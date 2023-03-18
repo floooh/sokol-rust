@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Erik W. Gren <ErikWDev@gmail.com>"]
 build = "build.rs"
+license = "zlib/libpng"
 
 [features]
 default = []
