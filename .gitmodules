@@ -1,3 +1,4 @@
 [submodule "src/sokol/c/cimgui"]
 	path = src/sokol/c/cimgui
 	url = git@github.com:cimgui/cimgui.git
+	shallow = true
