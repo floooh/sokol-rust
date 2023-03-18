@@ -146,46 +146,8 @@ basic-http-server .
 ```
 
 ## Shaders
-Sokol's own shader compiler does not yet have support for generating helper files in rust, though they can quite easily
-be translated into rust manually. See `examples/mrt/shader.rs` or `examples/cube/shader.rs` for examples on how this can been done.
-
-I have started a work-in-progress version of the shader compiler can be found in `sokolrust.cc`. I have successfully used it to translate all the shaders that
-are required to run the examples here. If you want to try it out yourself, here is some rough guidelines:
-
-1. Place `sokolrust.cc` inside the `src/shdc/` folder of the [sokol-tools](https://github.com/floooh/sokol-tools)
-2. Make some slight modifications to the code-base:
-```cpp
-// .. in main.cc switch case, add a case for rust
-case format_t::SOKOL_RUST:
-    output_err = sokolrust_t::gen(args, inp, spirvcross, bytecode);
-    break;
-
-// .. in shdc.h, add SOKOL_RUST as a format and implement the string conversions
-case SOKOL_RUST:    return "sokol_rust";
-// ..
-else if (str == "sokol_rust") {
-    return SOKOL_RUST;
-}
-// ..
-struct sokolrust_t {
-    static errmsg_t gen(const args_t& args, const input_t& inp, const std::array<spirvcross_t,slang_t::NUM>& spirvcross, const std::array<bytecode_t,slang_t::NUM>& bytecode);
-};
-// ..
-namespace util {
-    // ..
-    std::string to_upper_case(const std::string& str);
-    // ..
-};
-
-
-// .. in util.cc, add a simple helper function
-std::string to_upper_case(const std::string& str) {
-    return pystring::upper(str);
-}
-```
-3. Re-compile the shader compiler and use it like normal but now with `-f sokol_rust`
-
-I hope to add this frontend to the official compiler soon so that you don't have to apply this patch manually 
+Checkout [sokol-tools](https://github.com/floooh/sokol-tools) for a sokol shader pipeline! It supports these rust bindings and all shaders in the examples folder
+here have been compiled using it with `-f sokol_rust`!
 
 ## License and attributinos
 This code is released under the zlib license (see `LICENSE` for info). Parts of `gen_rust.py` and `build.rs` have been copied and modified from
