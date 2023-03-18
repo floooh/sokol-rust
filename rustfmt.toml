@@ -1,0 +1,22 @@
+#
+# NOTE: For info about what these do see https://rust-lang.github.io/rustfmt/
+#
+
+group_imports = "StdExternalCrate"
+match_block_trailing_comma = true
+use_field_init_shorthand = true
+normalize_doc_attributes = true
+overflow_delimited_expr = true
+imports_granularity = "Crate"
+use_small_heuristics = "Max"
+reorder_impl_items = true
+use_try_shorthand = true
+newline_style = "Unix"
+wrap_comments = true
+version = "Two"
+
+short_array_element_width_threshold = 20
+single_line_if_else_max_width = 80
+struct_lit_width = 80
+comment_width = 110
+max_width = 110
