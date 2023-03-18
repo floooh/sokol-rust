@@ -187,10 +187,12 @@ std::string to_upper_case(const std::string& str) {
 
 I hope to add this frontend to the official compiler soon so that you don't have to apply this patch manually 
 
-## License
+## License and attributinos
 This code is released under the zlib license (see `LICENSE` for info). Parts of `gen_rust.py` and `build.rs` have been copied and modified from
 the zig-bindings (https://github.com/floooh/sokol-odin/) and odin-bindings (https://github.com/floooh/sokol-odin/) for sokol.
 
 The sokol headers are created by Andre Weissflog (floooh) and sokol is released under its own license here: https://github.com/floooh/sokol/blob/master/LICENSE
 
 cimgui https://github.com/cimgui/cimgui is released under the MIT license
+
+The old rust bindings by Daniel Ludwig (code-disaster) https://github.com/code-disaster/sokol-rs were used to figure out the `build.rs` script and it was released under the MIT license.
