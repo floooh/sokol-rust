@@ -1,0 +1,58 @@
+[package]
+name = "sokol"
+version = "0.1.0"
+edition = "2021"
+authors = ["Erik W. Gren <ErikWDev@gmail.com>"]
+build = "build.rs"
+license = "zlib/libpng"
+
+[features]
+default = []
+imgui = []
+
+[build-dependencies]
+cc = { version = "1.0", features = ["parallel"] }
+
+[[example]]
+name = "clear"
+path = "examples/clear/clear.rs"
+
+[[example]]
+name = "userdata"
+path = "examples/userdata/userdata.rs"
+
+[[example]]
+name = "cube"
+path = "examples/cube/cube.rs"
+
+[[example]]
+name = "mrt"
+path = "examples/mrt/mrt.rs"
+
+[[example]]
+name = "debugtext"
+path = "examples/debugtext/debugtext.rs"
+
+[[example]]
+name = "sgl-context"
+path = "examples/sgl-context/sgl-context.rs"
+
+[[example]]
+name = "sgl-points"
+path = "examples/sgl-points/sgl-points.rs"
+
+[[example]]
+name = "blend"
+path = "examples/blend/blend.rs"
+
+[[example]]
+name = "audio"
+path = "examples/audio/audio.rs"
+
+[[example]]
+name = "instancing"
+path = "examples/instancing/instancing.rs"
+
+[[example]]
+name = "texcube"
+path = "examples/texcube/texcube.rs"
