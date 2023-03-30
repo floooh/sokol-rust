@@ -103,6 +103,8 @@ cargo run --example instancing
 cargo run --example userdata
 ```
 
+>NOTE: The imgui sample currently doesn't work, see the note about lib.rs here [here](https://github.com/floooh/sokol-rust/issues/4#issuecomment-1489105274), and [this issue](https://github.com/floooh/sokol-rust/issues/3) for a clean solution.
+
 To run the imgui example, you need to go into it's directory:
 ```console
 cd examples/imgui
