@@ -271,13 +271,13 @@ impl Default for Mousebutton {
         Self::Left
     }
 }
-pub const MODIFIER_SHIFT: usize = 1;
-pub const MODIFIER_CTRL: usize = 2;
-pub const MODIFIER_ALT: usize = 4;
-pub const MODIFIER_SUPER: usize = 8;
-pub const MODIFIER_LMB: usize = 256;
-pub const MODIFIER_RMB: usize = 512;
-pub const MODIFIER_MMB: usize = 1024;
+pub const MODIFIER_SHIFT: u32 = 1;
+pub const MODIFIER_CTRL: u32 = 2;
+pub const MODIFIER_ALT: u32 = 4;
+pub const MODIFIER_SUPER: u32 = 8;
+pub const MODIFIER_LMB: u32 = 256;
+pub const MODIFIER_RMB: u32 = 512;
+pub const MODIFIER_MMB: u32 = 1024;
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Event {
