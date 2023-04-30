@@ -551,7 +551,6 @@ pub struct Desc {
     pub icon: IconDesc,
     pub allocator: Allocator,
     pub logger: Logger,
-    pub gl_force_gles2: bool,
     pub gl_major_version: i32,
     pub gl_minor_version: i32,
     pub win32_console_utf8: bool,
@@ -592,7 +591,6 @@ impl Desc {
             icon: IconDesc::new(),
             allocator: Allocator::new(),
             logger: Logger::new(),
-            gl_force_gles2: false,
             gl_major_version: 0,
             gl_minor_version: 0,
             win32_console_utf8: false,
@@ -746,7 +744,6 @@ pub mod ffi {
         pub fn sapp_run(desc: *const Desc);
         pub fn sapp_egl_get_display() -> *const core::ffi::c_void;
         pub fn sapp_egl_get_context() -> *const core::ffi::c_void;
-        pub fn sapp_gles2() -> bool;
         pub fn sapp_html5_ask_leave_site(ask: bool);
         pub fn sapp_html5_get_dropped_file_size(index: i32) -> u32;
         pub fn sapp_html5_fetch_dropped_file(request: *const Html5FetchRequest);
@@ -917,10 +914,6 @@ pub fn egl_get_display() -> *const core::ffi::c_void {
 #[inline]
 pub fn egl_get_context() -> *const core::ffi::c_void {
     unsafe { ffi::sapp_egl_get_context() }
-}
-#[inline]
-pub fn gles2() -> bool {
-    unsafe { ffi::sapp_gles2() }
 }
 #[inline]
 pub fn html5_ask_leave_site(ask: bool) {

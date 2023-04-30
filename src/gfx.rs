@@ -171,7 +171,6 @@ impl Default for Color {
 #[repr(i32)]
 pub enum Backend {
     Glcore33,
-    Gles2,
     Gles3,
     D3d11,
     MetalIos,
@@ -299,12 +298,7 @@ impl Default for PixelformatInfo {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Features {
-    pub instancing: bool,
     pub origin_top_left: bool,
-    pub multiple_render_targets: bool,
-    pub msaa_render_targets: bool,
-    pub imagetype_3d: bool,
-    pub imagetype_array: bool,
     pub image_clamp_to_border: bool,
     pub mrt_independent_blend_state: bool,
     pub mrt_independent_write_mask: bool,
@@ -312,12 +306,7 @@ pub struct Features {
 impl Features {
     pub const fn new() -> Self {
         Self {
-            instancing: false,
             origin_top_left: false,
-            multiple_render_targets: false,
-            msaa_render_targets: false,
-            imagetype_3d: false,
-            imagetype_array: false,
             image_clamp_to_border: false,
             mrt_independent_blend_state: false,
             mrt_independent_write_mask: false,
@@ -1853,14 +1842,12 @@ pub enum LogItem {
     ValidateShaderdescUbStd140ArrayType,
     ValidateShaderdescNoContImgs,
     ValidateShaderdescImgName,
-    ValidateShaderdescAttrNames,
     ValidateShaderdescAttrSemantics,
     ValidateShaderdescAttrStringTooLong,
     ValidatePipelinedescCanary,
     ValidatePipelinedescShader,
     ValidatePipelinedescNoAttrs,
     ValidatePipelinedescLayoutStride4,
-    ValidatePipelinedescAttrName,
     ValidatePipelinedescAttrSemantics,
     ValidatePassdescCanary,
     ValidatePassdescNoColorAtts,
@@ -1926,21 +1913,6 @@ impl LogItem {
 impl Default for LogItem {
     fn default() -> Self {
         Self::Ok
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct GlContextDesc {
-    pub force_gles2: bool,
-}
-impl GlContextDesc {
-    pub const fn new() -> Self {
-        Self { force_gles2: false }
-    }
-}
-impl Default for GlContextDesc {
-    fn default() -> Self {
-        Self::new()
     }
 }
 #[repr(C)]
@@ -2040,7 +2012,6 @@ pub struct ContextDesc {
     pub color_format: PixelFormat,
     pub depth_format: PixelFormat,
     pub sample_count: i32,
-    pub gl: GlContextDesc,
     pub metal: MetalContextDesc,
     pub d3d11: D3d11ContextDesc,
     pub wgpu: WgpuContextDesc,
@@ -2051,7 +2022,6 @@ impl ContextDesc {
             color_format: PixelFormat::new(),
             depth_format: PixelFormat::new(),
             sample_count: 0,
-            gl: GlContextDesc::new(),
             metal: MetalContextDesc::new(),
             d3d11: D3d11ContextDesc::new(),
             wgpu: WgpuContextDesc::new(),
