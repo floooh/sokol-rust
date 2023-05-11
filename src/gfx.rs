@@ -1736,6 +1736,7 @@ pub enum LogItem {
     GlShaderCompilationFailed,
     GlShaderLinkingFailed,
     GlVertexAttributeNotFoundInShader,
+    GlTextureNameNotFoundInShader,
     GlFramebufferIncomplete,
     GlMsaaFramebufferIncomplete,
     D3d11CreateBufferFailed,
