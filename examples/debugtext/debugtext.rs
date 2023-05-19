@@ -22,8 +22,9 @@ static mut STATE: State = State { pass_action: sg::PassAction::new() };
 extern "C" fn init() {
     let state = unsafe { &mut STATE };
     state.pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.0, g: 0.125, b: 0.25, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.0, g: 0.125, b: 0.25, a: 1.0 },
+        ..Default::default()
     };
 
     sg::setup(&sg::Desc {

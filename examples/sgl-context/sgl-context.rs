@@ -56,8 +56,9 @@ extern "C" fn init() {
     });
 
     state.display.pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.5, g: 0.7, b: 1.0, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.5, g: 0.7, b: 1.0, a: 1.0 },
+        ..Default::default()
     };
     state.display.sgl_pip = sgl::context_make_pipeline(
         sgl::default_context(),
@@ -101,8 +102,9 @@ extern "C" fn init() {
         sg::PassAttachmentDesc { image: state.offscreen.img, ..Default::default() };
     state.offscreen.pass = sg::make_pass(&pass_desc);
     state.offscreen.pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        ..Default::default()
     };
 }
 

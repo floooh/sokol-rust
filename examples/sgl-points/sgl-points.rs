@@ -82,8 +82,9 @@ extern "C" fn frame() {
 
     let mut pass_action = sg::PassAction::new();
     pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        ..Default::default()
     };
     sg::begin_default_pass(&pass_action, sapp::width(), sapp::height());
     sgl::draw();

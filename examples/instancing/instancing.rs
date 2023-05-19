@@ -44,8 +44,8 @@ extern "C" fn init() {
 
     // a pass action for the default render pass
     state.pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
         ..Default::default()
     };
 
@@ -102,7 +102,7 @@ extern "C" fn init() {
             },
             attrs: {
                 let mut attrs = [sg::VertexAttrDesc::new(); sg::MAX_VERTEX_ATTRIBUTES];
-    
+
                 attrs[shader::ATTR_VS_POS     ] = sg::VertexAttrDesc { format: sg::VertexFormat::Float3, buffer_index: 0, ..Default::default() };
                 attrs[shader::ATTR_VS_COLOR0  ] = sg::VertexAttrDesc { format: sg::VertexFormat::Float4, buffer_index: 0, ..Default::default() };
                 attrs[shader::ATTR_VS_INST_POS] = sg::VertexAttrDesc { format: sg::VertexFormat::Float3, buffer_index: 1, ..Default::default() };

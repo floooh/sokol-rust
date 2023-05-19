@@ -50,8 +50,8 @@ extern "C" fn frame() {
 
     let mut pass_action = sg::PassAction::new();
     pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color {
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color {
             r: 0.3,
             g: 0.3,
             b: 0.3,

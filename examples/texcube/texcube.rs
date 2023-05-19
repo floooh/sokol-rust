@@ -149,8 +149,8 @@ extern "C" fn init() {
 
     // default pass action, clear to blue-ish
     state.pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.25, g: 0.5, b: 0.75, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.25, g: 0.5, b: 0.75, a: 1.0 },
         ..Default::default()
     };
 }

@@ -78,24 +78,27 @@ extern "C" fn init() {
 
     // setup pass action for default render pass
     state.dflt.pass_action.colors[0] =
-        sg::ColorAttachmentAction { action: sg::Action::Dontcare, ..Default::default() };
+        sg::ColorAttachmentAction { load_action: sg::LoadAction::Dontcare, ..Default::default() };
     state.dflt.pass_action.depth =
-        sg::DepthAttachmentAction { action: sg::Action::Dontcare, ..Default::default() };
+        sg::DepthAttachmentAction { load_action: sg::LoadAction::Dontcare, ..Default::default() };
     state.dflt.pass_action.stencil =
-        sg::StencilAttachmentAction { action: sg::Action::Dontcare, ..Default::default() };
+        sg::StencilAttachmentAction { load_action: sg::LoadAction::Dontcare, ..Default::default() };
 
     // set pass action for offscreen render pass
     state.offscreen.pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.25, g: 0.0, b: 0.0, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.25, g: 0.0, b: 0.0, a: 1.0 },
+        ..Default::default()
     };
     state.offscreen.pass_action.colors[1] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.0, g: 0.25, b: 0.0, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.0, g: 0.25, b: 0.0, a: 1.0 },
+        ..Default::default()
     };
     state.offscreen.pass_action.colors[2] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 0.0, g: 0.0, b: 0.25, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.25, a: 1.0 },
+        ..Default::default()
     };
 
     // setup the offscreen render pass and render target images,

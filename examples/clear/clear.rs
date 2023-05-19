@@ -16,8 +16,8 @@ extern "C" fn init() {
     });
 
     state.pass_action.colors[0] = sg::ColorAttachmentAction {
-        action: sg::Action::Clear,
-        value: sg::Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
         ..Default::default()
     };
 
@@ -50,8 +50,8 @@ extern "C" fn init() {
 extern "C" fn frame() {
     let state = unsafe { &mut STATE };
 
-    let g = state.pass_action.colors[0].value.g + 0.01;
-    state.pass_action.colors[0].value.g = if g > 1.0 { 0.0 } else { g };
+    let g = state.pass_action.colors[0].clear_value.g + 0.01;
+    state.pass_action.colors[0].clear_value.g = if g > 1.0 { 0.0 } else { g };
 
     let (width, height) = (sapp::width(), sapp::height());
 

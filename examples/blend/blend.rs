@@ -43,9 +43,9 @@ extern "C" fn init() {
     });
 
     // a default pass action which does not clear, since the entire screen is overwritten anyway
-    state.pass_action.colors[0].action = sg::Action::Dontcare;
-    state.pass_action.depth.action = sg::Action::Dontcare;
-    state.pass_action.stencil.action = sg::Action::Dontcare;
+    state.pass_action.colors[0].load_action = sg::LoadAction::Dontcare;
+    state.pass_action.depth.load_action = sg::LoadAction::Dontcare;
+    state.pass_action.stencil.load_action = sg::LoadAction::Dontcare;
 
     // a quad vertex buffer
     #[rustfmt::skip]
