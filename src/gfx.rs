@@ -843,19 +843,35 @@ impl Default for ColorMask {
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u32)]
-pub enum Action {
+pub enum LoadAction {
     Default,
     Clear,
     Load,
     Dontcare,
-    Num,
 }
-impl Action {
+impl LoadAction {
     pub const fn new() -> Self {
         Self::Default
     }
 }
-impl Default for Action {
+impl Default for LoadAction {
+    fn default() -> Self {
+        Self::Default
+    }
+}
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u32)]
+pub enum StoreAction {
+    Default,
+    Store,
+    Dontcare,
+}
+impl StoreAction {
+    pub const fn new() -> Self {
+        Self::Default
+    }
+}
+impl Default for StoreAction {
     fn default() -> Self {
         Self::Default
     }
@@ -863,12 +879,17 @@ impl Default for Action {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ColorAttachmentAction {
-    pub action: Action,
-    pub value: Color,
+    pub load_action: LoadAction,
+    pub store_action: StoreAction,
+    pub clear_value: Color,
 }
 impl ColorAttachmentAction {
     pub const fn new() -> Self {
-        Self { action: Action::new(), value: Color::new() }
+        Self {
+            load_action: LoadAction::new(),
+            store_action: StoreAction::new(),
+            clear_value: Color::new(),
+        }
     }
 }
 impl Default for ColorAttachmentAction {
@@ -879,12 +900,17 @@ impl Default for ColorAttachmentAction {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct DepthAttachmentAction {
-    pub action: Action,
-    pub value: f32,
+    pub load_action: LoadAction,
+    pub store_action: StoreAction,
+    pub clear_value: f32,
 }
 impl DepthAttachmentAction {
     pub const fn new() -> Self {
-        Self { action: Action::new(), value: 0.0 }
+        Self {
+            load_action: LoadAction::new(),
+            store_action: StoreAction::new(),
+            clear_value: 0.0,
+        }
     }
 }
 impl Default for DepthAttachmentAction {
@@ -895,12 +921,13 @@ impl Default for DepthAttachmentAction {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct StencilAttachmentAction {
-    pub action: Action,
-    pub value: u8,
+    pub load_action: LoadAction,
+    pub store_action: StoreAction,
+    pub clear_value: u8,
 }
 impl StencilAttachmentAction {
     pub const fn new() -> Self {
-        Self { action: Action::new(), value: 0 }
+        Self { load_action: LoadAction::new(), store_action: StoreAction::new(), clear_value: 0 }
     }
 }
 impl Default for StencilAttachmentAction {
@@ -1459,6 +1486,7 @@ impl Default for PassAttachmentDesc {
 pub struct PassDesc {
     pub _start_canary: u32,
     pub color_attachments: [PassAttachmentDesc; 4],
+    pub resolve_attachments: [PassAttachmentDesc; 4],
     pub depth_stencil_attachment: PassAttachmentDesc,
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
@@ -1468,6 +1496,7 @@ impl PassDesc {
         Self {
             _start_canary: 0,
             color_attachments: [PassAttachmentDesc::new(); 4],
+            resolve_attachments: [PassAttachmentDesc::new(); 4],
             depth_stencil_attachment: PassAttachmentDesc::new(),
             label: core::ptr::null(),
             _end_canary: 0,
@@ -1824,6 +1853,9 @@ pub enum LogItem {
     ValidateImagedescNonrtPixelformat,
     ValidateImagedescMsaaButNoRt,
     ValidateImagedescNoMsaaRtSupport,
+    ValidateImagedescMsaaNumMipmaps,
+    ValidateImagedescMsaa3dImage,
+    ValidateImagedescDepth3dImage,
     ValidateImagedescRtImmutable,
     ValidateImagedescRtNoData,
     ValidateImagedescInjectedNoData,
@@ -1863,8 +1895,28 @@ pub enum LogItem {
     ValidatePassdescDepthInvPixelformat,
     ValidatePassdescImageSizes,
     ValidatePassdescImageSampleCounts,
+    ValidatePassdescResolveColorImageMsaa,
+    ValidatePassdescResolveImage,
+    ValidatePassdescResolveSampleCount,
+    ValidatePassdescResolveMiplevel,
+    ValidatePassdescResolveFace,
+    ValidatePassdescResolveLayer,
+    ValidatePassdescResolveSlice,
+    ValidatePassdescResolveImageNoRt,
+    ValidatePassdescResolveImageSizes,
+    ValidatePassdescResolveImageFormat,
+    ValidatePassdescDepthImage,
+    ValidatePassdescDepthMiplevel,
+    ValidatePassdescDepthFace,
+    ValidatePassdescDepthLayer,
+    ValidatePassdescDepthSlice,
+    ValidatePassdescDepthImageNoRt,
+    ValidatePassdescDepthImageSizes,
+    ValidatePassdescDepthImageSampleCount,
     ValidateBeginpassPass,
-    ValidateBeginpassImage,
+    ValidateBeginpassColorAttachmentImage,
+    ValidateBeginpassResolveAttachmentImage,
+    ValidateBeginpassDepthstencilAttachmentImage,
     ValidateApipPipelineValidId,
     ValidateApipPipelineExists,
     ValidateApipPipelineValid,
@@ -1889,9 +1941,13 @@ pub enum LogItem {
     ValidateAbndVsImgs,
     ValidateAbndVsImgExists,
     ValidateAbndVsImgTypes,
+    ValidateAbndVsImgMsaa,
+    ValidateAbndVsImgDepth,
     ValidateAbndFsImgs,
     ValidateAbndFsImgExists,
     ValidateAbndFsImgTypes,
+    ValidateAbndFsImgMsaa,
+    ValidateAbndFsImgDepth,
     ValidateAubNoPipeline,
     ValidateAubNoUbAtSlot,
     ValidateAubSize,
