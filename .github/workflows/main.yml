@@ -24,4 +24,4 @@ jobs:
             sudo apt-get update
             sudo apt-get install libglu1-mesa-dev mesa-common-dev xorg-dev libasound-dev
       - name: Run cargo build --all-targets
-        run: cargo build --all-targets
+        run: cargo build --examples --verbose
