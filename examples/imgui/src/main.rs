@@ -51,12 +51,8 @@ extern "C" fn frame() {
     let mut pass_action = sg::PassAction::new();
     pass_action.colors[0] = sg::ColorAttachmentAction {
         load_action: sg::LoadAction::Clear,
-        clear_value: sg::Color {
-            r: 0.3,
-            g: 0.3,
-            b: 0.3,
-            a: 1.0,
-        },
+        store_action: sg::StoreAction::Default,
+        clear_value: sg::Color { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
     };
     sg::begin_default_pass(&pass_action, sapp::width(), sapp::height());
     simgui::render();

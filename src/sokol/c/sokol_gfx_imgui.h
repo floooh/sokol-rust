@@ -1043,7 +1043,6 @@ _SOKOL_PRIVATE void _sg_imgui_draw_resource_slot(const sg_slot_info* slot) {
 _SOKOL_PRIVATE const char* _sg_imgui_backend_string(sg_backend b) {
     switch (b) {
         case SG_BACKEND_GLCORE33:           return "SG_BACKEND_GLCORE33";
-        case SG_BACKEND_GLES2:              return "SG_BACKEND_GLES2";
         case SG_BACKEND_GLES3:              return "SG_BACKEND_GLES3";
         case SG_BACKEND_D3D11:              return "SG_BACKEND_D3D11";
         case SG_BACKEND_METAL_IOS:          return "SG_BACKEND_METAL_IOS";
@@ -3731,27 +3730,27 @@ _SOKOL_PRIVATE void _sg_imgui_draw_passaction_panel(sg_imgui_t* ctx, sg_pass pas
         const sg_color_attachment_action* c_att = &action->colors[i];
         igText("  Color Attachment %d:", i);
         sg_imgui_str_t color_str;
-        switch (c_att->action) {
-            case SG_ACTION_LOAD: igText("    SG_ACTION_LOAD"); break;
-            case SG_ACTION_DONTCARE: igText("    SG_ACTION_DONTCARE"); break;
+        switch (c_att->load_action) {
+            case SG_LOADACTION_LOAD: igText("    SG_LOADACTION_LOAD"); break;
+            case SG_LOADACTION_DONTCARE: igText("    SG_LOADACTION_DONTCARE"); break;
             default:
-                igText("    SG_ACTION_CLEAR: %s", _sg_imgui_color_string(&color_str, c_att->value));
+                igText("    SG_LOADACTION_CLEAR: %s", _sg_imgui_color_string(&color_str, c_att->clear_value));
                 break;
         }
     }
     const sg_depth_attachment_action* d_att = &action->depth;
     igText("  Depth Attachment:");
-    switch (d_att->action) {
-        case SG_ACTION_LOAD: igText("    SG_ACTION_LOAD"); break;
-        case SG_ACTION_DONTCARE: igText("    SG_ACTION_DONTCARE"); break;
-        default: igText("    SG_ACTION_CLEAR: %.3f", d_att->value); break;
+    switch (d_att->load_action) {
+        case SG_LOADACTION_LOAD: igText("    SG_LOADACTION_LOAD"); break;
+        case SG_LOADACTION_DONTCARE: igText("    SG_LOADACTION_DONTCARE"); break;
+        default: igText("    SG_LOADACTION_CLEAR: %.3f", d_att->clear_value); break;
     }
     const sg_stencil_attachment_action* s_att = &action->stencil;
     igText("  Stencil Attachment");
-    switch (s_att->action) {
-        case SG_ACTION_LOAD: igText("    SG_ACTION_LOAD"); break;
-        case SG_ACTION_DONTCARE: igText("    SG_ACTION_DONTCARE"); break;
-        default: igText("    SG_ACTION_CLEAR: 0x%02X", s_att->value); break;
+    switch (s_att->load_action) {
+        case SG_LOADACTION_LOAD: igText("    SG_LOADACTION_LOAD"); break;
+        case SG_LOADACTION_DONTCARE: igText("    SG_LOADACTION_DONTCARE"); break;
+        default: igText("    SG_ACTION_CLEAR: 0x%02X", s_att->clear_value); break;
     }
 }
 
@@ -3890,12 +3889,9 @@ _SOKOL_PRIVATE void _sg_imgui_draw_caps_panel(void) {
     igText("Backend: %s\n\n", _sg_imgui_backend_string(sg_query_backend()));
     sg_features f = sg_query_features();
     igText("Features:");
-    igText("    instancing: %s", _sg_imgui_bool_string(f.instancing));
     igText("    origin_top_left: %s", _sg_imgui_bool_string(f.origin_top_left));
-    igText("    multiple_render_targets: %s", _sg_imgui_bool_string(f.multiple_render_targets));
-    igText("    msaa_render_targets: %s", _sg_imgui_bool_string(f.msaa_render_targets));
-    igText("    imagetype_3d: %s", _sg_imgui_bool_string(f.imagetype_3d));
-    igText("    imagetype_array: %s", _sg_imgui_bool_string(f.imagetype_array));
+    igText("    mrt_independent_blend_state: %s", _sg_imgui_bool_string(f.mrt_independent_blend_state));
+    igText("    mrt_independent_write_mask: %s", _sg_imgui_bool_string(f.mrt_independent_write_mask));
     igText("    image_clamp_to_border: %s", _sg_imgui_bool_string(f.image_clamp_to_border));
     igText("    mrt_independent_blend_state: %s", _sg_imgui_bool_string(f.mrt_independent_blend_state));
     igText("    mrt_independent_write_mask: %s", _sg_imgui_bool_string(f.mrt_independent_write_mask));
