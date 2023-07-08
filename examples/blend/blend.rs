@@ -66,7 +66,7 @@ extern "C" fn init() {
         // but only the first two floats from the position, need to
         // provide a stride to skip the gap to the next vertex
         layout: {
-            let mut layout = sg::LayoutDesc::new();
+            let mut layout = sg::VertexLayoutState::new();
             layout.buffers[0].stride = 28;
             layout.attrs[shader::ATTR_VS_BG_POSITION].format = sg::VertexFormat::Float2;
             layout
@@ -81,7 +81,7 @@ extern "C" fn init() {
     // one pipeline object per blend-factor combination
     let mut pip_desc = sg::PipelineDesc {
         layout: {
-            let mut layout = sg::LayoutDesc::new();
+            let mut layout = sg::VertexLayoutState::new();
             layout.attrs[shader::ATTR_VS_QUAD_POSITION].format = sg::VertexFormat::Float3;
             layout.attrs[shader::ATTR_VS_QUAD_COLOR0].format = sg::VertexFormat::Float4;
             layout

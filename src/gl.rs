@@ -216,7 +216,7 @@ pub mod ffi {
         pub fn sgl_scissor_rectf(x: f32, y: f32, w: f32, h: f32, origin_top_left: bool);
         pub fn sgl_enable_texture();
         pub fn sgl_disable_texture();
-        pub fn sgl_texture(img: sg::Image);
+        pub fn sgl_texture(img: sg::Image, smp: sg::Sampler);
         pub fn sgl_layer(layer_id: i32);
         pub fn sgl_load_default_pipeline();
         pub fn sgl_load_pipeline(pip: Pipeline);
@@ -390,8 +390,8 @@ pub fn disable_texture() {
     unsafe { ffi::sgl_disable_texture() }
 }
 #[inline]
-pub fn texture(img: sg::Image) {
-    unsafe { ffi::sgl_texture(img) }
+pub fn texture(img: sg::Image, smp: sg::Sampler) {
+    unsafe { ffi::sgl_texture(img, smp) }
 }
 #[inline]
 pub fn layer(layer_id: i32) {

@@ -64,6 +64,21 @@ impl Default for Image {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct Sampler {
+    pub id: u32,
+}
+impl Sampler {
+    pub const fn new() -> Self {
+        Self { id: 0 }
+    }
+}
+impl Default for Sampler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Shader {
     pub id: u32,
 }
@@ -142,8 +157,10 @@ pub const INVALID_ID: u32 = 0;
 pub const NUM_SHADER_STAGES: usize = 2;
 pub const NUM_INFLIGHT_FRAMES: usize = 2;
 pub const MAX_COLOR_ATTACHMENTS: usize = 4;
-pub const MAX_SHADERSTAGE_BUFFERS: usize = 8;
+pub const MAX_VERTEX_BUFFERS: usize = 8;
 pub const MAX_SHADERSTAGE_IMAGES: usize = 12;
+pub const MAX_SHADERSTAGE_SAMPLERS: usize = 8;
+pub const MAX_SHADERSTAGE_IMAGESAMPLERPAIRS: usize = 12;
 pub const MAX_SHADERSTAGE_UBS: usize = 4;
 pub const MAX_UB_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
@@ -445,12 +462,32 @@ impl Default for ImageType {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
-pub enum SamplerType {
+#[repr(u32)]
+pub enum ImageSampleType {
     Default,
     Float,
+    Depth,
     Sint,
     Uint,
+    Num,
+}
+impl ImageSampleType {
+    pub const fn new() -> Self {
+        Self::Default
+    }
+}
+impl Default for ImageSampleType {
+    fn default() -> Self {
+        Self::Default
+    }
+}
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u32)]
+pub enum SamplerType {
+    Default,
+    Sample,
+    Compare,
+    Num,
 }
 impl SamplerType {
     pub const fn new() -> Self {
@@ -524,12 +561,9 @@ impl Default for PrimitiveType {
 #[repr(u32)]
 pub enum Filter {
     Default,
+    None,
     Nearest,
     Linear,
-    NearestMipmapNearest,
-    NearestMipmapLinear,
-    LinearMipmapNearest,
-    LinearMipmapLinear,
     Num,
 }
 impl Filter {
@@ -962,14 +996,30 @@ impl Default for PassAction {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct StageBindings {
+    pub images: [Image; 12],
+    pub samplers: [Sampler; 8],
+}
+impl StageBindings {
+    pub const fn new() -> Self {
+        Self { images: [Image::new(); 12], samplers: [Sampler::new(); 8] }
+    }
+}
+impl Default for StageBindings {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Bindings {
     pub _start_canary: u32,
     pub vertex_buffers: [Buffer; 8],
     pub vertex_buffer_offsets: [i32; 8],
     pub index_buffer: Buffer,
     pub index_buffer_offset: i32,
-    pub vs_images: [Image; 12],
-    pub fs_images: [Image; 12],
+    pub vs: StageBindings,
+    pub fs: StageBindings,
     pub _end_canary: u32,
 }
 impl Bindings {
@@ -980,8 +1030,8 @@ impl Bindings {
             vertex_buffer_offsets: [0; 8],
             index_buffer: Buffer::new(),
             index_buffer_offset: 0,
-            vs_images: [Image::new(); 12],
-            fs_images: [Image::new(); 12],
+            vs: StageBindings::new(),
+            fs: StageBindings::new(),
             _end_canary: 0,
         }
     }
@@ -1056,15 +1106,6 @@ pub struct ImageDesc {
     pub usage: Usage,
     pub pixel_format: PixelFormat,
     pub sample_count: i32,
-    pub min_filter: Filter,
-    pub mag_filter: Filter,
-    pub wrap_u: Wrap,
-    pub wrap_v: Wrap,
-    pub wrap_w: Wrap,
-    pub border_color: BorderColor,
-    pub max_anisotropy: u32,
-    pub min_lod: f32,
-    pub max_lod: f32,
     pub data: ImageData,
     pub label: *const core::ffi::c_char,
     pub gl_textures: [u32; 2],
@@ -1088,15 +1129,6 @@ impl ImageDesc {
             usage: Usage::new(),
             pixel_format: PixelFormat::new(),
             sample_count: 0,
-            min_filter: Filter::new(),
-            mag_filter: Filter::new(),
-            wrap_u: Wrap::new(),
-            wrap_v: Wrap::new(),
-            wrap_w: Wrap::new(),
-            border_color: BorderColor::new(),
-            max_anisotropy: 0,
-            min_lod: 0.0,
-            max_lod: 0.0,
             data: ImageData::new(),
             label: core::ptr::null(),
             gl_textures: [0; 2],
@@ -1110,6 +1142,57 @@ impl ImageDesc {
     }
 }
 impl Default for ImageDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct SamplerDesc {
+    pub _start_canary: u32,
+    pub min_filter: Filter,
+    pub mag_filter: Filter,
+    pub mipmap_filter: Filter,
+    pub wrap_u: Wrap,
+    pub wrap_v: Wrap,
+    pub wrap_w: Wrap,
+    pub min_lod: f32,
+    pub max_lod: f32,
+    pub border_color: BorderColor,
+    pub compare: CompareFunc,
+    pub max_anisotropy: u32,
+    pub label: *const core::ffi::c_char,
+    pub gl_sampler: u32,
+    pub mtl_sampler: *const core::ffi::c_void,
+    pub d3d11_sampler: *const core::ffi::c_void,
+    pub wgpu_sampler: *const core::ffi::c_void,
+    pub _end_canary: u32,
+}
+impl SamplerDesc {
+    pub const fn new() -> Self {
+        Self {
+            _start_canary: 0,
+            min_filter: Filter::new(),
+            mag_filter: Filter::new(),
+            mipmap_filter: Filter::new(),
+            wrap_u: Wrap::new(),
+            wrap_v: Wrap::new(),
+            wrap_w: Wrap::new(),
+            min_lod: 0.0,
+            max_lod: 0.0,
+            border_color: BorderColor::new(),
+            compare: CompareFunc::new(),
+            max_anisotropy: 0,
+            label: core::ptr::null(),
+            gl_sampler: 0,
+            mtl_sampler: core::ptr::null(),
+            d3d11_sampler: core::ptr::null(),
+            wgpu_sampler: core::ptr::null(),
+            _end_canary: 0,
+        }
+    }
+}
+impl Default for SamplerDesc {
     fn default() -> Self {
         Self::new()
     }
@@ -1168,20 +1251,56 @@ impl Default for ShaderUniformBlockDesc {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ShaderImageDesc {
-    pub name: *const core::ffi::c_char,
+    pub used: bool,
+    pub multisampled: bool,
     pub image_type: ImageType,
-    pub sampler_type: SamplerType,
+    pub sample_type: ImageSampleType,
 }
 impl ShaderImageDesc {
     pub const fn new() -> Self {
         Self {
-            name: core::ptr::null(),
+            used: false,
+            multisampled: false,
             image_type: ImageType::new(),
-            sampler_type: SamplerType::new(),
+            sample_type: ImageSampleType::new(),
         }
     }
 }
 impl Default for ShaderImageDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderSamplerDesc {
+    pub used: bool,
+    pub sampler_type: SamplerType,
+}
+impl ShaderSamplerDesc {
+    pub const fn new() -> Self {
+        Self { used: false, sampler_type: SamplerType::new() }
+    }
+}
+impl Default for ShaderSamplerDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderImageSamplerPairDesc {
+    pub used: bool,
+    pub image_slot: i32,
+    pub sampler_slot: i32,
+    pub glsl_name: *const core::ffi::c_char,
+}
+impl ShaderImageSamplerPairDesc {
+    pub const fn new() -> Self {
+        Self { used: false, image_slot: 0, sampler_slot: 0, glsl_name: core::ptr::null() }
+    }
+}
+impl Default for ShaderImageSamplerPairDesc {
     fn default() -> Self {
         Self::new()
     }
@@ -1195,6 +1314,8 @@ pub struct ShaderStageDesc {
     pub d3d11_target: *const core::ffi::c_char,
     pub uniform_blocks: [ShaderUniformBlockDesc; 4],
     pub images: [ShaderImageDesc; 12],
+    pub samplers: [ShaderSamplerDesc; 8],
+    pub image_sampler_pairs: [ShaderImageSamplerPairDesc; 12],
 }
 impl ShaderStageDesc {
     pub const fn new() -> Self {
@@ -1205,6 +1326,8 @@ impl ShaderStageDesc {
             d3d11_target: core::ptr::null(),
             uniform_blocks: [ShaderUniformBlockDesc::new(); 4],
             images: [ShaderImageDesc::new(); 12],
+            samplers: [ShaderSamplerDesc::new(); 8],
+            image_sampler_pairs: [ShaderImageSamplerPairDesc::new(); 12],
         }
     }
 }
@@ -1242,50 +1365,53 @@ impl Default for ShaderDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct BufferLayoutDesc {
+pub struct VertexBufferLayoutState {
     pub stride: i32,
     pub step_func: VertexStep,
     pub step_rate: i32,
 }
-impl BufferLayoutDesc {
+impl VertexBufferLayoutState {
     pub const fn new() -> Self {
         Self { stride: 0, step_func: VertexStep::new(), step_rate: 0 }
     }
 }
-impl Default for BufferLayoutDesc {
+impl Default for VertexBufferLayoutState {
     fn default() -> Self {
         Self::new()
     }
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct VertexAttrDesc {
+pub struct VertexAttrState {
     pub buffer_index: i32,
     pub offset: i32,
     pub format: VertexFormat,
 }
-impl VertexAttrDesc {
+impl VertexAttrState {
     pub const fn new() -> Self {
         Self { buffer_index: 0, offset: 0, format: VertexFormat::new() }
     }
 }
-impl Default for VertexAttrDesc {
+impl Default for VertexAttrState {
     fn default() -> Self {
         Self::new()
     }
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct LayoutDesc {
-    pub buffers: [BufferLayoutDesc; 8],
-    pub attrs: [VertexAttrDesc; 16],
+pub struct VertexLayoutState {
+    pub buffers: [VertexBufferLayoutState; 8],
+    pub attrs: [VertexAttrState; 16],
 }
-impl LayoutDesc {
+impl VertexLayoutState {
     pub const fn new() -> Self {
-        Self { buffers: [BufferLayoutDesc::new(); 8], attrs: [VertexAttrDesc::new(); 16] }
+        Self {
+            buffers: [VertexBufferLayoutState::new(); 8],
+            attrs: [VertexAttrState::new(); 16],
+        }
     }
 }
-impl Default for LayoutDesc {
+impl Default for VertexLayoutState {
     fn default() -> Self {
         Self::new()
     }
@@ -1398,12 +1524,12 @@ impl Default for BlendState {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct ColorState {
+pub struct ColorTargetState {
     pub pixel_format: PixelFormat,
     pub write_mask: ColorMask,
     pub blend: BlendState,
 }
-impl ColorState {
+impl ColorTargetState {
     pub const fn new() -> Self {
         Self {
             pixel_format: PixelFormat::new(),
@@ -1412,7 +1538,7 @@ impl ColorState {
         }
     }
 }
-impl Default for ColorState {
+impl Default for ColorTargetState {
     fn default() -> Self {
         Self::new()
     }
@@ -1422,11 +1548,11 @@ impl Default for ColorState {
 pub struct PipelineDesc {
     pub _start_canary: u32,
     pub shader: Shader,
-    pub layout: LayoutDesc,
+    pub layout: VertexLayoutState,
     pub depth: DepthState,
     pub stencil: StencilState,
     pub color_count: i32,
-    pub colors: [ColorState; 4],
+    pub colors: [ColorTargetState; 4],
     pub primitive_type: PrimitiveType,
     pub index_type: IndexType,
     pub cull_mode: CullMode,
@@ -1442,11 +1568,11 @@ impl PipelineDesc {
         Self {
             _start_canary: 0,
             shader: Shader::new(),
-            layout: LayoutDesc::new(),
+            layout: VertexLayoutState::new(),
             depth: DepthState::new(),
             stencil: StencilState::new(),
             color_count: 0,
-            colors: [ColorState::new(); 4],
+            colors: [ColorTargetState::new(); 4],
             primitive_type: PrimitiveType::new(),
             index_type: IndexType::new(),
             cull_mode: CullMode::new(),
@@ -1515,11 +1641,13 @@ pub struct TraceHooks {
     pub reset_state_cache: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub make_buffer: Option<extern "C" fn(*const BufferDesc, Buffer, *mut core::ffi::c_void)>,
     pub make_image: Option<extern "C" fn(*const ImageDesc, Image, *mut core::ffi::c_void)>,
+    pub make_sampler: Option<extern "C" fn(*const SamplerDesc, Sampler, *mut core::ffi::c_void)>,
     pub make_shader: Option<extern "C" fn(*const ShaderDesc, Shader, *mut core::ffi::c_void)>,
     pub make_pipeline: Option<extern "C" fn(*const PipelineDesc, Pipeline, *mut core::ffi::c_void)>,
     pub make_pass: Option<extern "C" fn(*const PassDesc, Pass, *mut core::ffi::c_void)>,
     pub destroy_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub destroy_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
+    pub destroy_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub destroy_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub destroy_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
     pub destroy_pass: Option<extern "C" fn(Pass, *mut core::ffi::c_void)>,
@@ -1538,40 +1666,36 @@ pub struct TraceHooks {
     pub commit: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub alloc_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub alloc_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
+    pub alloc_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub alloc_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub alloc_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
     pub alloc_pass: Option<extern "C" fn(Pass, *mut core::ffi::c_void)>,
     pub dealloc_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub dealloc_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
+    pub dealloc_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub dealloc_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub dealloc_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
     pub dealloc_pass: Option<extern "C" fn(Pass, *mut core::ffi::c_void)>,
     pub init_buffer: Option<extern "C" fn(Buffer, *const BufferDesc, *mut core::ffi::c_void)>,
     pub init_image: Option<extern "C" fn(Image, *const ImageDesc, *mut core::ffi::c_void)>,
+    pub init_sampler: Option<extern "C" fn(Sampler, *const SamplerDesc, *mut core::ffi::c_void)>,
     pub init_shader: Option<extern "C" fn(Shader, *const ShaderDesc, *mut core::ffi::c_void)>,
     pub init_pipeline: Option<extern "C" fn(Pipeline, *const PipelineDesc, *mut core::ffi::c_void)>,
     pub init_pass: Option<extern "C" fn(Pass, *const PassDesc, *mut core::ffi::c_void)>,
     pub uninit_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub uninit_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
+    pub uninit_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub uninit_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub uninit_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
     pub uninit_pass: Option<extern "C" fn(Pass, *mut core::ffi::c_void)>,
     pub fail_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub fail_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
+    pub fail_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub fail_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub fail_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
     pub fail_pass: Option<extern "C" fn(Pass, *mut core::ffi::c_void)>,
     pub push_debug_group: Option<extern "C" fn(*const core::ffi::c_char, *mut core::ffi::c_void)>,
     pub pop_debug_group: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_buffer_pool_exhausted: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_image_pool_exhausted: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_shader_pool_exhausted: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_pipeline_pool_exhausted: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_pass_pool_exhausted: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_context_mismatch: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_pass_invalid: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_draw_invalid: Option<extern "C" fn(*mut core::ffi::c_void)>,
-    pub err_bindings_invalid: Option<extern "C" fn(*mut core::ffi::c_void)>,
 }
 impl TraceHooks {
     pub const fn new() -> Self {
@@ -1580,11 +1704,13 @@ impl TraceHooks {
             reset_state_cache: None,
             make_buffer: None,
             make_image: None,
+            make_sampler: None,
             make_shader: None,
             make_pipeline: None,
             make_pass: None,
             destroy_buffer: None,
             destroy_image: None,
+            destroy_sampler: None,
             destroy_shader: None,
             destroy_pipeline: None,
             destroy_pass: None,
@@ -1603,40 +1729,36 @@ impl TraceHooks {
             commit: None,
             alloc_buffer: None,
             alloc_image: None,
+            alloc_sampler: None,
             alloc_shader: None,
             alloc_pipeline: None,
             alloc_pass: None,
             dealloc_buffer: None,
             dealloc_image: None,
+            dealloc_sampler: None,
             dealloc_shader: None,
             dealloc_pipeline: None,
             dealloc_pass: None,
             init_buffer: None,
             init_image: None,
+            init_sampler: None,
             init_shader: None,
             init_pipeline: None,
             init_pass: None,
             uninit_buffer: None,
             uninit_image: None,
+            uninit_sampler: None,
             uninit_shader: None,
             uninit_pipeline: None,
             uninit_pass: None,
             fail_buffer: None,
             fail_image: None,
+            fail_sampler: None,
             fail_shader: None,
             fail_pipeline: None,
             fail_pass: None,
             push_debug_group: None,
             pop_debug_group: None,
-            err_buffer_pool_exhausted: None,
-            err_image_pool_exhausted: None,
-            err_shader_pool_exhausted: None,
-            err_pipeline_pool_exhausted: None,
-            err_pass_pool_exhausted: None,
-            err_context_mismatch: None,
-            err_pass_invalid: None,
-            err_draw_invalid: None,
-            err_bindings_invalid: None,
         }
     }
 }
@@ -1705,6 +1827,21 @@ impl ImageInfo {
     }
 }
 impl Default for ImageInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct SamplerInfo {
+    pub slot: SlotInfo,
+}
+impl SamplerInfo {
+    pub const fn new() -> Self {
+        Self { slot: SlotInfo::new() }
+    }
+}
+impl Default for SamplerInfo {
     fn default() -> Self {
         Self::new()
     }
@@ -1807,6 +1944,7 @@ pub enum LogItem {
     WgpuActivateContextFixme,
     UninitBufferActiveContextMismatch,
     UninitImageActiveContextMismatch,
+    UninitSamplerActiveContextMismatch,
     UninitShaderActiveContextMismatch,
     UninitPipelineActiveContextMismatch,
     UninitPassActiveContextMismatch,
@@ -1815,26 +1953,31 @@ pub enum LogItem {
     TraceHooksNotEnabled,
     DeallocBufferInvalidState,
     DeallocImageInvalidState,
+    DeallocSamplerInvalidState,
     DeallocShaderInvalidState,
     DeallocPipelineInvalidState,
     DeallocPassInvalidState,
     InitBufferInvalidState,
     InitImageInvalidState,
+    InitSamplerInvalidState,
     InitShaderInvalidState,
     InitPipelineInvalidState,
     InitPassInvalidState,
     UninitBufferInvalidState,
     UninitImageInvalidState,
+    UninitSamplerInvalidState,
     UninitShaderInvalidState,
     UninitPipelineInvalidState,
     UninitPassInvalidState,
     FailBufferInvalidState,
     FailImageInvalidState,
+    FailSamplerInvalidState,
     FailShaderInvalidState,
     FailPipelineInvalidState,
     FailPassInvalidState,
     BufferPoolExhausted,
     ImagePoolExhausted,
+    SamplerPoolExhausted,
     ShaderPoolExhausted,
     PipelinePoolExhausted,
     PassPoolExhausted,
@@ -1861,6 +2004,9 @@ pub enum LogItem {
     ValidateImagedescInjectedNoData,
     ValidateImagedescDynamicNoData,
     ValidateImagedescCompressedImmutable,
+    ValidateSamplerdescCanary,
+    ValidateSamplerdescMinfilterNone,
+    ValidateSamplerdescMagfilterNone,
     ValidateShaderdescCanary,
     ValidateShaderdescSource,
     ValidateShaderdescBytecode,
@@ -1873,8 +2019,17 @@ pub enum LogItem {
     ValidateShaderdescUbSizeMismatch,
     ValidateShaderdescUbArrayCount,
     ValidateShaderdescUbStd140ArrayType,
-    ValidateShaderdescNoContImgs,
-    ValidateShaderdescImgName,
+    ValidateShaderdescNoContImages,
+    ValidateShaderdescNoContSamplers,
+    ValidateShaderdescImageSamplerPairImageSlotOutOfRange,
+    ValidateShaderdescImageSamplerPairSamplerSlotOutOfRange,
+    ValidateShaderdescImageSamplerPairNameRequiredForGl,
+    ValidateShaderdescImageSamplerPairHasNameButNotUsed,
+    ValidateShaderdescImageSamplerPairHasImageButNotUsed,
+    ValidateShaderdescImageSamplerPairHasSamplerButNotUsed,
+    ValidateShaderdescImageNotReferencedByImageSamplerPairs,
+    ValidateShaderdescSamplerNotReferencedByImageSamplerPairs,
+    ValidateShaderdescNoContImageSamplerPairs,
     ValidateShaderdescAttrSemantics,
     ValidateShaderdescAttrStringTooLong,
     ValidatePipelinedescCanary,
@@ -1883,7 +2038,7 @@ pub enum LogItem {
     ValidatePipelinedescLayoutStride4,
     ValidatePipelinedescAttrSemantics,
     ValidatePassdescCanary,
-    ValidatePassdescNoColorAtts,
+    ValidatePassdescNoAttachments,
     ValidatePassdescNoContColorAtts,
     ValidatePassdescImage,
     ValidatePassdescMiplevel,
@@ -1938,16 +2093,28 @@ pub enum LogItem {
     ValidateAbndIbExists,
     ValidateAbndIbType,
     ValidateAbndIbOverflow,
-    ValidateAbndVsImgs,
+    ValidateAbndVsExpectedImageBinding,
     ValidateAbndVsImgExists,
-    ValidateAbndVsImgTypes,
-    ValidateAbndVsImgMsaa,
-    ValidateAbndVsImgDepth,
-    ValidateAbndFsImgs,
+    ValidateAbndVsImageTypeMismatch,
+    ValidateAbndVsImageMsaa,
+    ValidateAbndVsUnexpectedImageBinding,
+    ValidateAbndVsExpectedSamplerBinding,
+    ValidateAbndVsUnexpectedSamplerCompareNever,
+    ValidateAbndVsExpectedSamplerCompareNever,
+    ValidateAbndVsUnexpectedSamplerBinding,
+    ValidateAbndVsSmpExists,
+    ValidateAbndVsImgSmpMipmaps,
+    ValidateAbndFsExpectedImageBinding,
     ValidateAbndFsImgExists,
-    ValidateAbndFsImgTypes,
-    ValidateAbndFsImgMsaa,
-    ValidateAbndFsImgDepth,
+    ValidateAbndFsImageTypeMismatch,
+    ValidateAbndFsImageMsaa,
+    ValidateAbndFsUnexpectedImageBinding,
+    ValidateAbndFsExpectedSamplerBinding,
+    ValidateAbndFsUnexpectedSamplerCompareNever,
+    ValidateAbndFsExpectedSamplerCompareNever,
+    ValidateAbndFsUnexpectedSamplerBinding,
+    ValidateAbndFsSmpExists,
+    ValidateAbndFsImgSmpMipmaps,
     ValidateAubNoPipeline,
     ValidateAubNoUbAtSlot,
     ValidateAubSize,
@@ -2155,15 +2322,16 @@ pub struct Desc {
     pub _start_canary: u32,
     pub buffer_pool_size: i32,
     pub image_pool_size: i32,
+    pub sampler_pool_size: i32,
     pub shader_pool_size: i32,
     pub pipeline_pool_size: i32,
     pub pass_pool_size: i32,
     pub context_pool_size: i32,
     pub uniform_buffer_size: i32,
     pub staging_buffer_size: i32,
-    pub sampler_cache_size: i32,
     pub max_commit_listeners: i32,
     pub disable_validation: bool,
+    pub mtl_force_managed_storage_mode: bool,
     pub allocator: Allocator,
     pub logger: Logger,
     pub context: ContextDesc,
@@ -2175,15 +2343,16 @@ impl Desc {
             _start_canary: 0,
             buffer_pool_size: 0,
             image_pool_size: 0,
+            sampler_pool_size: 0,
             shader_pool_size: 0,
             pipeline_pool_size: 0,
             pass_pool_size: 0,
             context_pool_size: 0,
             uniform_buffer_size: 0,
             staging_buffer_size: 0,
-            sampler_cache_size: 0,
             max_commit_listeners: 0,
             disable_validation: false,
+            mtl_force_managed_storage_mode: false,
             allocator: Allocator::new(),
             logger: Logger::new(),
             context: ContextDesc::new(),
@@ -2211,11 +2380,13 @@ pub mod ffi {
         pub fn sg_remove_commit_listener(listener: CommitListener) -> bool;
         pub fn sg_make_buffer(desc: *const BufferDesc) -> Buffer;
         pub fn sg_make_image(desc: *const ImageDesc) -> Image;
+        pub fn sg_make_sampler(desc: *const SamplerDesc) -> Sampler;
         pub fn sg_make_shader(desc: *const ShaderDesc) -> Shader;
         pub fn sg_make_pipeline(desc: *const PipelineDesc) -> Pipeline;
         pub fn sg_make_pass(desc: *const PassDesc) -> Pass;
         pub fn sg_destroy_buffer(buf: Buffer);
         pub fn sg_destroy_image(img: Image);
+        pub fn sg_destroy_sampler(smp: Sampler);
         pub fn sg_destroy_shader(shd: Shader);
         pub fn sg_destroy_pipeline(pip: Pipeline);
         pub fn sg_destroy_pass(pass: Pass);
@@ -2244,46 +2415,55 @@ pub mod ffi {
         pub fn sg_query_pixelformat(fmt: PixelFormat) -> PixelformatInfo;
         pub fn sg_query_buffer_state(buf: Buffer) -> ResourceState;
         pub fn sg_query_image_state(img: Image) -> ResourceState;
+        pub fn sg_query_sampler_state(smp: Sampler) -> ResourceState;
         pub fn sg_query_shader_state(shd: Shader) -> ResourceState;
         pub fn sg_query_pipeline_state(pip: Pipeline) -> ResourceState;
         pub fn sg_query_pass_state(pass: Pass) -> ResourceState;
         pub fn sg_query_buffer_info(buf: Buffer) -> BufferInfo;
         pub fn sg_query_image_info(img: Image) -> ImageInfo;
+        pub fn sg_query_sampler_info(smp: Sampler) -> SamplerInfo;
         pub fn sg_query_shader_info(shd: Shader) -> ShaderInfo;
         pub fn sg_query_pipeline_info(pip: Pipeline) -> PipelineInfo;
         pub fn sg_query_pass_info(pass: Pass) -> PassInfo;
         pub fn sg_query_buffer_desc(buf: Buffer) -> BufferDesc;
         pub fn sg_query_image_desc(img: Image) -> ImageDesc;
+        pub fn sg_query_sampler_desc(smp: Sampler) -> SamplerDesc;
         pub fn sg_query_shader_desc(shd: Shader) -> ShaderDesc;
         pub fn sg_query_pipeline_desc(pip: Pipeline) -> PipelineDesc;
         pub fn sg_query_pass_desc(pass: Pass) -> PassDesc;
         pub fn sg_query_buffer_defaults(desc: *const BufferDesc) -> BufferDesc;
         pub fn sg_query_image_defaults(desc: *const ImageDesc) -> ImageDesc;
+        pub fn sg_query_sampler_defaults(desc: *const SamplerDesc) -> SamplerDesc;
         pub fn sg_query_shader_defaults(desc: *const ShaderDesc) -> ShaderDesc;
         pub fn sg_query_pipeline_defaults(desc: *const PipelineDesc) -> PipelineDesc;
         pub fn sg_query_pass_defaults(desc: *const PassDesc) -> PassDesc;
         pub fn sg_alloc_buffer() -> Buffer;
         pub fn sg_alloc_image() -> Image;
+        pub fn sg_alloc_sampler() -> Sampler;
         pub fn sg_alloc_shader() -> Shader;
         pub fn sg_alloc_pipeline() -> Pipeline;
         pub fn sg_alloc_pass() -> Pass;
         pub fn sg_dealloc_buffer(buf: Buffer);
         pub fn sg_dealloc_image(img: Image);
+        pub fn sg_dealloc_sampler(smp: Sampler);
         pub fn sg_dealloc_shader(shd: Shader);
         pub fn sg_dealloc_pipeline(pip: Pipeline);
         pub fn sg_dealloc_pass(pass: Pass);
         pub fn sg_init_buffer(buf: Buffer, desc: *const BufferDesc);
         pub fn sg_init_image(img: Image, desc: *const ImageDesc);
+        pub fn sg_init_sampler(smg: Sampler, desc: *const SamplerDesc);
         pub fn sg_init_shader(shd: Shader, desc: *const ShaderDesc);
         pub fn sg_init_pipeline(pip: Pipeline, desc: *const PipelineDesc);
         pub fn sg_init_pass(pass: Pass, desc: *const PassDesc);
         pub fn sg_uninit_buffer(buf: Buffer);
         pub fn sg_uninit_image(img: Image);
+        pub fn sg_uninit_sampler(smp: Sampler);
         pub fn sg_uninit_shader(shd: Shader);
         pub fn sg_uninit_pipeline(pip: Pipeline);
         pub fn sg_uninit_pass(pass: Pass);
         pub fn sg_fail_buffer(buf: Buffer);
         pub fn sg_fail_image(img: Image);
+        pub fn sg_fail_sampler(smp: Sampler);
         pub fn sg_fail_shader(shd: Shader);
         pub fn sg_fail_pipeline(pip: Pipeline);
         pub fn sg_fail_pass(pass: Pass);
@@ -2341,6 +2521,10 @@ pub fn make_image(desc: &ImageDesc) -> Image {
     unsafe { ffi::sg_make_image(desc) }
 }
 #[inline]
+pub fn make_sampler(desc: &SamplerDesc) -> Sampler {
+    unsafe { ffi::sg_make_sampler(desc) }
+}
+#[inline]
 pub fn make_shader(desc: &ShaderDesc) -> Shader {
     unsafe { ffi::sg_make_shader(desc) }
 }
@@ -2359,6 +2543,10 @@ pub fn destroy_buffer(buf: Buffer) {
 #[inline]
 pub fn destroy_image(img: Image) {
     unsafe { ffi::sg_destroy_image(img) }
+}
+#[inline]
+pub fn destroy_sampler(smp: Sampler) {
+    unsafe { ffi::sg_destroy_sampler(smp) }
 }
 #[inline]
 pub fn destroy_shader(shd: Shader) {
@@ -2473,6 +2661,10 @@ pub fn query_image_state(img: Image) -> ResourceState {
     unsafe { ffi::sg_query_image_state(img) }
 }
 #[inline]
+pub fn query_sampler_state(smp: Sampler) -> ResourceState {
+    unsafe { ffi::sg_query_sampler_state(smp) }
+}
+#[inline]
 pub fn query_shader_state(shd: Shader) -> ResourceState {
     unsafe { ffi::sg_query_shader_state(shd) }
 }
@@ -2491,6 +2683,10 @@ pub fn query_buffer_info(buf: Buffer) -> BufferInfo {
 #[inline]
 pub fn query_image_info(img: Image) -> ImageInfo {
     unsafe { ffi::sg_query_image_info(img) }
+}
+#[inline]
+pub fn query_sampler_info(smp: Sampler) -> SamplerInfo {
+    unsafe { ffi::sg_query_sampler_info(smp) }
 }
 #[inline]
 pub fn query_shader_info(shd: Shader) -> ShaderInfo {
@@ -2513,6 +2709,10 @@ pub fn query_image_desc(img: Image) -> ImageDesc {
     unsafe { ffi::sg_query_image_desc(img) }
 }
 #[inline]
+pub fn query_sampler_desc(smp: Sampler) -> SamplerDesc {
+    unsafe { ffi::sg_query_sampler_desc(smp) }
+}
+#[inline]
 pub fn query_shader_desc(shd: Shader) -> ShaderDesc {
     unsafe { ffi::sg_query_shader_desc(shd) }
 }
@@ -2531,6 +2731,10 @@ pub fn query_buffer_defaults(desc: &BufferDesc) -> BufferDesc {
 #[inline]
 pub fn query_image_defaults(desc: &ImageDesc) -> ImageDesc {
     unsafe { ffi::sg_query_image_defaults(desc) }
+}
+#[inline]
+pub fn query_sampler_defaults(desc: &SamplerDesc) -> SamplerDesc {
+    unsafe { ffi::sg_query_sampler_defaults(desc) }
 }
 #[inline]
 pub fn query_shader_defaults(desc: &ShaderDesc) -> ShaderDesc {
@@ -2553,6 +2757,10 @@ pub fn alloc_image() -> Image {
     unsafe { ffi::sg_alloc_image() }
 }
 #[inline]
+pub fn alloc_sampler() -> Sampler {
+    unsafe { ffi::sg_alloc_sampler() }
+}
+#[inline]
 pub fn alloc_shader() -> Shader {
     unsafe { ffi::sg_alloc_shader() }
 }
@@ -2571,6 +2779,10 @@ pub fn dealloc_buffer(buf: Buffer) {
 #[inline]
 pub fn dealloc_image(img: Image) {
     unsafe { ffi::sg_dealloc_image(img) }
+}
+#[inline]
+pub fn dealloc_sampler(smp: Sampler) {
+    unsafe { ffi::sg_dealloc_sampler(smp) }
 }
 #[inline]
 pub fn dealloc_shader(shd: Shader) {
@@ -2593,6 +2805,10 @@ pub fn init_image(img: Image, desc: &ImageDesc) {
     unsafe { ffi::sg_init_image(img, desc) }
 }
 #[inline]
+pub fn init_sampler(smg: Sampler, desc: &SamplerDesc) {
+    unsafe { ffi::sg_init_sampler(smg, desc) }
+}
+#[inline]
 pub fn init_shader(shd: Shader, desc: &ShaderDesc) {
     unsafe { ffi::sg_init_shader(shd, desc) }
 }
@@ -2613,6 +2829,10 @@ pub fn uninit_image(img: Image) {
     unsafe { ffi::sg_uninit_image(img) }
 }
 #[inline]
+pub fn uninit_sampler(smp: Sampler) {
+    unsafe { ffi::sg_uninit_sampler(smp) }
+}
+#[inline]
 pub fn uninit_shader(shd: Shader) {
     unsafe { ffi::sg_uninit_shader(shd) }
 }
@@ -2631,6 +2851,10 @@ pub fn fail_buffer(buf: Buffer) {
 #[inline]
 pub fn fail_image(img: Image) {
     unsafe { ffi::sg_fail_image(img) }
+}
+#[inline]
+pub fn fail_sampler(smp: Sampler) {
+    unsafe { ffi::sg_fail_sampler(smp) }
 }
 #[inline]
 pub fn fail_shader(shd: Shader) {

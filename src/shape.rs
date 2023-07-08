@@ -336,11 +336,11 @@ pub mod ffi {
         pub fn sshape_element_range(buf: *const Buffer) -> ElementRange;
         pub fn sshape_vertex_buffer_desc(buf: *const Buffer) -> sg::BufferDesc;
         pub fn sshape_index_buffer_desc(buf: *const Buffer) -> sg::BufferDesc;
-        pub fn sshape_buffer_layout_desc() -> sg::BufferLayoutDesc;
-        pub fn sshape_position_attr_desc() -> sg::VertexAttrDesc;
-        pub fn sshape_normal_attr_desc() -> sg::VertexAttrDesc;
-        pub fn sshape_texcoord_attr_desc() -> sg::VertexAttrDesc;
-        pub fn sshape_color_attr_desc() -> sg::VertexAttrDesc;
+        pub fn sshape_vertex_buffer_layout_state() -> sg::VertexBufferLayoutState;
+        pub fn sshape_position_vertex_attr_state() -> sg::VertexAttrState;
+        pub fn sshape_normal_vertex_attr_state() -> sg::VertexAttrState;
+        pub fn sshape_texcoord_vertex_attr_state() -> sg::VertexAttrState;
+        pub fn sshape_color_vertex_attr_state() -> sg::VertexAttrState;
         pub fn sshape_color_4f(r: f32, g: f32, b: f32, a: f32) -> u32;
         pub fn sshape_color_3f(r: f32, g: f32, b: f32) -> u32;
         pub fn sshape_color_4b(r: u8, g: u8, b: u8, a: u8) -> u32;
@@ -402,24 +402,24 @@ pub fn index_buffer_desc(buf: &Buffer) -> sg::BufferDesc {
     unsafe { ffi::sshape_index_buffer_desc(buf) }
 }
 #[inline]
-pub fn buffer_layout_desc() -> sg::BufferLayoutDesc {
-    unsafe { ffi::sshape_buffer_layout_desc() }
+pub fn vertex_buffer_layout_state() -> sg::VertexBufferLayoutState {
+    unsafe { ffi::sshape_vertex_buffer_layout_state() }
 }
 #[inline]
-pub fn position_attr_desc() -> sg::VertexAttrDesc {
-    unsafe { ffi::sshape_position_attr_desc() }
+pub fn position_vertex_attr_state() -> sg::VertexAttrState {
+    unsafe { ffi::sshape_position_vertex_attr_state() }
 }
 #[inline]
-pub fn normal_attr_desc() -> sg::VertexAttrDesc {
-    unsafe { ffi::sshape_normal_attr_desc() }
+pub fn normal_vertex_attr_state() -> sg::VertexAttrState {
+    unsafe { ffi::sshape_normal_vertex_attr_state() }
 }
 #[inline]
-pub fn texcoord_attr_desc() -> sg::VertexAttrDesc {
-    unsafe { ffi::sshape_texcoord_attr_desc() }
+pub fn texcoord_vertex_attr_state() -> sg::VertexAttrState {
+    unsafe { ffi::sshape_texcoord_vertex_attr_state() }
 }
 #[inline]
-pub fn color_attr_desc() -> sg::VertexAttrDesc {
-    unsafe { ffi::sshape_color_attr_desc() }
+pub fn color_vertex_attr_state() -> sg::VertexAttrState {
+    unsafe { ffi::sshape_color_vertex_attr_state() }
 }
 #[inline]
 pub fn color_4f(r: f32, g: f32, b: f32, a: f32) -> u32 {
