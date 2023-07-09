@@ -80,7 +80,7 @@ fn select_sokol_backend(build: &mut cc::Build, config: &CompilationConfig) -> So
             BuildTarget::Linux => SokolBackend::Gl,
             BuildTarget::Windows => SokolBackend::D3d11,
             BuildTarget::Macos => SokolBackend::Metal,
-            BuildTarget::WasmEmscripten => SokolBackend::Gles2,
+            BuildTarget::WasmEmscripten => SokolBackend::Gles3,
         },
 
         "D3D11" => SokolBackend::D3d11,
@@ -253,7 +253,14 @@ fn make_sokol() {
             }
         },
 
-        BuildTarget::WasmEmscripten => {},
+        BuildTarget::WasmEmscripten => {
+            match backend {
+                SokolBackend::Gles3 => {
+                    println!("cargo:rustc-link-arg=-sUSE_WEBGL2");
+                },
+                _ => {},
+            }
+        },
     }
 
     build.compile("sokol-rust");
