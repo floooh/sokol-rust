@@ -253,13 +253,11 @@ fn make_sokol() {
             }
         },
 
-        BuildTarget::WasmEmscripten => {
-            match backend {
-                SokolBackend::Gles3 => {
-                    println!("cargo:rustc-link-arg=-sUSE_WEBGL2");
-                },
-                _ => {},
-            }
+        BuildTarget::WasmEmscripten => match backend {
+            SokolBackend::Gles3 => {
+                println!("cargo:rustc-link-arg=-sUSE_WEBGL2");
+            },
+            _ => {},
         },
     }
 
