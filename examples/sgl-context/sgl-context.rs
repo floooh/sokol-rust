@@ -21,6 +21,7 @@ struct Offscreen {
 
 struct Display {
     pass_action: sg::PassAction,
+    smp: sg::Sampler,
     sgl_pip: sgl::Pipeline,
 }
 
@@ -36,7 +37,11 @@ static mut STATE: State = State {
         img: sg::Image::new(),
         sgl_context: sgl::Context::new(),
     },
-    display: Display { pass_action: sg::PassAction::new(), sgl_pip: sgl::Pipeline::new() },
+    display: Display {
+        pass_action: sg::PassAction::new(),
+        smp: sg::Sampler::new(),
+        sgl_pip: sgl::Pipeline::new(),
+    },
 };
 
 extern "C" fn init() {
@@ -60,18 +65,15 @@ extern "C" fn init() {
         clear_value: sg::Color { r: 0.5, g: 0.7, b: 1.0, a: 1.0 },
         ..Default::default()
     };
-    state.display.sgl_pip = sgl::context_make_pipeline(
-        sgl::default_context(),
-        &sg::PipelineDesc {
-            cull_mode: sg::CullMode::Back,
-            depth: sg::DepthState {
-                write_enabled: true,
-                compare: sg::CompareFunc::LessEqual,
-                ..Default::default()
-            },
+    state.display.sgl_pip = sgl::context_make_pipeline(sgl::default_context(), &sg::PipelineDesc {
+        cull_mode: sg::CullMode::Back,
+        depth: sg::DepthState {
+            write_enabled: true,
+            compare: sg::CompareFunc::LessEqual,
             ..Default::default()
         },
-    );
+        ..Default::default()
+    });
 
     // create a sokol-gl context compatible with the offscreen render pass
     // (specific color pixel format, no depth-stencil-surface, no MSAA)
@@ -91,10 +93,6 @@ extern "C" fn init() {
         height: OFFSCREEN_HEIGHT,
         pixel_format: OFFSCREEN_PIXELFORMAT,
         sample_count: OFFSCREEN_SAMPLECOUNT,
-        wrap_u: sg::Wrap::ClampToEdge,
-        wrap_v: sg::Wrap::ClampToEdge,
-        min_filter: sg::Filter::Nearest,
-        mag_filter: sg::Filter::Nearest,
         ..Default::default()
     });
     let mut pass_desc = sg::PassDesc::new();
@@ -106,6 +104,15 @@ extern "C" fn init() {
         clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
         ..Default::default()
     };
+
+    // a sampler to sample the offscreen render target as texture
+    state.display.smp = sg::make_sampler(&sg::SamplerDesc {
+        wrap_u: sg::Wrap::ClampToEdge,
+        wrap_v: sg::Wrap::ClampToEdge,
+        min_filter: sg::Filter::Nearest,
+        mag_filter: sg::Filter::Nearest,
+        ..Default::default()
+    });
 }
 
 extern "C" fn frame() {
@@ -125,7 +132,7 @@ extern "C" fn frame() {
     sgl::set_context(sgl::default_context());
     sgl::defaults();
     sgl::enable_texture();
-    sgl::texture(state.offscreen.img);
+    sgl::texture(state.offscreen.img, state.display.smp);
     sgl::load_pipeline(state.display.sgl_pip);
     sgl::matrix_mode_projection();
     sgl::perspective(f32::to_radians(45.0), sapp::widthf() / sapp::heightf(), 0.1, 100.0);

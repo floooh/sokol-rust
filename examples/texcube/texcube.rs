@@ -115,22 +115,31 @@ extern "C" fn init() {
         0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF,
         0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF,
     ];
-    /* NOTE: SLOT_tex is provided by shader code generation */
+    // NOTE: SLOT_tex is provided by shader code generation
     let mut image_desc = sg::ImageDesc { width: 4, height: 4, ..Default::default() };
     image_desc.data.subimage[0][0] = sg::slice_as_range(&pixels);
-    state.bind.fs_images[shader::SLOT_TEX] = sg::make_image(&image_desc);
+    state.bind.fs.images[shader::SLOT_TEX] = sg::make_image(&image_desc);
+
+    // create a sampler object
+    state.bind.fs.samplers[shader::SLOT_SMP] = sg::make_sampler(&sg::SamplerDesc {
+        min_filter: sg::Filter::Nearest,
+        mag_filter: sg::Filter::Nearest,
+        wrap_u: sg::Wrap::Repeat,
+        wrap_v: sg::Wrap::Repeat,
+        ..Default::default()
+    });
 
     // shader and pipeline object
     #[rustfmt::skip]
     let pip = sg::make_pipeline(&sg::PipelineDesc {
         shader: sg::make_shader(&shader::texcube_shader_desc(sg::query_backend())),
-        layout: sg::LayoutDesc {
+        layout: sg::VertexLayoutState {
             attrs: {
-                let mut attrs = [sg::VertexAttrDesc::new(); sg::MAX_VERTEX_ATTRIBUTES];
+                let mut attrs = [sg::VertexAttrState::new(); sg::MAX_VERTEX_ATTRIBUTES];
 
-                attrs[shader::ATTR_VS_POS] = sg::VertexAttrDesc { format: sg::VertexFormat::Float3, ..Default::default() };
-                attrs[shader::ATTR_VS_COLOR0] = sg::VertexAttrDesc { format: sg::VertexFormat::Ubyte4n, ..Default::default() };
-                attrs[shader::ATTR_VS_TEXCOORD0] = sg::VertexAttrDesc { format: sg::VertexFormat::Short2n, ..Default::default() };
+                attrs[shader::ATTR_VS_POS] = sg::VertexAttrState { format: sg::VertexFormat::Float3, ..Default::default() };
+                attrs[shader::ATTR_VS_COLOR0] = sg::VertexAttrState { format: sg::VertexFormat::Ubyte4n, ..Default::default() };
+                attrs[shader::ATTR_VS_TEXCOORD0] = sg::VertexAttrState { format: sg::VertexFormat::Short2n, ..Default::default() };
 
                 attrs
             },

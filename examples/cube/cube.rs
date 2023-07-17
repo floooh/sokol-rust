@@ -87,7 +87,7 @@ extern "C" fn init() {
     state.pip = sg::make_pipeline(&sg::PipelineDesc {
         shader: sg::make_shader(&shader::cube_shader_desc(sg::query_backend())),
         layout: {
-            let mut layout = sg::LayoutDesc::new();
+            let mut layout = sg::VertexLayoutState::new();
             layout.buffers[0].stride = 28;
 
             layout.attrs[shader::ATTR_VS_POSITION].format = sg::VertexFormat::Float3;

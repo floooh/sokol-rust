@@ -198,12 +198,22 @@ extern "C" fn init() {
     fsq_pip_desc.layout.attrs[shader::ATTR_VS_FSQ_POS].format = sg::VertexFormat::Float2;
     state.fsq.pip = sg::make_pipeline(&fsq_pip_desc);
 
+    // a sampler to sample the offscreen render targets as texture
+    let smp = sg::make_sampler(&sg::SamplerDesc {
+        min_filter: sg::Filter::Linear,
+        mag_filter: sg::Filter::Linear,
+        wrap_u: sg::Wrap::ClampToEdge,
+        wrap_v: sg::Wrap::ClampToEdge,
+        ..Default::default()
+    });
+
     // resource bindings to render the fullscreen quad (composed from the
     // offscreen render target textures
     state.fsq.bind.vertex_buffers[0] = quad_vbuf;
     for i in 0..=2 {
-        state.fsq.bind.fs_images[i] = state.offscreen.pass_desc.color_attachments[i].image;
+        state.fsq.bind.fs.images[i] = state.offscreen.pass_desc.color_attachments[i].image;
     }
+    state.fsq.bind.fs.samplers[0] = smp;
 
     // shader, pipeline and resource bindings to render debug visualization quads
     let mut dbg_pip_desc = sg::PipelineDesc {
@@ -217,6 +227,7 @@ extern "C" fn init() {
     // resource bindings to render the debug visualization
     // (the required images will be filled in during rendering)
     state.dbg.bind.vertex_buffers[0] = quad_vbuf;
+    state.dbg.bind.fs.samplers[0] = smp;
 }
 
 extern "C" fn frame() {
@@ -255,7 +266,7 @@ extern "C" fn frame() {
     sg::apply_pipeline(state.dbg.pip);
     for i in 0..=2 {
         sg::apply_viewport(i * 100, 0, 100, 100, false);
-        state.dbg.bind.fs_images[0] = state.offscreen.pass_desc.color_attachments[i as usize].image;
+        state.dbg.bind.fs.images[0] = state.offscreen.pass_desc.color_attachments[i as usize].image;
         sg::apply_bindings(&state.dbg.bind);
         sg::draw(0, 4, 1);
     }
@@ -287,10 +298,6 @@ fn create_offscreen_pass(width: i32, height: i32) {
         render_target: true,
         width,
         height,
-        min_filter: sg::Filter::Linear,
-        mag_filter: sg::Filter::Linear,
-        wrap_u: sg::Wrap::ClampToEdge,
-        wrap_v: sg::Wrap::ClampToEdge,
         sample_count: OFFSCREEN_SAMPLE_COUNT as _,
 
         ..Default::default()
@@ -307,7 +314,7 @@ fn create_offscreen_pass(width: i32, height: i32) {
 
     // update the fullscreen-quad texture bindings
     for i in 0..=2 {
-        state.fsq.bind.fs_images[i] = state.offscreen.pass_desc.color_attachments[i].image;
+        state.fsq.bind.fs.images[i] = state.offscreen.pass_desc.color_attachments[i].image;
     }
 }
 
