@@ -2236,6 +2236,27 @@ impl Default for WgpuContextDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct GlContextDesc {
+    pub default_framebuffer_cb: Option<extern "C" fn() -> u32>,
+    pub default_framebuffer_userdata_cb: Option<extern "C" fn(*mut core::ffi::c_void) -> u32>,
+    pub user_data: *mut core::ffi::c_void,
+}
+impl GlContextDesc {
+    pub const fn new() -> Self {
+        Self {
+            default_framebuffer_cb: None,
+            default_framebuffer_userdata_cb: None,
+            user_data: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for GlContextDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ContextDesc {
     pub color_format: PixelFormat,
     pub depth_format: PixelFormat,
@@ -2243,6 +2264,7 @@ pub struct ContextDesc {
     pub metal: MetalContextDesc,
     pub d3d11: D3d11ContextDesc,
     pub wgpu: WgpuContextDesc,
+    pub gl: GlContextDesc,
 }
 impl ContextDesc {
     pub const fn new() -> Self {
@@ -2253,6 +2275,7 @@ impl ContextDesc {
             metal: MetalContextDesc::new(),
             d3d11: D3d11ContextDesc::new(),
             wgpu: WgpuContextDesc::new(),
+            gl: GlContextDesc::new(),
         }
     }
 }
