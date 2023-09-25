@@ -89,13 +89,13 @@ impl Default for Logger {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Allocator {
-    pub alloc: Option<extern "C" fn(usize, *mut core::ffi::c_void) -> *mut core::ffi::c_void>,
-    pub free: Option<extern "C" fn(*mut core::ffi::c_void, *mut core::ffi::c_void)>,
+    pub alloc_fn: Option<extern "C" fn(usize, *mut core::ffi::c_void) -> *mut core::ffi::c_void>,
+    pub free_fn: Option<extern "C" fn(*mut core::ffi::c_void, *mut core::ffi::c_void)>,
     pub user_data: *mut core::ffi::c_void,
 }
 impl Allocator {
     pub const fn new() -> Self {
-        Self { alloc: None, free: None, user_data: core::ptr::null_mut() }
+        Self { alloc_fn: None, free_fn: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Allocator {
