@@ -469,6 +469,7 @@ pub enum ImageSampleType {
     Depth,
     Sint,
     Uint,
+    UnfilterableFloat,
     Num,
 }
 impl ImageSampleType {
@@ -485,8 +486,9 @@ impl Default for ImageSampleType {
 #[repr(u32)]
 pub enum SamplerType {
     Default,
-    Sample,
-    Compare,
+    Filtering,
+    Nonfiltering,
+    Comparison,
     Num,
 }
 impl SamplerType {
@@ -1891,6 +1893,427 @@ impl Default for PassInfo {
         Self::new()
     }
 }
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsGl {
+    pub num_bind_buffer: u32,
+    pub num_active_texture: u32,
+    pub num_bind_texture: u32,
+    pub num_bind_sampler: u32,
+    pub num_use_program: u32,
+    pub num_render_state: u32,
+    pub num_vertex_attrib_pointer: u32,
+    pub num_vertex_attrib_divisor: u32,
+    pub num_enable_vertex_attrib_array: u32,
+    pub num_disable_vertex_attrib_array: u32,
+    pub num_uniform: u32,
+}
+impl FrameStatsGl {
+    pub const fn new() -> Self {
+        Self {
+            num_bind_buffer: 0,
+            num_active_texture: 0,
+            num_bind_texture: 0,
+            num_bind_sampler: 0,
+            num_use_program: 0,
+            num_render_state: 0,
+            num_vertex_attrib_pointer: 0,
+            num_vertex_attrib_divisor: 0,
+            num_enable_vertex_attrib_array: 0,
+            num_disable_vertex_attrib_array: 0,
+            num_uniform: 0,
+        }
+    }
+}
+impl Default for FrameStatsGl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsD3d11Pass {
+    pub num_om_set_render_targets: u32,
+    pub num_clear_render_target_view: u32,
+    pub num_clear_depth_stencil_view: u32,
+    pub num_resolve_subresource: u32,
+}
+impl FrameStatsD3d11Pass {
+    pub const fn new() -> Self {
+        Self {
+            num_om_set_render_targets: 0,
+            num_clear_render_target_view: 0,
+            num_clear_depth_stencil_view: 0,
+            num_resolve_subresource: 0,
+        }
+    }
+}
+impl Default for FrameStatsD3d11Pass {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsD3d11Pipeline {
+    pub num_rs_set_state: u32,
+    pub num_om_set_depth_stencil_state: u32,
+    pub num_om_set_blend_state: u32,
+    pub num_ia_set_primitive_topology: u32,
+    pub num_ia_set_input_layout: u32,
+    pub num_vs_set_shader: u32,
+    pub num_vs_set_constant_buffers: u32,
+    pub num_ps_set_shader: u32,
+    pub num_ps_set_constant_buffers: u32,
+}
+impl FrameStatsD3d11Pipeline {
+    pub const fn new() -> Self {
+        Self {
+            num_rs_set_state: 0,
+            num_om_set_depth_stencil_state: 0,
+            num_om_set_blend_state: 0,
+            num_ia_set_primitive_topology: 0,
+            num_ia_set_input_layout: 0,
+            num_vs_set_shader: 0,
+            num_vs_set_constant_buffers: 0,
+            num_ps_set_shader: 0,
+            num_ps_set_constant_buffers: 0,
+        }
+    }
+}
+impl Default for FrameStatsD3d11Pipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsD3d11Bindings {
+    pub num_ia_set_vertex_buffers: u32,
+    pub num_ia_set_index_buffer: u32,
+    pub num_vs_set_shader_resources: u32,
+    pub num_ps_set_shader_resources: u32,
+    pub num_vs_set_samplers: u32,
+    pub num_ps_set_samplers: u32,
+}
+impl FrameStatsD3d11Bindings {
+    pub const fn new() -> Self {
+        Self {
+            num_ia_set_vertex_buffers: 0,
+            num_ia_set_index_buffer: 0,
+            num_vs_set_shader_resources: 0,
+            num_ps_set_shader_resources: 0,
+            num_vs_set_samplers: 0,
+            num_ps_set_samplers: 0,
+        }
+    }
+}
+impl Default for FrameStatsD3d11Bindings {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsD3d11Uniforms {
+    pub num_update_subresource: u32,
+}
+impl FrameStatsD3d11Uniforms {
+    pub const fn new() -> Self {
+        Self { num_update_subresource: 0 }
+    }
+}
+impl Default for FrameStatsD3d11Uniforms {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsD3d11Draw {
+    pub num_draw_indexed_instanced: u32,
+    pub num_draw_indexed: u32,
+    pub num_draw_instanced: u32,
+    pub num_draw: u32,
+}
+impl FrameStatsD3d11Draw {
+    pub const fn new() -> Self {
+        Self {
+            num_draw_indexed_instanced: 0,
+            num_draw_indexed: 0,
+            num_draw_instanced: 0,
+            num_draw: 0,
+        }
+    }
+}
+impl Default for FrameStatsD3d11Draw {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsD3d11 {
+    pub pass: FrameStatsD3d11Pass,
+    pub pipeline: FrameStatsD3d11Pipeline,
+    pub bindings: FrameStatsD3d11Bindings,
+    pub uniforms: FrameStatsD3d11Uniforms,
+    pub draw: FrameStatsD3d11Draw,
+    pub num_map: u32,
+    pub num_unmap: u32,
+}
+impl FrameStatsD3d11 {
+    pub const fn new() -> Self {
+        Self {
+            pass: FrameStatsD3d11Pass::new(),
+            pipeline: FrameStatsD3d11Pipeline::new(),
+            bindings: FrameStatsD3d11Bindings::new(),
+            uniforms: FrameStatsD3d11Uniforms::new(),
+            draw: FrameStatsD3d11Draw::new(),
+            num_map: 0,
+            num_unmap: 0,
+        }
+    }
+}
+impl Default for FrameStatsD3d11 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsMetalIdpool {
+    pub num_added: u32,
+    pub num_released: u32,
+    pub num_garbage_collected: u32,
+}
+impl FrameStatsMetalIdpool {
+    pub const fn new() -> Self {
+        Self { num_added: 0, num_released: 0, num_garbage_collected: 0 }
+    }
+}
+impl Default for FrameStatsMetalIdpool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsMetalPipeline {
+    pub num_set_blend_color: u32,
+    pub num_set_cull_mode: u32,
+    pub num_set_front_facing_winding: u32,
+    pub num_set_stencil_reference_value: u32,
+    pub num_set_depth_bias: u32,
+    pub num_set_render_pipeline_state: u32,
+    pub num_set_depth_stencil_state: u32,
+}
+impl FrameStatsMetalPipeline {
+    pub const fn new() -> Self {
+        Self {
+            num_set_blend_color: 0,
+            num_set_cull_mode: 0,
+            num_set_front_facing_winding: 0,
+            num_set_stencil_reference_value: 0,
+            num_set_depth_bias: 0,
+            num_set_render_pipeline_state: 0,
+            num_set_depth_stencil_state: 0,
+        }
+    }
+}
+impl Default for FrameStatsMetalPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsMetalBindings {
+    pub num_set_vertex_buffer: u32,
+    pub num_set_vertex_texture: u32,
+    pub num_set_vertex_sampler_state: u32,
+    pub num_set_fragment_texture: u32,
+    pub num_set_fragment_sampler_state: u32,
+}
+impl FrameStatsMetalBindings {
+    pub const fn new() -> Self {
+        Self {
+            num_set_vertex_buffer: 0,
+            num_set_vertex_texture: 0,
+            num_set_vertex_sampler_state: 0,
+            num_set_fragment_texture: 0,
+            num_set_fragment_sampler_state: 0,
+        }
+    }
+}
+impl Default for FrameStatsMetalBindings {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsMetalUniforms {
+    pub num_set_vertex_buffer_offset: u32,
+    pub num_set_fragment_buffer_offset: u32,
+}
+impl FrameStatsMetalUniforms {
+    pub const fn new() -> Self {
+        Self { num_set_vertex_buffer_offset: 0, num_set_fragment_buffer_offset: 0 }
+    }
+}
+impl Default for FrameStatsMetalUniforms {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsMetal {
+    pub idpool: FrameStatsMetalIdpool,
+    pub pipeline: FrameStatsMetalPipeline,
+    pub bindings: FrameStatsMetalBindings,
+    pub uniforms: FrameStatsMetalUniforms,
+}
+impl FrameStatsMetal {
+    pub const fn new() -> Self {
+        Self {
+            idpool: FrameStatsMetalIdpool::new(),
+            pipeline: FrameStatsMetalPipeline::new(),
+            bindings: FrameStatsMetalBindings::new(),
+            uniforms: FrameStatsMetalUniforms::new(),
+        }
+    }
+}
+impl Default for FrameStatsMetal {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsWgpuUniforms {
+    pub num_set_bindgroup: u32,
+    pub size_write_buffer: u32,
+}
+impl FrameStatsWgpuUniforms {
+    pub const fn new() -> Self {
+        Self { num_set_bindgroup: 0, size_write_buffer: 0 }
+    }
+}
+impl Default for FrameStatsWgpuUniforms {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsWgpuBindings {
+    pub num_set_vertex_buffer: u32,
+    pub num_skip_redundant_vertex_buffer: u32,
+    pub num_set_index_buffer: u32,
+    pub num_skip_redundant_index_buffer: u32,
+    pub num_create_bindgroup: u32,
+    pub num_discard_bindgroup: u32,
+    pub num_set_bindgroup: u32,
+    pub num_skip_redundant_bindgroup: u32,
+    pub num_bindgroup_cache_hits: u32,
+    pub num_bindgroup_cache_misses: u32,
+    pub num_bindgroup_cache_collisions: u32,
+    pub num_bindgroup_cache_hash_vs_key_mismatch: u32,
+}
+impl FrameStatsWgpuBindings {
+    pub const fn new() -> Self {
+        Self {
+            num_set_vertex_buffer: 0,
+            num_skip_redundant_vertex_buffer: 0,
+            num_set_index_buffer: 0,
+            num_skip_redundant_index_buffer: 0,
+            num_create_bindgroup: 0,
+            num_discard_bindgroup: 0,
+            num_set_bindgroup: 0,
+            num_skip_redundant_bindgroup: 0,
+            num_bindgroup_cache_hits: 0,
+            num_bindgroup_cache_misses: 0,
+            num_bindgroup_cache_collisions: 0,
+            num_bindgroup_cache_hash_vs_key_mismatch: 0,
+        }
+    }
+}
+impl Default for FrameStatsWgpuBindings {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsWgpu {
+    pub uniforms: FrameStatsWgpuUniforms,
+    pub bindings: FrameStatsWgpuBindings,
+}
+impl FrameStatsWgpu {
+    pub const fn new() -> Self {
+        Self { uniforms: FrameStatsWgpuUniforms::new(), bindings: FrameStatsWgpuBindings::new() }
+    }
+}
+impl Default for FrameStatsWgpu {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStats {
+    pub frame_index: u32,
+    pub num_passes: u32,
+    pub num_apply_viewport: u32,
+    pub num_apply_scissor_rect: u32,
+    pub num_apply_pipeline: u32,
+    pub num_apply_bindings: u32,
+    pub num_apply_uniforms: u32,
+    pub num_draw: u32,
+    pub num_update_buffer: u32,
+    pub num_append_buffer: u32,
+    pub num_update_image: u32,
+    pub size_apply_uniforms: u32,
+    pub size_update_buffer: u32,
+    pub size_append_buffer: u32,
+    pub size_update_image: u32,
+    pub gl: FrameStatsGl,
+    pub d3d11: FrameStatsD3d11,
+    pub metal: FrameStatsMetal,
+    pub wgpu: FrameStatsWgpu,
+}
+impl FrameStats {
+    pub const fn new() -> Self {
+        Self {
+            frame_index: 0,
+            num_passes: 0,
+            num_apply_viewport: 0,
+            num_apply_scissor_rect: 0,
+            num_apply_pipeline: 0,
+            num_apply_bindings: 0,
+            num_apply_uniforms: 0,
+            num_draw: 0,
+            num_update_buffer: 0,
+            num_append_buffer: 0,
+            num_update_image: 0,
+            size_apply_uniforms: 0,
+            size_update_buffer: 0,
+            size_append_buffer: 0,
+            size_update_image: 0,
+            gl: FrameStatsGl::new(),
+            d3d11: FrameStatsD3d11::new(),
+            metal: FrameStatsMetal::new(),
+            wgpu: FrameStatsWgpu::new(),
+        }
+    }
+}
+impl Default for FrameStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(i32)]
 pub enum LogItem {
@@ -1941,11 +2364,21 @@ pub enum LogItem {
     MetalCreateRpsFailed,
     MetalCreateRpsOutput,
     MetalCreateDssFailed,
-    WgpuMapUniformBufferFailed,
-    WgpuStagingBufferFullCopyToBuffer,
-    WgpuStagingBufferFullCopyToTexture,
-    WgpuResetStateCacheFixme,
-    WgpuActivateContextFixme,
+    WgpuBindgroupsPoolExhausted,
+    WgpuBindgroupscacheSizeGreaterOne,
+    WgpuBindgroupscacheSizePow2,
+    WgpuCreatebindgroupFailed,
+    WgpuCreateBufferFailed,
+    WgpuCreateTextureFailed,
+    WgpuCreateTextureViewFailed,
+    WgpuCreateSamplerFailed,
+    WgpuCreateShaderModuleFailed,
+    WgpuShaderTooManyImages,
+    WgpuShaderTooManySamplers,
+    WgpuShaderCreateBindgroupLayoutFailed,
+    WgpuCreatePipelineLayoutFailed,
+    WgpuCreateRenderPipelineFailed,
+    WgpuPassCreateTextureViewFailed,
     UninitBufferActiveContextMismatch,
     UninitImageActiveContextMismatch,
     UninitSamplerActiveContextMismatch,
@@ -2011,6 +2444,7 @@ pub enum LogItem {
     ValidateSamplerdescCanary,
     ValidateSamplerdescMinfilterNone,
     ValidateSamplerdescMagfilterNone,
+    ValidateSamplerdescAnistropicRequiresLinearFiltering,
     ValidateShaderdescCanary,
     ValidateShaderdescSource,
     ValidateShaderdescBytecode,
@@ -2031,6 +2465,8 @@ pub enum LogItem {
     ValidateShaderdescImageSamplerPairHasNameButNotUsed,
     ValidateShaderdescImageSamplerPairHasImageButNotUsed,
     ValidateShaderdescImageSamplerPairHasSamplerButNotUsed,
+    ValidateShaderdescNonfilteringSamplerRequired,
+    ValidateShaderdescComparisonSamplerRequired,
     ValidateShaderdescImageNotReferencedByImageSamplerPairs,
     ValidateShaderdescSamplerNotReferencedByImageSamplerPairs,
     ValidateShaderdescNoContImageSamplerPairs,
@@ -2101,10 +2537,13 @@ pub enum LogItem {
     ValidateAbndVsImgExists,
     ValidateAbndVsImageTypeMismatch,
     ValidateAbndVsImageMsaa,
+    ValidateAbndVsExpectedFilterableImage,
+    ValidateAbndVsExpectedDepthImage,
     ValidateAbndVsUnexpectedImageBinding,
     ValidateAbndVsExpectedSamplerBinding,
     ValidateAbndVsUnexpectedSamplerCompareNever,
     ValidateAbndVsExpectedSamplerCompareNever,
+    ValidateAbndVsExpectedNonfilteringSampler,
     ValidateAbndVsUnexpectedSamplerBinding,
     ValidateAbndVsSmpExists,
     ValidateAbndVsImgSmpMipmaps,
@@ -2112,10 +2551,13 @@ pub enum LogItem {
     ValidateAbndFsImgExists,
     ValidateAbndFsImageTypeMismatch,
     ValidateAbndFsImageMsaa,
+    ValidateAbndFsExpectedFilterableImage,
+    ValidateAbndFsExpectedDepthImage,
     ValidateAbndFsUnexpectedImageBinding,
     ValidateAbndFsExpectedSamplerBinding,
     ValidateAbndFsUnexpectedSamplerCompareNever,
     ValidateAbndFsExpectedSamplerCompareNever,
+    ValidateAbndFsExpectedNonfilteringSampler,
     ValidateAbndFsUnexpectedSamplerBinding,
     ValidateAbndFsSmpExists,
     ValidateAbndFsImgSmpMipmaps,
@@ -2355,10 +2797,11 @@ pub struct Desc {
     pub pass_pool_size: i32,
     pub context_pool_size: i32,
     pub uniform_buffer_size: i32,
-    pub staging_buffer_size: i32,
     pub max_commit_listeners: i32,
     pub disable_validation: bool,
     pub mtl_force_managed_storage_mode: bool,
+    pub wgpu_disable_bindgroups_cache: bool,
+    pub wgpu_bindgroups_cache_size: i32,
     pub allocator: Allocator,
     pub logger: Logger,
     pub context: ContextDesc,
@@ -2376,10 +2819,11 @@ impl Desc {
             pass_pool_size: 0,
             context_pool_size: 0,
             uniform_buffer_size: 0,
-            staging_buffer_size: 0,
             max_commit_listeners: 0,
             disable_validation: false,
             mtl_force_managed_storage_mode: false,
+            wgpu_disable_bindgroups_cache: false,
+            wgpu_bindgroups_cache_size: 0,
             allocator: Allocator::new(),
             logger: Logger::new(),
             context: ContextDesc::new(),
@@ -2494,12 +2938,20 @@ pub mod ffi {
         pub fn sg_fail_shader(shd: Shader);
         pub fn sg_fail_pipeline(pip: Pipeline);
         pub fn sg_fail_pass(pass: Pass);
+        pub fn sg_enable_frame_stats();
+        pub fn sg_disable_frame_stats();
+        pub fn sg_frame_stats_enabled() -> bool;
+        pub fn sg_query_frame_stats() -> FrameStats;
         pub fn sg_setup_context() -> Context;
         pub fn sg_activate_context(ctx_id: Context);
         pub fn sg_discard_context(ctx_id: Context);
         pub fn sg_d3d11_device() -> *const core::ffi::c_void;
         pub fn sg_mtl_device() -> *const core::ffi::c_void;
         pub fn sg_mtl_render_command_encoder() -> *const core::ffi::c_void;
+        pub fn sg_wgpu_device() -> *const core::ffi::c_void;
+        pub fn sg_wgpu_queue() -> *const core::ffi::c_void;
+        pub fn sg_wgpu_command_encoder() -> *const core::ffi::c_void;
+        pub fn sg_wgpu_render_pass_encoder() -> *const core::ffi::c_void;
     }
 }
 #[inline]
@@ -2896,6 +3348,22 @@ pub fn fail_pass(pass: Pass) {
     unsafe { ffi::sg_fail_pass(pass) }
 }
 #[inline]
+pub fn enable_frame_stats() {
+    unsafe { ffi::sg_enable_frame_stats() }
+}
+#[inline]
+pub fn disable_frame_stats() {
+    unsafe { ffi::sg_disable_frame_stats() }
+}
+#[inline]
+pub fn frame_stats_enabled() -> bool {
+    unsafe { ffi::sg_frame_stats_enabled() }
+}
+#[inline]
+pub fn query_frame_stats() -> FrameStats {
+    unsafe { ffi::sg_query_frame_stats() }
+}
+#[inline]
 pub fn setup_context() -> Context {
     unsafe { ffi::sg_setup_context() }
 }
@@ -2918,4 +3386,20 @@ pub fn mtl_device() -> *const core::ffi::c_void {
 #[inline]
 pub fn mtl_render_command_encoder() -> *const core::ffi::c_void {
     unsafe { ffi::sg_mtl_render_command_encoder() }
+}
+#[inline]
+pub fn wgpu_device() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_wgpu_device() }
+}
+#[inline]
+pub fn wgpu_queue() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_wgpu_queue() }
+}
+#[inline]
+pub fn wgpu_command_encoder() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_wgpu_command_encoder() }
+}
+#[inline]
+pub fn wgpu_render_pass_encoder() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_wgpu_render_pass_encoder() }
 }

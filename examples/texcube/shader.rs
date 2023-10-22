@@ -32,7 +32,7 @@ use sokol::gfx as sg;
                     Multisampled: false
                     Bind slot: SLOT_tex = 0
                 Sampler 'smp':
-                    Type: sg::SamplerType::Sample
+                    Type: sg::SamplerType::Filtering
                     Bind slot: SLOT_smp = 0
                 Image Sampler Pair 'tex_smp':
                     Image: tex
@@ -443,7 +443,7 @@ pub fn texcube_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
             desc.fs.images[0].sample_type = sg::ImageSampleType::Float;
             desc.fs.samplers[0].used = true;
-            desc.fs.samplers[0].sampler_type = sg::SamplerType::Sample;
+            desc.fs.samplers[0].sampler_type = sg::SamplerType::Filtering;
             desc.fs.image_sampler_pairs[0].used = true;
             desc.fs.image_sampler_pairs[0].image_slot = 0;
             desc.fs.image_sampler_pairs[0].sampler_slot = 0;
@@ -470,7 +470,7 @@ pub fn texcube_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
             desc.fs.images[0].sample_type = sg::ImageSampleType::Float;
             desc.fs.samplers[0].used = true;
-            desc.fs.samplers[0].sampler_type = sg::SamplerType::Sample;
+            desc.fs.samplers[0].sampler_type = sg::SamplerType::Filtering;
             desc.fs.image_sampler_pairs[0].used = true;
             desc.fs.image_sampler_pairs[0].image_slot = 0;
             desc.fs.image_sampler_pairs[0].sampler_slot = 0;
@@ -488,7 +488,7 @@ pub fn texcube_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
             desc.fs.images[0].sample_type = sg::ImageSampleType::Float;
             desc.fs.samplers[0].used = true;
-            desc.fs.samplers[0].sampler_type = sg::SamplerType::Sample;
+            desc.fs.samplers[0].sampler_type = sg::SamplerType::Filtering;
             desc.fs.image_sampler_pairs[0].used = true;
             desc.fs.image_sampler_pairs[0].image_slot = 0;
             desc.fs.image_sampler_pairs[0].sampler_slot = 0;
