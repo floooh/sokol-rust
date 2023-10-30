@@ -1116,6 +1116,7 @@ pub struct ImageDesc {
     pub d3d11_texture: *const core::ffi::c_void,
     pub d3d11_shader_resource_view: *const core::ffi::c_void,
     pub wgpu_texture: *const core::ffi::c_void,
+    pub wgpu_texture_view: *const core::ffi::c_void,
     pub _end_canary: u32,
 }
 impl ImageDesc {
@@ -1139,6 +1140,7 @@ impl ImageDesc {
             d3d11_texture: core::ptr::null(),
             d3d11_shader_resource_view: core::ptr::null(),
             wgpu_texture: core::ptr::null(),
+            wgpu_texture_view: core::ptr::null(),
             _end_canary: 0,
         }
     }
@@ -2838,6 +2840,391 @@ impl Default for Desc {
         Self::new()
     }
 }
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11BufferInfo {
+    pub buf: *const core::ffi::c_void,
+}
+impl D3d11BufferInfo {
+    pub const fn new() -> Self {
+        Self { buf: core::ptr::null() }
+    }
+}
+impl Default for D3d11BufferInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11ImageInfo {
+    pub tex2d: *const core::ffi::c_void,
+    pub tex3d: *const core::ffi::c_void,
+    pub res: *const core::ffi::c_void,
+    pub srv: *const core::ffi::c_void,
+}
+impl D3d11ImageInfo {
+    pub const fn new() -> Self {
+        Self {
+            tex2d: core::ptr::null(),
+            tex3d: core::ptr::null(),
+            res: core::ptr::null(),
+            srv: core::ptr::null(),
+        }
+    }
+}
+impl Default for D3d11ImageInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11SamplerInfo {
+    pub smp: *const core::ffi::c_void,
+}
+impl D3d11SamplerInfo {
+    pub const fn new() -> Self {
+        Self { smp: core::ptr::null() }
+    }
+}
+impl Default for D3d11SamplerInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11ShaderInfo {
+    pub vs_cbufs: [*const core::ffi::c_void; 4],
+    pub fs_cbufs: [*const core::ffi::c_void; 4],
+    pub vs: *const core::ffi::c_void,
+    pub fs: *const core::ffi::c_void,
+}
+impl D3d11ShaderInfo {
+    pub const fn new() -> Self {
+        Self {
+            vs_cbufs: [core::ptr::null(); 4],
+            fs_cbufs: [core::ptr::null(); 4],
+            vs: core::ptr::null(),
+            fs: core::ptr::null(),
+        }
+    }
+}
+impl Default for D3d11ShaderInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11PipelineInfo {
+    pub il: *const core::ffi::c_void,
+    pub rs: *const core::ffi::c_void,
+    pub dss: *const core::ffi::c_void,
+    pub bs: *const core::ffi::c_void,
+}
+impl D3d11PipelineInfo {
+    pub const fn new() -> Self {
+        Self {
+            il: core::ptr::null(),
+            rs: core::ptr::null(),
+            dss: core::ptr::null(),
+            bs: core::ptr::null(),
+        }
+    }
+}
+impl Default for D3d11PipelineInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11PassInfo {
+    pub color_rtv: [*const core::ffi::c_void; 4],
+    pub resolve_rtv: [*const core::ffi::c_void; 4],
+    pub dsv: *const core::ffi::c_void,
+}
+impl D3d11PassInfo {
+    pub const fn new() -> Self {
+        Self {
+            color_rtv: [core::ptr::null(); 4],
+            resolve_rtv: [core::ptr::null(); 4],
+            dsv: core::ptr::null(),
+        }
+    }
+}
+impl Default for D3d11PassInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct MtlBufferInfo {
+    pub buf: [*const core::ffi::c_void; 2],
+    pub active_slot: i32,
+}
+impl MtlBufferInfo {
+    pub const fn new() -> Self {
+        Self { buf: [core::ptr::null(); 2], active_slot: 0 }
+    }
+}
+impl Default for MtlBufferInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct MtlImageInfo {
+    pub tex: [*const core::ffi::c_void; 2],
+    pub active_slot: i32,
+}
+impl MtlImageInfo {
+    pub const fn new() -> Self {
+        Self { tex: [core::ptr::null(); 2], active_slot: 0 }
+    }
+}
+impl Default for MtlImageInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct MtlSamplerInfo {
+    pub smp: *const core::ffi::c_void,
+}
+impl MtlSamplerInfo {
+    pub const fn new() -> Self {
+        Self { smp: core::ptr::null() }
+    }
+}
+impl Default for MtlSamplerInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct MtlShaderInfo {
+    pub vs_lib: *const core::ffi::c_void,
+    pub fs_lib: *const core::ffi::c_void,
+    pub vs_func: *const core::ffi::c_void,
+    pub fs_func: *const core::ffi::c_void,
+}
+impl MtlShaderInfo {
+    pub const fn new() -> Self {
+        Self {
+            vs_lib: core::ptr::null(),
+            fs_lib: core::ptr::null(),
+            vs_func: core::ptr::null(),
+            fs_func: core::ptr::null(),
+        }
+    }
+}
+impl Default for MtlShaderInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct MtlPipelineInfo {
+    pub rps: *const core::ffi::c_void,
+    pub dss: *const core::ffi::c_void,
+}
+impl MtlPipelineInfo {
+    pub const fn new() -> Self {
+        Self { rps: core::ptr::null(), dss: core::ptr::null() }
+    }
+}
+impl Default for MtlPipelineInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuBufferInfo {
+    pub buf: *const core::ffi::c_void,
+}
+impl WgpuBufferInfo {
+    pub const fn new() -> Self {
+        Self { buf: core::ptr::null() }
+    }
+}
+impl Default for WgpuBufferInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuImageInfo {
+    pub tex: *const core::ffi::c_void,
+    pub view: *const core::ffi::c_void,
+}
+impl WgpuImageInfo {
+    pub const fn new() -> Self {
+        Self { tex: core::ptr::null(), view: core::ptr::null() }
+    }
+}
+impl Default for WgpuImageInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuSamplerInfo {
+    pub smp: *const core::ffi::c_void,
+}
+impl WgpuSamplerInfo {
+    pub const fn new() -> Self {
+        Self { smp: core::ptr::null() }
+    }
+}
+impl Default for WgpuSamplerInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuShaderInfo {
+    pub vs_mod: *const core::ffi::c_void,
+    pub fs_mod: *const core::ffi::c_void,
+    pub bgl: *const core::ffi::c_void,
+}
+impl WgpuShaderInfo {
+    pub const fn new() -> Self {
+        Self { vs_mod: core::ptr::null(), fs_mod: core::ptr::null(), bgl: core::ptr::null() }
+    }
+}
+impl Default for WgpuShaderInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuPipelineInfo {
+    pub pip: *const core::ffi::c_void,
+}
+impl WgpuPipelineInfo {
+    pub const fn new() -> Self {
+        Self { pip: core::ptr::null() }
+    }
+}
+impl Default for WgpuPipelineInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuPassInfo {
+    pub color_view: [*const core::ffi::c_void; 4],
+    pub resolve_view: [*const core::ffi::c_void; 4],
+    pub ds_view: *const core::ffi::c_void,
+}
+impl WgpuPassInfo {
+    pub const fn new() -> Self {
+        Self {
+            color_view: [core::ptr::null(); 4],
+            resolve_view: [core::ptr::null(); 4],
+            ds_view: core::ptr::null(),
+        }
+    }
+}
+impl Default for WgpuPassInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlBufferInfo {
+    pub buf: [u32; 2],
+    pub active_slot: i32,
+}
+impl GlBufferInfo {
+    pub const fn new() -> Self {
+        Self { buf: [0; 2], active_slot: 0 }
+    }
+}
+impl Default for GlBufferInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlImageInfo {
+    pub tex: [u32; 2],
+    pub tex_target: u32,
+    pub msaa_render_buffer: u32,
+    pub active_slot: i32,
+}
+impl GlImageInfo {
+    pub const fn new() -> Self {
+        Self { tex: [0; 2], tex_target: 0, msaa_render_buffer: 0, active_slot: 0 }
+    }
+}
+impl Default for GlImageInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlSamplerInfo {
+    pub smp: u32,
+}
+impl GlSamplerInfo {
+    pub const fn new() -> Self {
+        Self { smp: 0 }
+    }
+}
+impl Default for GlSamplerInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlShaderInfo {
+    pub prog: u32,
+}
+impl GlShaderInfo {
+    pub const fn new() -> Self {
+        Self { prog: 0 }
+    }
+}
+impl Default for GlShaderInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlPassInfo {
+    pub frame_buffer: u32,
+    pub msaa_resolve_framebuffer: [u32; 4],
+}
+impl GlPassInfo {
+    pub const fn new() -> Self {
+        Self { frame_buffer: 0, msaa_resolve_framebuffer: [0; 4] }
+    }
+}
+impl Default for GlPassInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 pub mod ffi {
     #![allow(unused_imports)]
     use super::*;
@@ -2948,12 +3335,35 @@ pub mod ffi {
         pub fn sg_activate_context(ctx_id: Context);
         pub fn sg_discard_context(ctx_id: Context);
         pub fn sg_d3d11_device() -> *const core::ffi::c_void;
+        pub fn sg_d3d11_device_context() -> *const core::ffi::c_void;
+        pub fn sg_d3d11_query_buffer_info(buf: Buffer) -> D3d11BufferInfo;
+        pub fn sg_d3d11_query_image_info(img: Image) -> D3d11ImageInfo;
+        pub fn sg_d3d11_query_sampler_info(smp: Sampler) -> D3d11SamplerInfo;
+        pub fn sg_d3d11_query_shader_info(shd: Shader) -> D3d11ShaderInfo;
+        pub fn sg_d3d11_query_pipeline_info(pip: Pipeline) -> D3d11PipelineInfo;
+        pub fn sg_d3d11_query_pass_info(pass: Pass) -> D3d11PassInfo;
         pub fn sg_mtl_device() -> *const core::ffi::c_void;
         pub fn sg_mtl_render_command_encoder() -> *const core::ffi::c_void;
+        pub fn sg_mtl_query_buffer_info(buf: Buffer) -> MtlBufferInfo;
+        pub fn sg_mtl_query_image_info(img: Image) -> MtlImageInfo;
+        pub fn sg_mtl_query_sampler_info(smp: Sampler) -> MtlSamplerInfo;
+        pub fn sg_mtl_query_shader_info(shd: Shader) -> MtlShaderInfo;
+        pub fn sg_mtl_query_pipeline_info(pip: Pipeline) -> MtlPipelineInfo;
         pub fn sg_wgpu_device() -> *const core::ffi::c_void;
         pub fn sg_wgpu_queue() -> *const core::ffi::c_void;
         pub fn sg_wgpu_command_encoder() -> *const core::ffi::c_void;
         pub fn sg_wgpu_render_pass_encoder() -> *const core::ffi::c_void;
+        pub fn sg_wgpu_query_buffer_info(buf: Buffer) -> WgpuBufferInfo;
+        pub fn sg_wgpu_query_image_info(img: Image) -> WgpuImageInfo;
+        pub fn sg_wgpu_query_sampler_info(smp: Sampler) -> WgpuSamplerInfo;
+        pub fn sg_wgpu_query_shader_info(shd: Shader) -> WgpuShaderInfo;
+        pub fn sg_wgpu_query_pipeline_info(pip: Pipeline) -> WgpuPipelineInfo;
+        pub fn sg_wgpu_query_pass_info(pass: Pass) -> WgpuPassInfo;
+        pub fn sg_gl_query_buffer_info(buf: Buffer) -> GlBufferInfo;
+        pub fn sg_gl_query_image_info(img: Image) -> GlImageInfo;
+        pub fn sg_gl_query_sampler_info(smp: Sampler) -> GlSamplerInfo;
+        pub fn sg_gl_query_shader_info(shd: Shader) -> GlShaderInfo;
+        pub fn sg_gl_query_pass_info(pass: Pass) -> GlPassInfo;
     }
 }
 #[inline]
@@ -3382,12 +3792,60 @@ pub fn d3d11_device() -> *const core::ffi::c_void {
     unsafe { ffi::sg_d3d11_device() }
 }
 #[inline]
+pub fn d3d11_device_context() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_d3d11_device_context() }
+}
+#[inline]
+pub fn d3d11_query_buffer_info(buf: Buffer) -> D3d11BufferInfo {
+    unsafe { ffi::sg_d3d11_query_buffer_info(buf) }
+}
+#[inline]
+pub fn d3d11_query_image_info(img: Image) -> D3d11ImageInfo {
+    unsafe { ffi::sg_d3d11_query_image_info(img) }
+}
+#[inline]
+pub fn d3d11_query_sampler_info(smp: Sampler) -> D3d11SamplerInfo {
+    unsafe { ffi::sg_d3d11_query_sampler_info(smp) }
+}
+#[inline]
+pub fn d3d11_query_shader_info(shd: Shader) -> D3d11ShaderInfo {
+    unsafe { ffi::sg_d3d11_query_shader_info(shd) }
+}
+#[inline]
+pub fn d3d11_query_pipeline_info(pip: Pipeline) -> D3d11PipelineInfo {
+    unsafe { ffi::sg_d3d11_query_pipeline_info(pip) }
+}
+#[inline]
+pub fn d3d11_query_pass_info(pass: Pass) -> D3d11PassInfo {
+    unsafe { ffi::sg_d3d11_query_pass_info(pass) }
+}
+#[inline]
 pub fn mtl_device() -> *const core::ffi::c_void {
     unsafe { ffi::sg_mtl_device() }
 }
 #[inline]
 pub fn mtl_render_command_encoder() -> *const core::ffi::c_void {
     unsafe { ffi::sg_mtl_render_command_encoder() }
+}
+#[inline]
+pub fn mtl_query_buffer_info(buf: Buffer) -> MtlBufferInfo {
+    unsafe { ffi::sg_mtl_query_buffer_info(buf) }
+}
+#[inline]
+pub fn mtl_query_image_info(img: Image) -> MtlImageInfo {
+    unsafe { ffi::sg_mtl_query_image_info(img) }
+}
+#[inline]
+pub fn mtl_query_sampler_info(smp: Sampler) -> MtlSamplerInfo {
+    unsafe { ffi::sg_mtl_query_sampler_info(smp) }
+}
+#[inline]
+pub fn mtl_query_shader_info(shd: Shader) -> MtlShaderInfo {
+    unsafe { ffi::sg_mtl_query_shader_info(shd) }
+}
+#[inline]
+pub fn mtl_query_pipeline_info(pip: Pipeline) -> MtlPipelineInfo {
+    unsafe { ffi::sg_mtl_query_pipeline_info(pip) }
 }
 #[inline]
 pub fn wgpu_device() -> *const core::ffi::c_void {
@@ -3404,4 +3862,48 @@ pub fn wgpu_command_encoder() -> *const core::ffi::c_void {
 #[inline]
 pub fn wgpu_render_pass_encoder() -> *const core::ffi::c_void {
     unsafe { ffi::sg_wgpu_render_pass_encoder() }
+}
+#[inline]
+pub fn wgpu_query_buffer_info(buf: Buffer) -> WgpuBufferInfo {
+    unsafe { ffi::sg_wgpu_query_buffer_info(buf) }
+}
+#[inline]
+pub fn wgpu_query_image_info(img: Image) -> WgpuImageInfo {
+    unsafe { ffi::sg_wgpu_query_image_info(img) }
+}
+#[inline]
+pub fn wgpu_query_sampler_info(smp: Sampler) -> WgpuSamplerInfo {
+    unsafe { ffi::sg_wgpu_query_sampler_info(smp) }
+}
+#[inline]
+pub fn wgpu_query_shader_info(shd: Shader) -> WgpuShaderInfo {
+    unsafe { ffi::sg_wgpu_query_shader_info(shd) }
+}
+#[inline]
+pub fn wgpu_query_pipeline_info(pip: Pipeline) -> WgpuPipelineInfo {
+    unsafe { ffi::sg_wgpu_query_pipeline_info(pip) }
+}
+#[inline]
+pub fn wgpu_query_pass_info(pass: Pass) -> WgpuPassInfo {
+    unsafe { ffi::sg_wgpu_query_pass_info(pass) }
+}
+#[inline]
+pub fn gl_query_buffer_info(buf: Buffer) -> GlBufferInfo {
+    unsafe { ffi::sg_gl_query_buffer_info(buf) }
+}
+#[inline]
+pub fn gl_query_image_info(img: Image) -> GlImageInfo {
+    unsafe { ffi::sg_gl_query_image_info(img) }
+}
+#[inline]
+pub fn gl_query_sampler_info(smp: Sampler) -> GlSamplerInfo {
+    unsafe { ffi::sg_gl_query_sampler_info(smp) }
+}
+#[inline]
+pub fn gl_query_shader_info(shd: Shader) -> GlShaderInfo {
+    unsafe { ffi::sg_gl_query_shader_info(shd) }
+}
+#[inline]
+pub fn gl_query_pass_info(pass: Pass) -> GlPassInfo {
+    unsafe { ffi::sg_gl_query_pass_info(pass) }
 }
