@@ -14,7 +14,7 @@ fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str 
 
 /// Helper function to cast a rust slice into a sokol Range
 pub fn slice_as_range<T>(data: &[T]) -> Range {
-    Range { size: data.len() * std::mem::size_of::<T>(), ptr: data.as_ptr() as *const _ }
+    Range { size: std::mem::size_of_val(data), ptr: data.as_ptr() as *const _ }
 }
 /// Helper function to cast a rust reference into a sokol Range
 pub fn value_as_range<T>(value: &T) -> Range {
