@@ -55,7 +55,7 @@ pub fn dot_vec3(v0: Vec3, v1: Vec3) -> f32 {
 
 #[inline]
 pub fn len_vec3(v: Vec3) -> f32 {
-    return dot_vec3(v, v).sqrt();
+    dot_vec3(v, v).sqrt()
 }
 
 pub fn norm_vec3(v: Vec3) -> Vec3 {
