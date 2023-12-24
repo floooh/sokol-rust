@@ -42,7 +42,7 @@ extern "C" fn init() {
 fn compute_color(t: f32) -> [f32; 3] {
     // t is expected to be 0.0 <= t <= 1.0
     let i0 = (t * 16.0) as usize % 16;
-    let i1 = (i0 + 1) as usize % 16;
+    let i1 = (i0 + 1) % 16;
 
     let l = (t * 16.0).fract();
     let c0 = PALETTE[i0];

@@ -43,7 +43,7 @@ fn get_compilation_config(tool: &cc::Tool) -> CompilationConfig {
               be able to cross compile. This is unacceptable.
     */
     let target_var = std::env::var("TARGET").unwrap();
-    let split = target_var.split("-").collect::<Vec<_>>();
+    let split = target_var.split('-').collect::<Vec<_>>();
     let is_wasm_hack = split.contains(&"wasm32") || split.contains(&"emscripten");
 
     let build_target = if is_wasm_hack {
@@ -156,7 +156,7 @@ fn make_sokol() {
     for file in &files {
         let file = format!("{BASE_C_DIR}{file}");
 
-        println!("cargo:rerun-if-changed={}", file);
+        println!("cargo:rerun-if-changed={file}");
 
         if config.build_target == BuildTarget::Macos {
             build.flag("-ObjC");
@@ -290,7 +290,7 @@ fn make_imgui() {
     for file in &files {
         let file = format!("{BASE_C_DIR}{file}");
 
-        println!("cargo:rerun-if-changed={}", file);
+        println!("cargo:rerun-if-changed={file}");
 
         if config.build_target == BuildTarget::Macos {
             build.flag("-ObjC");
