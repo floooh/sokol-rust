@@ -257,6 +257,9 @@ fn make_sokol() {
             SokolBackend::Gles3 => {
                 println!("cargo:rustc-link-arg=-sUSE_WEBGL2");
             },
+            SokolBackend::Wgpu => {
+                println!("cargo:rustc-link-arg=-sUSE_WEBGPU");
+            },
             _ => {},
         },
     }
