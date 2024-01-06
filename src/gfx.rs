@@ -240,6 +240,7 @@ pub enum PixelFormat {
     Bgra8,
     Rgb10a2,
     Rg11b10f,
+    Rgb9e5,
     Rg32ui,
     Rg32si,
     Rg32f,
@@ -272,7 +273,6 @@ pub enum PixelFormat {
     Etc2Rgba8,
     Etc2Rg11,
     Etc2Rg11sn,
-    Rgb9e5,
     Num,
 }
 impl PixelFormat {
@@ -294,6 +294,8 @@ pub struct PixelformatInfo {
     pub blend: bool,
     pub msaa: bool,
     pub depth: bool,
+    pub compressed: bool,
+    pub bytes_per_pixel: i32,
 }
 impl PixelformatInfo {
     pub const fn new() -> Self {
@@ -304,6 +306,8 @@ impl PixelformatInfo {
             blend: false,
             msaa: false,
             depth: false,
+            compressed: false,
+            bytes_per_pixel: 0,
         }
     }
 }
@@ -3273,6 +3277,9 @@ pub mod ffi {
         pub fn sg_query_features() -> Features;
         pub fn sg_query_limits() -> Limits;
         pub fn sg_query_pixelformat(fmt: PixelFormat) -> PixelformatInfo;
+        pub fn sg_query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i32;
+        pub fn sg_query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32)
+            -> i32;
         pub fn sg_query_buffer_state(buf: Buffer) -> ResourceState;
         pub fn sg_query_image_state(img: Image) -> ResourceState;
         pub fn sg_query_sampler_state(smp: Sampler) -> ResourceState;
@@ -3542,6 +3549,14 @@ pub fn query_limits() -> Limits {
 #[inline]
 pub fn query_pixelformat(fmt: PixelFormat) -> PixelformatInfo {
     unsafe { ffi::sg_query_pixelformat(fmt) }
+}
+#[inline]
+pub fn query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i32 {
+    unsafe { ffi::sg_query_row_pitch(fmt, width, row_align_bytes) }
+}
+#[inline]
+pub fn query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32) -> i32 {
+    unsafe { ffi::sg_query_surface_pitch(fmt, width, height, row_align_bytes) }
 }
 #[inline]
 pub fn query_buffer_state(buf: Buffer) -> ResourceState {
