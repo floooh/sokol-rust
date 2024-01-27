@@ -573,6 +573,11 @@ pub struct Desc {
     pub html5_preserve_drawing_buffer: bool,
     pub html5_premultiplied_alpha: bool,
     pub html5_ask_leave_site: bool,
+    pub html5_bubble_mouse_events: bool,
+    pub html5_bubble_touch_events: bool,
+    pub html5_bubble_wheel_events: bool,
+    pub html5_bubble_key_events: bool,
+    pub html5_bubble_char_events: bool,
     pub ios_keyboard_resizes_canvas: bool,
 }
 impl Desc {
@@ -613,6 +618,11 @@ impl Desc {
             html5_preserve_drawing_buffer: false,
             html5_premultiplied_alpha: false,
             html5_ask_leave_site: false,
+            html5_bubble_mouse_events: false,
+            html5_bubble_touch_events: false,
+            html5_bubble_wheel_events: false,
+            html5_bubble_key_events: false,
+            html5_bubble_char_events: false,
             ios_keyboard_resizes_canvas: false,
         }
     }
