@@ -12,6 +12,7 @@ Check out the `examples/` folder for more examples. Here is `examples/clear/clea
 ```rust
 use sokol::app as sapp;
 use sokol::gfx as sg;
+use sokol::gfx as sglue;
 
 struct State {
     pass_action: sg::PassAction,
@@ -25,7 +26,7 @@ extern "C" fn init() {
     let state = unsafe { &mut STATE };
 
     sg::setup(&sg::Desc {
-        context: sokol::glue::context(),
+        environment: sglue::environment(),
         ..Default::default()
     });
 
@@ -44,7 +45,7 @@ extern "C" fn frame() {
 
     let (width, height) = (sapp::width(), sapp::height());
 
-    sg::begin_default_pass(&state.pass_action, width, height);
+    sg::begin_pass(&sg::Pass { action: state.pass_action, swapchain: sglue::swapchain() ..Default::default() });
     sg::end_pass();
     sg::commit();
 }

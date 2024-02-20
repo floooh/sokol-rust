@@ -37,7 +37,7 @@ extern "C" fn init() {
 
     sg::setup(&sg::Desc {
         pipeline_pool_size: (NUM_BLEND_FACTORS * NUM_BLEND_FACTORS + 1) as _,
-        context: sglue::context(),
+        environment: sglue::environment(),
         logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         ..Default::default()
     });
@@ -119,7 +119,11 @@ extern "C" fn frame() {
     let view_proj = m::mul_mat4(proj, view);
 
     // start rendering
-    sg::begin_default_pass(&state.pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: state.pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
 
     // draw a background quad
     sg::apply_pipeline(state.bg_pip);

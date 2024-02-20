@@ -37,7 +37,7 @@ static mut STATE: State = State {
 extern "C" fn init() {
     let state = unsafe { &mut STATE };
     sg::setup(&sg::Desc {
-        context: sglue::context(),
+        environment: sglue::environment(),
         logger: sg::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });
@@ -162,7 +162,11 @@ extern "C" fn frame() {
         shader::VsParams { mvp: m::mul_mat4(view_proj, m::rotate_mat4(state.ry, m::vec3(0.0, 1.0, 0.0))) };
 
     // ...and draw
-    sg::begin_default_pass(&state.pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: state.pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     sg::apply_pipeline(state.pip);
     sg::apply_bindings(&state.bind);
     sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_VS_PARAMS, &sg::value_as_range(&vs_params));

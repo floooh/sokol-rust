@@ -4,7 +4,7 @@
 //  Test point rendering with sokol/gl
 //------------------------------------------------------------------------------
 
-use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue};
+use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue, log as slog };
 
 #[rustfmt::skip]
 const PALETTE: [[f32; 3]; 16] = [
@@ -28,13 +28,13 @@ const PALETTE: [[f32; 3]; 16] = [
 
 extern "C" fn init() {
     sg::setup(&sg::Desc {
-        context: sglue::context(),
-        logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
+        environment: sglue::environment(),
+        logger: sg::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });
 
     sgl::setup(&sgl::Desc {
-        logger: sgl::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
+        logger: sgl::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });
 }
@@ -86,7 +86,11 @@ extern "C" fn frame() {
         clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
         ..Default::default()
     };
-    sg::begin_default_pass(&pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     sgl::draw();
     sg::end_pass();
     sg::commit();

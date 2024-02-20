@@ -280,7 +280,7 @@ fn make_imgui() {
     }
 
     let _backend = select_sokol_backend(&mut build, &config);
-    let files = ["sokol_imgui.c", "sokol_gfx_imgui.c"];
+    let files = ["sokol_imgui.c" ];
 
     //
     // include paths

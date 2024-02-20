@@ -3,7 +3,7 @@
 //  Test sokol-audio rust bindings
 //------------------------------------------------------------------------------
 
-use sokol::{app as sapp, audio as saudio, gfx as sg, glue as sgapp, log as slog};
+use sokol::{app as sapp, audio as saudio, gfx as sg, glue as sglue, log as slog};
 
 const NUM_SAMPLES: usize = 32;
 
@@ -25,7 +25,7 @@ extern "C" fn init() {
     let state = unsafe { &mut STATE };
 
     sg::setup(&sg::Desc {
-        context: sgapp::context(),
+        environment: sglue::environment(),
         logger: sg::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });
@@ -57,7 +57,11 @@ extern "C" fn frame() {
         state.samples[state.sample_pos] = if 0 != (state.even_odd & 0x20) { 0.1 } else { -0.1 };
     }
 
-    sg::begin_default_pass(&state.pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: state.pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     sg::end_pass();
     sg::commit();
 }

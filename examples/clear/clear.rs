@@ -1,4 +1,4 @@
-use sokol::{app as sapp, gfx as sg};
+use sokol::{app as sapp, gfx as sg, glue as sglue };
 
 struct State {
     pass_action: sg::PassAction,
@@ -10,7 +10,7 @@ extern "C" fn init() {
     let state = unsafe { &mut STATE };
 
     sg::setup(&sg::Desc {
-        context: sokol::glue::context(),
+        environment: sglue::environment(),
         logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         ..Default::default()
     });
@@ -53,9 +53,7 @@ extern "C" fn frame() {
     let g = state.pass_action.colors[0].clear_value.g + 0.01;
     state.pass_action.colors[0].clear_value.g = if g > 1.0 { 0.0 } else { g };
 
-    let (width, height) = (sapp::width(), sapp::height());
-
-    sg::begin_default_pass(&state.pass_action, width, height);
+    sg::begin_pass(&sg::Pass { action: state.pass_action, swapchain: sglue::swapchain(), ..Default::default() });
     sg::end_pass();
     sg::commit();
 }

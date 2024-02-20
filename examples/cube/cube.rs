@@ -24,7 +24,7 @@ extern "C" fn init() {
     let state = unsafe { &mut STATE };
 
     sg::setup(&sg::Desc {
-        context: sglue::context(),
+        environment: sglue::environment(),
         logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         ..Default::default()
     });
@@ -127,7 +127,11 @@ extern "C" fn frame() {
         ..Default::default()
     };
 
-    sg::begin_default_pass(&pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     sg::apply_pipeline(state.pip);
     sg::apply_bindings(&state.bind);
     sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_VS_PARAMS, &sg::value_as_range(&vs_params));

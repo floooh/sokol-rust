@@ -13,14 +13,14 @@ mod math;
 mod shader;
 
 use math as m;
-use sokol::{app as sapp, gfx as sg};
+use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
 
 const OFFSCREEN_SAMPLE_COUNT: usize = 1;
 
 struct Offscreen {
     pub pass_action: sg::PassAction,
-    pub pass_desc: sg::PassDesc,
-    pub pass: sg::Pass,
+    pub attachments_desc: sg::AttachmentsDesc,
+    pub attachments: sg::Attachments,
     pub pip: sg::Pipeline,
     pub bind: sg::Bindings,
 }
@@ -52,8 +52,8 @@ struct State {
 static mut STATE: State = State {
     offscreen: Offscreen {
         pass_action: sg::PassAction::new(),
-        pass_desc: sg::PassDesc::new(),
-        pass: sg::Pass::new(),
+        attachments_desc: sg::AttachmentsDesc::new(),
+        attachments: sg::Attachments::new(),
         pip: sg::Pipeline::new(),
         bind: sg::Bindings::new(),
     },
@@ -71,8 +71,8 @@ extern "C" fn init() {
     state.view = m::lookat_mat4(m::vec3(0.0, 1.5, 6.0), m::Vec3::ZERO, m::vec3(0.0, 1.0, 0.0));
 
     sg::setup(&sg::Desc {
-        context: sokol::glue::context(),
-        logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
+        environment: sglue::environment(),
+        logger: sg::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });
 
@@ -103,7 +103,7 @@ extern "C" fn init() {
 
     // setup the offscreen render pass and render target images,
     // this will also be called when the window resizes
-    create_offscreen_pass(sapp::width(), sapp::height());
+    create_offscreen_attachments(sapp::width(), sapp::height());
 
     #[rustfmt::skip]
     const VERTICES: &[f32] = &[
@@ -211,7 +211,7 @@ extern "C" fn init() {
     // offscreen render target textures
     state.fsq.bind.vertex_buffers[0] = quad_vbuf;
     for i in 0..=2 {
-        state.fsq.bind.fs.images[i] = state.offscreen.pass_desc.color_attachments[i].image;
+        state.fsq.bind.fs.images[i] = state.offscreen.attachments_desc.colors[i].image;
     }
     state.fsq.bind.fs.samplers[0] = smp;
 
@@ -245,7 +245,11 @@ extern "C" fn frame() {
     };
 
     // render cube into MRT offscreen render targets
-    sg::begin_pass(state.offscreen.pass, &state.offscreen.pass_action);
+    sg::begin_pass(&sg::Pass {
+        action: state.offscreen.pass_action,
+        attachments: state.offscreen.attachments,
+        ..Default::default()
+    });
     sg::apply_pipeline(state.offscreen.pip);
     sg::apply_bindings(&state.offscreen.bind);
     sg::apply_uniforms(
@@ -258,7 +262,11 @@ extern "C" fn frame() {
 
     // render fullscreen quad with the composed offscreen-render images,
     // 3 a small debug view quads at the bottom of the screen
-    sg::begin_default_pass(&state.dflt.pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: state.dflt.pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     sg::apply_pipeline(state.fsq.pip);
     sg::apply_bindings(&state.fsq.bind);
     sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_FSQ_PARAMS, &sg::value_as_range(&fsq_params));
@@ -266,7 +274,7 @@ extern "C" fn frame() {
     sg::apply_pipeline(state.dbg.pip);
     for i in 0..=2 {
         sg::apply_viewport(i * 100, 0, 100, 100, false);
-        state.dbg.bind.fs.images[0] = state.offscreen.pass_desc.color_attachments[i as usize].image;
+        state.dbg.bind.fs.images[0] = state.offscreen.attachments_desc.colors[i as usize].image;
         sg::apply_bindings(&state.dbg.bind);
         sg::draw(0, 4, 1);
     }
@@ -278,20 +286,20 @@ extern "C" fn event(event: *const sapp::Event) {
     let event = unsafe { &*event };
 
     if event._type == sapp::EventType::Resized {
-        create_offscreen_pass(event.framebuffer_width, event.framebuffer_height);
+        create_offscreen_attachments(event.framebuffer_width, event.framebuffer_height);
     }
 }
 
-// helper function to create or re-create render target images and pass object for offscreen rendering
-fn create_offscreen_pass(width: i32, height: i32) {
+// helper function to create or re-create render target images and attachments object for offscreen rendering
+fn create_offscreen_attachments(width: i32, height: i32) {
     let state = unsafe { &mut STATE };
 
     // destroy previous resources (can be called with invalid ids)
-    sg::destroy_pass(state.offscreen.pass);
-    for att in state.offscreen.pass_desc.color_attachments {
+    sg::destroy_attachments(state.offscreen.attachments);
+    for att in state.offscreen.attachments_desc.colors {
         sg::destroy_image(att.image);
     }
-    sg::destroy_image(state.offscreen.pass_desc.depth_stencil_attachment.image);
+    sg::destroy_image(state.offscreen.attachments_desc.depth_stencil.image);
 
     // create offscreen render target images and pass
     let color_img_desc = sg::ImageDesc {
@@ -307,14 +315,14 @@ fn create_offscreen_pass(width: i32, height: i32) {
     depth_img_desc.pixel_format = sg::PixelFormat::Depth;
 
     for i in 0..=2 {
-        state.offscreen.pass_desc.color_attachments[i].image = sg::make_image(&color_img_desc);
+        state.offscreen.attachments_desc.colors[i].image = sg::make_image(&color_img_desc);
     }
-    state.offscreen.pass_desc.depth_stencil_attachment.image = sg::make_image(&depth_img_desc);
-    state.offscreen.pass = sg::make_pass(&state.offscreen.pass_desc);
+    state.offscreen.attachments_desc.depth_stencil.image = sg::make_image(&depth_img_desc);
+    state.offscreen.attachments = sg::make_attachments(&state.offscreen.attachments_desc);
 
     // update the fullscreen-quad texture bindings
     for i in 0..=2 {
-        state.fsq.bind.fs.images[i] = state.offscreen.pass_desc.color_attachments[i].image;
+        state.fsq.bind.fs.images[i] = state.offscreen.attachments_desc.colors[i].image;
     }
 }
 
