@@ -9,3 +9,6 @@ pub mod audio;
 pub mod gl;
 pub mod debugtext;
 pub mod shape;
+/// Enable feature "imgui" to use
+#[cfg(feature="imgui")]
+pub mod imgui;

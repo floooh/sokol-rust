@@ -57,6 +57,7 @@ extern "C" fn frame() {
             b: 0.3,
             a: 1.0,
         },
+        ..Default::default()
     };
     sg::begin_pass(&sg::Pass {
         action: pass_action,
