@@ -12,7 +12,7 @@ Check out the `examples/` folder for more examples. Here is `examples/clear/clea
 ```rust
 use sokol::app as sapp;
 use sokol::gfx as sg;
-use sokol::gfx as sglue;
+use sokol::glue as sglue;
 
 struct State {
     pass_action: sg::PassAction,
