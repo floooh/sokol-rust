@@ -4,8 +4,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-use crate::gfx as sg;
-use crate::app as sapp;
+use crate::{app as sapp, gfx as sg};
 
 /// Helper function to convert a C string to a rust string slice
 #[inline]
@@ -22,9 +21,7 @@ pub struct Image {
 }
 impl Image {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Image {
@@ -40,10 +37,7 @@ pub struct ImageDesc {
 }
 impl ImageDesc {
     pub const fn new() -> Self {
-        Self {
-            image: sg::Image::new(),
-            sampler: sg::Sampler::new(),
-        }
+        Self { image: sg::Image::new(), sampler: sg::Sampler::new() }
     }
 }
 impl Default for ImageDesc {
@@ -77,11 +71,7 @@ pub struct Allocator {
 }
 impl Allocator {
     pub const fn new() -> Self {
-        Self {
-            alloc_fn: None,
-            free_fn: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { alloc_fn: None, free_fn: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Allocator {
@@ -92,15 +82,22 @@ impl Default for Allocator {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Logger {
-    pub func: Option<extern "C" fn(*const core::ffi::c_char, u32, u32, *const core::ffi::c_char, u32, *const core::ffi::c_char, *mut core::ffi::c_void)>,
+    pub func: Option<
+        extern "C" fn(
+            *const core::ffi::c_char,
+            u32,
+            u32,
+            *const core::ffi::c_char,
+            u32,
+            *const core::ffi::c_char,
+            *mut core::ffi::c_void,
+        ),
+    >,
     pub user_data: *mut core::ffi::c_void,
 }
 impl Logger {
     pub const fn new() -> Self {
-        Self {
-            func: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { func: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Logger {
@@ -159,12 +156,7 @@ pub struct FrameDesc {
 }
 impl FrameDesc {
     pub const fn new() -> Self {
-        Self {
-            width: 0,
-            height: 0,
-            delta_time: 0.0,
-            dpi_scale: 0.0,
-        }
+        Self { width: 0, height: 0, delta_time: 0.0, dpi_scale: 0.0 }
     }
 }
 impl Default for FrameDesc {
@@ -199,116 +191,78 @@ pub mod ffi {
 }
 #[inline]
 pub fn setup(desc: &Desc) {
-    unsafe {
-        ffi::simgui_setup(desc)
-    }
+    unsafe { ffi::simgui_setup(desc) }
 }
 #[inline]
 pub fn new_frame(desc: &FrameDesc) {
-    unsafe {
-        ffi::simgui_new_frame(desc)
-    }
+    unsafe { ffi::simgui_new_frame(desc) }
 }
 #[inline]
 pub fn render() {
-    unsafe {
-        ffi::simgui_render()
-    }
+    unsafe { ffi::simgui_render() }
 }
 #[inline]
 pub fn make_image(desc: &ImageDesc) -> Image {
-    unsafe {
-        ffi::simgui_make_image(desc)
-    }
+    unsafe { ffi::simgui_make_image(desc) }
 }
 #[inline]
 pub fn destroy_image(img: Image) {
-    unsafe {
-        ffi::simgui_destroy_image(img)
-    }
+    unsafe { ffi::simgui_destroy_image(img) }
 }
 #[inline]
 pub fn query_image_desc(img: Image) -> ImageDesc {
-    unsafe {
-        ffi::simgui_query_image_desc(img)
-    }
+    unsafe { ffi::simgui_query_image_desc(img) }
 }
 #[inline]
 pub fn imtextureid(img: Image) -> *mut core::ffi::c_void {
-    unsafe {
-        ffi::simgui_imtextureid(img)
-    }
+    unsafe { ffi::simgui_imtextureid(img) }
 }
 #[inline]
 pub fn image_from_imtextureid(imtextureid: *mut core::ffi::c_void) -> Image {
-    unsafe {
-        ffi::simgui_image_from_imtextureid(imtextureid)
-    }
+    unsafe { ffi::simgui_image_from_imtextureid(imtextureid) }
 }
 #[inline]
 pub fn add_focus_event(focus: bool) {
-    unsafe {
-        ffi::simgui_add_focus_event(focus)
-    }
+    unsafe { ffi::simgui_add_focus_event(focus) }
 }
 #[inline]
 pub fn add_mouse_pos_event(x: f32, y: f32) {
-    unsafe {
-        ffi::simgui_add_mouse_pos_event(x, y)
-    }
+    unsafe { ffi::simgui_add_mouse_pos_event(x, y) }
 }
 #[inline]
 pub fn add_touch_pos_event(x: f32, y: f32) {
-    unsafe {
-        ffi::simgui_add_touch_pos_event(x, y)
-    }
+    unsafe { ffi::simgui_add_touch_pos_event(x, y) }
 }
 #[inline]
 pub fn add_mouse_button_event(mouse_button: i32, down: bool) {
-    unsafe {
-        ffi::simgui_add_mouse_button_event(mouse_button, down)
-    }
+    unsafe { ffi::simgui_add_mouse_button_event(mouse_button, down) }
 }
 #[inline]
 pub fn add_mouse_wheel_event(wheel_x: f32, wheel_y: f32) {
-    unsafe {
-        ffi::simgui_add_mouse_wheel_event(wheel_x, wheel_y)
-    }
+    unsafe { ffi::simgui_add_mouse_wheel_event(wheel_x, wheel_y) }
 }
 #[inline]
 pub fn add_input_character(c: u32) {
-    unsafe {
-        ffi::simgui_add_input_character(c)
-    }
+    unsafe { ffi::simgui_add_input_character(c) }
 }
 #[inline]
 pub fn add_input_characters_utf8(c: &str) {
-        let tmp_0 = std::ffi::CString::new(c).unwrap();
-    unsafe {
-        ffi::simgui_add_input_characters_utf8(tmp_0.as_ptr())
-    }
+    let tmp_0 = std::ffi::CString::new(c).unwrap();
+    unsafe { ffi::simgui_add_input_characters_utf8(tmp_0.as_ptr()) }
 }
 #[inline]
 pub fn add_touch_button_event(mouse_button: i32, down: bool) {
-    unsafe {
-        ffi::simgui_add_touch_button_event(mouse_button, down)
-    }
+    unsafe { ffi::simgui_add_touch_button_event(mouse_button, down) }
 }
 #[inline]
 pub fn handle_event(ev: &sapp::Event) -> bool {
-    unsafe {
-        ffi::simgui_handle_event(ev)
-    }
+    unsafe { ffi::simgui_handle_event(ev) }
 }
 #[inline]
 pub fn map_keycode(keycode: sapp::Keycode) -> i32 {
-    unsafe {
-        ffi::simgui_map_keycode(keycode)
-    }
+    unsafe { ffi::simgui_map_keycode(keycode) }
 }
 #[inline]
 pub fn shutdown() {
-    unsafe {
-        ffi::simgui_shutdown()
-    }
+    unsafe { ffi::simgui_shutdown() }
 }

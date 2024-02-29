@@ -127,11 +127,7 @@ extern "C" fn frame() {
         ..Default::default()
     };
 
-    sg::begin_pass(&sg::Pass {
-        action: pass_action,
-        swapchain: sglue::swapchain(),
-        ..Default::default()
-    });
+    sg::begin_pass(&sg::Pass { action: pass_action, swapchain: sglue::swapchain(), ..Default::default() });
     sg::apply_pipeline(state.pip);
     sg::apply_bindings(&state.bind);
     sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_VS_PARAMS, &sg::value_as_range(&vs_params));

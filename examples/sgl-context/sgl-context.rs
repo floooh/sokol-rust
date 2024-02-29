@@ -5,7 +5,7 @@
 //  using sokol/gl contexts.
 //------------------------------------------------------------------------------
 
-use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue, log as slog };
+use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue, log as slog};
 
 const OFFSCREEN_PIXELFORMAT: sg::PixelFormat = sg::PixelFormat::Rgba8;
 const OFFSCREEN_SAMPLECOUNT: i32 = 1;
@@ -65,18 +65,15 @@ extern "C" fn init() {
         clear_value: sg::Color { r: 0.5, g: 0.7, b: 1.0, a: 1.0 },
         ..Default::default()
     };
-    state.display.sgl_pip = sgl::context_make_pipeline(
-        sgl::default_context(),
-        &sg::PipelineDesc {
-            cull_mode: sg::CullMode::Back,
-            depth: sg::DepthState {
-                write_enabled: true,
-                compare: sg::CompareFunc::LessEqual,
-                ..Default::default()
-            },
+    state.display.sgl_pip = sgl::context_make_pipeline(sgl::default_context(), &sg::PipelineDesc {
+        cull_mode: sg::CullMode::Back,
+        depth: sg::DepthState {
+            write_enabled: true,
+            compare: sg::CompareFunc::LessEqual,
             ..Default::default()
         },
-    );
+        ..Default::default()
+    });
 
     // create a sokol-gl context compatible with the offscreen render pass
     // (specific color pixel format, no depth-stencil-surface, no MSAA)
@@ -99,8 +96,7 @@ extern "C" fn init() {
         ..Default::default()
     });
     let mut atts_desc = sg::AttachmentsDesc::new();
-    atts_desc.colors[0] =
-        sg::AttachmentDesc { image: state.offscreen.img, ..Default::default() };
+    atts_desc.colors[0] = sg::AttachmentDesc { image: state.offscreen.img, ..Default::default() };
     state.offscreen.attachments = sg::make_attachments(&atts_desc);
     state.offscreen.pass_action.colors[0] = sg::ColorAttachmentAction {
         load_action: sg::LoadAction::Clear,

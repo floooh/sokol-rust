@@ -4,7 +4,7 @@
 //  Test point rendering with sokol/gl
 //------------------------------------------------------------------------------
 
-use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue, log as slog };
+use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue, log as slog};
 
 #[rustfmt::skip]
 const PALETTE: [[f32; 3]; 16] = [
@@ -86,11 +86,7 @@ extern "C" fn frame() {
         clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
         ..Default::default()
     };
-    sg::begin_pass(&sg::Pass {
-        action: pass_action,
-        swapchain: sglue::swapchain(),
-        ..Default::default()
-    });
+    sg::begin_pass(&sg::Pass { action: pass_action, swapchain: sglue::swapchain(), ..Default::default() });
     sgl::draw();
     sg::end_pass();
     sg::commit();

@@ -3,7 +3,6 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-
 /// Helper function to convert a C string to a rust string slice
 #[inline]
 fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str {
@@ -64,15 +63,22 @@ impl Default for LogItem {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Logger {
-    pub func: Option<extern "C" fn(*const core::ffi::c_char, u32, u32, *const core::ffi::c_char, u32, *const core::ffi::c_char, *mut core::ffi::c_void)>,
+    pub func: Option<
+        extern "C" fn(
+            *const core::ffi::c_char,
+            u32,
+            u32,
+            *const core::ffi::c_char,
+            u32,
+            *const core::ffi::c_char,
+            *mut core::ffi::c_void,
+        ),
+    >,
     pub user_data: *mut core::ffi::c_void,
 }
 impl Logger {
     pub const fn new() -> Self {
-        Self {
-            func: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { func: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Logger {
@@ -89,11 +95,7 @@ pub struct Allocator {
 }
 impl Allocator {
     pub const fn new() -> Self {
-        Self {
-            alloc_fn: None,
-            free_fn: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { alloc_fn: None, free_fn: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Allocator {
@@ -155,67 +157,45 @@ pub mod ffi {
 }
 #[inline]
 pub fn setup(desc: &Desc) {
-    unsafe {
-        ffi::saudio_setup(desc)
-    }
+    unsafe { ffi::saudio_setup(desc) }
 }
 #[inline]
 pub fn shutdown() {
-    unsafe {
-        ffi::saudio_shutdown()
-    }
+    unsafe { ffi::saudio_shutdown() }
 }
 #[inline]
 pub fn isvalid() -> bool {
-    unsafe {
-        ffi::saudio_isvalid()
-    }
+    unsafe { ffi::saudio_isvalid() }
 }
 #[inline]
 pub fn userdata() -> *mut core::ffi::c_void {
-    unsafe {
-        ffi::saudio_userdata()
-    }
+    unsafe { ffi::saudio_userdata() }
 }
 #[inline]
 pub fn query_desc() -> Desc {
-    unsafe {
-        ffi::saudio_query_desc()
-    }
+    unsafe { ffi::saudio_query_desc() }
 }
 #[inline]
 pub fn sample_rate() -> i32 {
-    unsafe {
-        ffi::saudio_sample_rate()
-    }
+    unsafe { ffi::saudio_sample_rate() }
 }
 #[inline]
 pub fn buffer_frames() -> i32 {
-    unsafe {
-        ffi::saudio_buffer_frames()
-    }
+    unsafe { ffi::saudio_buffer_frames() }
 }
 #[inline]
 pub fn channels() -> i32 {
-    unsafe {
-        ffi::saudio_channels()
-    }
+    unsafe { ffi::saudio_channels() }
 }
 #[inline]
 pub fn suspended() -> bool {
-    unsafe {
-        ffi::saudio_suspended()
-    }
+    unsafe { ffi::saudio_suspended() }
 }
 #[inline]
 pub fn expect() -> i32 {
-    unsafe {
-        ffi::saudio_expect()
-    }
+    unsafe { ffi::saudio_expect() }
 }
 #[inline]
 pub fn push(frames: &f32, num_frames: i32) -> i32 {
-    unsafe {
-        ffi::saudio_push(frames, num_frames)
-    }
+    unsafe { ffi::saudio_push(frames, num_frames) }
 }

@@ -1,4 +1,4 @@
-use sokol::{app as sapp, gfx as sg, glue as sglue };
+use sokol::{app as sapp, gfx as sg, glue as sglue};
 
 #[derive(Debug)]
 pub struct ExampleUserData {
