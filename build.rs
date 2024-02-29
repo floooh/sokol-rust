@@ -267,54 +267,7 @@ fn make_sokol() {
     build.compile("sokol-rust");
 }
 
-fn make_imgui() {
-    let mut build = cc::Build::new();
-    let tool = build.try_get_compiler().unwrap();
-
-    let config = get_compilation_config(&tool);
-    const BASE_C_DIR: &str = "src/sokol/c/";
-
-    if !config.is_debug_build {
-        build.define("NDEBUG", None);
-        build.opt_level(2);
-    }
-
-    let _backend = select_sokol_backend(&mut build, &config);
-    let files = ["sokol_imgui.c"];
-
-    //
-    // include paths
-    //
-    build.include(BASE_C_DIR);
-    build.define("IMPL", None);
-
-    build.flag_if_supported("-Wno-unused-parameter").flag_if_supported("-Wno-missing-field-initializers");
-
-    for file in &files {
-        let file = format!("{BASE_C_DIR}{file}");
-
-        println!("cargo:rerun-if-changed={file}");
-
-        if config.build_target == BuildTarget::Macos {
-            build.flag("-ObjC");
-        }
-
-        build.file(file);
-    }
-
-    if config.debug_info_requested {
-        build.define("_DEBUG", None).define("SOKOL_DEBUG", None);
-    }
-    build.define("IMGUI_DISABLE_OBSOLETE_FUNCTIONS", None);
-
-    build.compile("sokol-rust-imgui");
-}
-
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-
     make_sokol();
-
-    #[cfg(feature = "imgui")]
-    make_imgui();
 }

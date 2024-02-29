@@ -13,8 +13,6 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v4
-        with:
-            submodules: recursive
       - name: setup-rust
         uses: dtolnay/rust-toolchain@master
         with:

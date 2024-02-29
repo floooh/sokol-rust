@@ -104,13 +104,9 @@ cargo run --example instancing
 cargo run --example userdata
 ```
 
->NOTE: The imgui sample currently doesn't work, see the note about lib.rs here [here](https://github.com/floooh/sokol-rust/issues/4#issuecomment-1489105274), and [this issue](https://github.com/floooh/sokol-rust/issues/3) for a clean solution.
-
-To run the imgui example, you need to go into it's directory:
-```console
-cd examples/imgui
-cargo run
-```
+>NOTE: imgui support has been removed for now, the required cimgui submodule dependency caused trouble with
+> Github Actions. We'll need to solve this some other way in the future, and in a way that works for all
+> language bindings.
 
 ## Wasm/Emscripten
 To compile for wasm, you will need the emcc compiler which you can get at https://github.com/emscripten-core/emsdk
