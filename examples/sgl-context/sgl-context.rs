@@ -5,7 +5,7 @@
 //  using sokol/gl contexts.
 //------------------------------------------------------------------------------
 
-use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue};
+use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue, log as slog};
 
 const OFFSCREEN_PIXELFORMAT: sg::PixelFormat = sg::PixelFormat::Rgba8;
 const OFFSCREEN_SAMPLECOUNT: i32 = 1;
@@ -14,7 +14,7 @@ const OFFSCREEN_HEIGHT: i32 = 32;
 
 struct Offscreen {
     pass_action: sg::PassAction,
-    pass: sg::Pass,
+    attachments: sg::Attachments,
     img: sg::Image,
     sgl_context: sgl::Context,
 }
@@ -33,7 +33,7 @@ struct State {
 static mut STATE: State = State {
     offscreen: Offscreen {
         pass_action: sg::PassAction::new(),
-        pass: sg::Pass::new(),
+        attachments: sg::Attachments::new(),
         img: sg::Image::new(),
         sgl_context: sgl::Context::new(),
     },
@@ -48,15 +48,15 @@ extern "C" fn init() {
     let state = unsafe { &mut STATE };
 
     sg::setup(&sg::Desc {
-        context: sglue::context(),
-        logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
+        environment: sglue::environment(),
+        logger: sg::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });
 
     sgl::setup(&sgl::Desc {
         max_vertices: 64,
         max_commands: 16,
-        logger: sgl::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
+        logger: sgl::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });
 
@@ -65,18 +65,15 @@ extern "C" fn init() {
         clear_value: sg::Color { r: 0.5, g: 0.7, b: 1.0, a: 1.0 },
         ..Default::default()
     };
-    state.display.sgl_pip = sgl::context_make_pipeline(
-        sgl::default_context(),
-        &sg::PipelineDesc {
-            cull_mode: sg::CullMode::Back,
-            depth: sg::DepthState {
-                write_enabled: true,
-                compare: sg::CompareFunc::LessEqual,
-                ..Default::default()
-            },
+    state.display.sgl_pip = sgl::context_make_pipeline(sgl::default_context(), &sg::PipelineDesc {
+        cull_mode: sg::CullMode::Back,
+        depth: sg::DepthState {
+            write_enabled: true,
+            compare: sg::CompareFunc::LessEqual,
             ..Default::default()
         },
-    );
+        ..Default::default()
+    });
 
     // create a sokol-gl context compatible with the offscreen render pass
     // (specific color pixel format, no depth-stencil-surface, no MSAA)
@@ -98,10 +95,9 @@ extern "C" fn init() {
         sample_count: OFFSCREEN_SAMPLECOUNT,
         ..Default::default()
     });
-    let mut pass_desc = sg::PassDesc::new();
-    pass_desc.color_attachments[0] =
-        sg::PassAttachmentDesc { image: state.offscreen.img, ..Default::default() };
-    state.offscreen.pass = sg::make_pass(&pass_desc);
+    let mut atts_desc = sg::AttachmentsDesc::new();
+    atts_desc.colors[0] = sg::AttachmentDesc { image: state.offscreen.img, ..Default::default() };
+    state.offscreen.attachments = sg::make_attachments(&atts_desc);
     state.offscreen.pass_action.colors[0] = sg::ColorAttachmentAction {
         load_action: sg::LoadAction::Clear,
         clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
@@ -145,10 +141,18 @@ extern "C" fn frame() {
     draw_cube();
 
     // do the actual offscreen and display rendering in sokol-gfx passes
-    sg::begin_pass(state.offscreen.pass, &state.offscreen.pass_action);
+    sg::begin_pass(&sg::Pass {
+        action: state.offscreen.pass_action,
+        attachments: state.offscreen.attachments,
+        ..Default::default()
+    });
     sgl::context_draw(state.offscreen.sgl_context);
     sg::end_pass();
-    sg::begin_default_pass(&state.display.pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: state.display.pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     sgl::context_draw(sgl::default_context());
     sg::end_pass();
     sg::commit();

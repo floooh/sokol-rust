@@ -28,7 +28,7 @@ extern "C" fn init() {
     };
 
     sg::setup(&sg::Desc {
-        context: sglue::context(),
+        environment: sglue::environment(),
         logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         ..Default::default()
     });
@@ -73,7 +73,11 @@ extern "C" fn frame() {
     print_font(FONT_C64, "C64:\n", 0x79, 0x86, 0xcb);
     print_font(FONT_ORIC, "Oric Atmos:\n", 0xff, 0x98, 0x00);
 
-    sg::begin_default_pass(&state.pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: state.pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     sdtx::draw();
     sg::end_pass();
     sg::commit();

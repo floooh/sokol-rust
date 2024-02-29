@@ -16,10 +16,15 @@ pub mod ffi {
     #![allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub fn sapp_sgcontext() -> sg::ContextDesc;
+        pub fn sglue_environment() -> sg::Environment;
+        pub fn sglue_swapchain() -> sg::Swapchain;
     }
 }
 #[inline]
-pub fn context() -> sg::ContextDesc {
-    unsafe { ffi::sapp_sgcontext() }
+pub fn environment() -> sg::Environment {
+    unsafe { ffi::sglue_environment() }
+}
+#[inline]
+pub fn swapchain() -> sg::Swapchain {
+    unsafe { ffi::sglue_swapchain() }
 }

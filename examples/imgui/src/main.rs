@@ -11,7 +11,7 @@ use sokol::imgui as simgui;
 
 extern "C" fn init() {
     sg::setup(&sg::Desc {
-        context: sglue::context(),
+        environment: sglue::environment(),
         logger: sg::Logger {
             func: Some(sokol::log::slog_func),
             ..Default::default()
@@ -57,8 +57,13 @@ extern "C" fn frame() {
             b: 0.3,
             a: 1.0,
         },
+        ..Default::default()
     };
-    sg::begin_default_pass(&pass_action, sapp::width(), sapp::height());
+    sg::begin_pass(&sg::Pass {
+        action: pass_action,
+        swapchain: sglue::swapchain(),
+        ..Default::default()
+    });
     simgui::render();
     sg::end_pass();
     sg::commit();

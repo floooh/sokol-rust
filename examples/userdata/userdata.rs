@@ -1,4 +1,4 @@
-use sokol::{app as sapp, gfx as sg};
+use sokol::{app as sapp, gfx as sg, glue as sglue};
 
 #[derive(Debug)]
 pub struct ExampleUserData {
@@ -9,7 +9,7 @@ pub struct ExampleUserData {
 
 extern "C" fn init() {
     sg::setup(&sg::Desc {
-        context: sokol::glue::context(),
+        environment: sokol::glue::environment(),
         logger: sg::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         ..Default::default()
     });
@@ -36,9 +36,7 @@ extern "C" fn frame_userdata(userdata: *mut core::ffi::c_void) {
     }
     println!("{state:?}");
 
-    let pass_action = sg::PassAction::new();
-    let (width, height) = (sapp::width(), sapp::height());
-    sg::begin_default_pass(&pass_action, width, height);
+    sg::begin_pass(&sg::Pass { swapchain: sglue::swapchain(), ..Default::default() });
     sg::end_pass();
     sg::commit();
 }

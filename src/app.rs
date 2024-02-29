@@ -770,20 +770,23 @@ pub mod ffi {
         pub fn sapp_html5_get_dropped_file_size(index: i32) -> u32;
         pub fn sapp_html5_fetch_dropped_file(request: *const Html5FetchRequest);
         pub fn sapp_metal_get_device() -> *const core::ffi::c_void;
-        pub fn sapp_metal_get_renderpass_descriptor() -> *const core::ffi::c_void;
-        pub fn sapp_metal_get_drawable() -> *const core::ffi::c_void;
+        pub fn sapp_metal_get_current_drawable() -> *const core::ffi::c_void;
+        pub fn sapp_metal_get_depth_stencil_texture() -> *const core::ffi::c_void;
+        pub fn sapp_metal_get_msaa_color_texture() -> *const core::ffi::c_void;
         pub fn sapp_macos_get_window() -> *const core::ffi::c_void;
         pub fn sapp_ios_get_window() -> *const core::ffi::c_void;
         pub fn sapp_d3d11_get_device() -> *const core::ffi::c_void;
         pub fn sapp_d3d11_get_device_context() -> *const core::ffi::c_void;
         pub fn sapp_d3d11_get_swap_chain() -> *const core::ffi::c_void;
-        pub fn sapp_d3d11_get_render_target_view() -> *const core::ffi::c_void;
+        pub fn sapp_d3d11_get_render_view() -> *const core::ffi::c_void;
+        pub fn sapp_d3d11_get_resolve_view() -> *const core::ffi::c_void;
         pub fn sapp_d3d11_get_depth_stencil_view() -> *const core::ffi::c_void;
         pub fn sapp_win32_get_hwnd() -> *const core::ffi::c_void;
         pub fn sapp_wgpu_get_device() -> *const core::ffi::c_void;
         pub fn sapp_wgpu_get_render_view() -> *const core::ffi::c_void;
         pub fn sapp_wgpu_get_resolve_view() -> *const core::ffi::c_void;
         pub fn sapp_wgpu_get_depth_stencil_view() -> *const core::ffi::c_void;
+        pub fn sapp_gl_get_framebuffer() -> u32;
         pub fn sapp_android_get_native_activity() -> *const core::ffi::c_void;
     }
 }
@@ -954,12 +957,16 @@ pub fn metal_get_device() -> *const core::ffi::c_void {
     unsafe { ffi::sapp_metal_get_device() }
 }
 #[inline]
-pub fn metal_get_renderpass_descriptor() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_metal_get_renderpass_descriptor() }
+pub fn metal_get_current_drawable() -> *const core::ffi::c_void {
+    unsafe { ffi::sapp_metal_get_current_drawable() }
 }
 #[inline]
-pub fn metal_get_drawable() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_metal_get_drawable() }
+pub fn metal_get_depth_stencil_texture() -> *const core::ffi::c_void {
+    unsafe { ffi::sapp_metal_get_depth_stencil_texture() }
+}
+#[inline]
+pub fn metal_get_msaa_color_texture() -> *const core::ffi::c_void {
+    unsafe { ffi::sapp_metal_get_msaa_color_texture() }
 }
 #[inline]
 pub fn macos_get_window() -> *const core::ffi::c_void {
@@ -982,8 +989,12 @@ pub fn d3d11_get_swap_chain() -> *const core::ffi::c_void {
     unsafe { ffi::sapp_d3d11_get_swap_chain() }
 }
 #[inline]
-pub fn d3d11_get_render_target_view() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_d3d11_get_render_target_view() }
+pub fn d3d11_get_render_view() -> *const core::ffi::c_void {
+    unsafe { ffi::sapp_d3d11_get_render_view() }
+}
+#[inline]
+pub fn d3d11_get_resolve_view() -> *const core::ffi::c_void {
+    unsafe { ffi::sapp_d3d11_get_resolve_view() }
 }
 #[inline]
 pub fn d3d11_get_depth_stencil_view() -> *const core::ffi::c_void {
@@ -1008,6 +1019,10 @@ pub fn wgpu_get_resolve_view() -> *const core::ffi::c_void {
 #[inline]
 pub fn wgpu_get_depth_stencil_view() -> *const core::ffi::c_void {
     unsafe { ffi::sapp_wgpu_get_depth_stencil_view() }
+}
+#[inline]
+pub fn gl_get_framebuffer() -> u32 {
+    unsafe { ffi::sapp_gl_get_framebuffer() }
 }
 #[inline]
 pub fn android_get_native_activity() -> *const core::ffi::c_void {

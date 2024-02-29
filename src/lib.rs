@@ -6,6 +6,9 @@ pub mod debugtext;
 pub mod gfx;
 pub mod gl;
 pub mod glue;
+/// Enable feature "imgui" to use
+#[cfg(feature = "imgui")]
+pub mod imgui;
 pub mod log;
 pub mod shape;
 pub mod time;
