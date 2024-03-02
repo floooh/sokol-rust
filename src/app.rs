@@ -578,6 +578,8 @@ pub struct Desc {
     pub html5_bubble_wheel_events: bool,
     pub html5_bubble_key_events: bool,
     pub html5_bubble_char_events: bool,
+    pub html5_use_emsc_set_main_loop: bool,
+    pub html5_emsc_set_main_loop_simulate_infinite_loop: bool,
     pub ios_keyboard_resizes_canvas: bool,
 }
 impl Desc {
@@ -623,6 +625,8 @@ impl Desc {
             html5_bubble_wheel_events: false,
             html5_bubble_key_events: false,
             html5_bubble_char_events: false,
+            html5_use_emsc_set_main_loop: false,
+            html5_emsc_set_main_loop_simulate_infinite_loop: false,
             ios_keyboard_resizes_canvas: false,
         }
     }
