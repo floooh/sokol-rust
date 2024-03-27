@@ -80,10 +80,10 @@ The rust compiler and cargo can be installed using [rustup](https://rustup.rs/)
 The same dependencies apply as with sokol normally for each platform
 
 ## Building with cargo
-Cargo will compile and link the sokol headers automatically durnig compilation thanks to the buildscript `build.rs`
+Cargo will compile and link the sokol headers automatically during compilation thanks to the buildscript `build.rs`
 
 ## Examples
-Not all examples have been translated to rust yet, but you can check the onces that have been in the `examples` directory.
+Not all examples have been translated to rust yet, but you can check the ones that have been in the `examples` directory.
 
 You can compile all examples using the following command:
 ```console
@@ -131,7 +131,7 @@ basic-http-server .
 Checkout [sokol-tools](https://github.com/floooh/sokol-tools) for a sokol shader pipeline! It supports these rust bindings and all shaders in the examples folder
 here have been compiled using it with `-f sokol_rust`!
 
-## License and attributinos
+## License and attributions
 This code is released under the zlib license (see `LICENSE` for info). Parts of `gen_rust.py` and `build.rs` have been copied and modified from
 the zig-bindings (https://github.com/floooh/sokol-odin/) and odin-bindings (https://github.com/floooh/sokol-odin/) for sokol.
 
