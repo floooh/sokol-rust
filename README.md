@@ -75,7 +75,7 @@ fn main() {
 ```
 
 ## Dependencies
-The rust compiler and cargo can be installed using [rustup](https://rustup.rs/)
+The Rust compiler and cargo can be installed using [rustup](https://rustup.rs/)
 
 The same dependencies apply as with sokol normally for each platform
 
@@ -83,7 +83,7 @@ The same dependencies apply as with sokol normally for each platform
 Cargo will compile and link the sokol headers automatically during compilation thanks to the buildscript `build.rs`
 
 ## Examples
-Not all examples have been translated to rust yet, but you can check the ones that have been in the `examples` directory.
+Not all examples have been translated to Rust yet, but you can check the ones that have been in the `examples` directory.
 
 You can compile all examples using the following command:
 ```console
@@ -128,7 +128,7 @@ basic-http-server .
 ```
 
 ## Shaders
-Checkout [sokol-tools](https://github.com/floooh/sokol-tools) for a sokol shader pipeline! It supports these rust bindings and all shaders in the examples folder
+Checkout [sokol-tools](https://github.com/floooh/sokol-tools) for a sokol shader pipeline! It supports these Rust bindings and all shaders in the examples folder
 here have been compiled using it with `-f sokol_rust`!
 
 ## License and attributions
@@ -139,4 +139,4 @@ The sokol headers are created by Andre Weissflog (floooh) and sokol is released 
 
 cimgui https://github.com/cimgui/cimgui is released under the MIT license
 
-The old rust bindings by Daniel Ludwig (code-disaster) https://github.com/code-disaster/sokol-rs were used to figure out the `build.rs` script and it was released under the MIT license.
+The old Rust bindings by Daniel Ludwig (code-disaster) https://github.com/code-disaster/sokol-rs were used to figure out the `build.rs` script and it was released under the MIT license.
