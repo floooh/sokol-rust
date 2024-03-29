@@ -5,18 +5,18 @@
 
 use crate::gfx as sg;
 
-/// Helper function to convert a C string to a rust string slice
+/// Helper function to convert a C string to a Rust string slice
 #[inline]
 fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str {
     let c_str = unsafe { core::ffi::CStr::from_ptr(c_char_ptr) };
     c_str.to_str().expect("c_char_ptr contained invalid Utf8 Data")
 }
 
-/// Helper function to cast a rust slice into a sokol Range
+/// Helper function to cast a Rust slice into a sokol Range
 pub fn slice_as_range<T>(data: &[T]) -> Range {
     Range { size: std::mem::size_of_val(data), ptr: data.as_ptr() as *const _ }
 }
-/// Helper function to cast a rust reference into a sokol Range
+/// Helper function to cast a Rust reference into a sokol Range
 pub fn value_as_range<T>(value: &T) -> Range {
     Range { size: std::mem::size_of::<T>(), ptr: value as *const T as *const _ }
 }
