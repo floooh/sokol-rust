@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //  saudio.rs
-//  Test sokol-audio rust bindings
+//  Test sokol-audio Rust bindings
 //------------------------------------------------------------------------------
 
 use sokol::{app as sapp, audio as saudio, gfx as sg, glue as sglue, log as slog};
