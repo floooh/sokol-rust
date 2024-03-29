@@ -55,13 +55,11 @@ extern "C" fn cleanup() {
 }
 
 fn main() {
-    let window_title = b"clear\0".as_ptr() as _;
-
     sapp::run(&sapp::Desc {
         init_cb: Some(init),
         cleanup_cb: Some(cleanup),
         frame_cb: Some(frame),
-        window_title,
+        window_title: c"clear".as_ptr(),
         width: 800,
         height: 600,
         sample_count: 4,
@@ -77,13 +75,15 @@ fn main() {
 ## Dependencies
 The Rust compiler and cargo can be installed using [rustup](https://rustup.rs/)
 
-The same dependencies apply as with sokol normally for each platform
+The same dependencies apply as with sokol normally for each platform.
 
 ## Building with cargo
 Cargo will compile and link the sokol headers automatically during compilation thanks to the buildscript `build.rs`
 
 ## Examples
 Not all examples have been translated to Rust yet, but you can check the ones that have been in the `examples` directory.
+
+Rust 1.77 or later is required to build the examples.
 
 You can compile all examples using the following command:
 ```console

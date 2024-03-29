@@ -67,13 +67,11 @@ extern "C" fn cleanup() {
 }
 
 fn main() {
-    let window_title = b"clear\0".as_ptr() as _;
-
     sapp::run(&sapp::Desc {
         init_cb: Some(init),
         cleanup_cb: Some(cleanup),
         frame_cb: Some(frame),
-        window_title,
+        window_title: c"clear".as_ptr(),
         width: 800,
         height: 600,
         sample_count: 4,

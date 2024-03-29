@@ -1191,11 +1191,11 @@ pub fn dbg_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
     let mut desc = sg::ShaderDesc::new();
     match backend {
         sg::Backend::Glcore33 => {
-            desc.attrs[0].name = b"pos\0".as_ptr() as *const _;
+            desc.attrs[0].name = c"pos".as_ptr();
             desc.vs.source = &VS_DBG_SOURCE_GLSL330 as *const _ as *const _;
-            desc.vs.entry = b"main\0".as_ptr() as *const _;
+            desc.vs.entry = c"main".as_ptr();
             desc.fs.source = &FS_DBG_SOURCE_GLSL330 as *const _ as *const _;
-            desc.fs.entry = b"main\0".as_ptr() as *const _;
+            desc.fs.entry = c"main".as_ptr();
             desc.fs.images[0].used = true;
             desc.fs.images[0].multisampled = false;
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
@@ -1205,18 +1205,18 @@ pub fn dbg_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.image_sampler_pairs[0].used = true;
             desc.fs.image_sampler_pairs[0].image_slot = 0;
             desc.fs.image_sampler_pairs[0].sampler_slot = 0;
-            desc.fs.image_sampler_pairs[0].glsl_name = b"tex_smp\0".as_ptr() as *const _;
-            desc.label = b"dbg_shader\0".as_ptr() as *const _;
+            desc.fs.image_sampler_pairs[0].glsl_name = c"tex_smp".as_ptr();
+            desc.label = c"dbg_shader".as_ptr();
         },
         sg::Backend::D3d11 => {
-            desc.attrs[0].sem_name = b"TEXCOORD\0".as_ptr() as *const _;
+            desc.attrs[0].sem_name = c"TEXCOORD".as_ptr();
             desc.attrs[0].sem_index = 0;
             desc.vs.source = &VS_DBG_SOURCE_HLSL4 as *const _ as *const _;
-            desc.vs.d3d11_target = b"vs_4_0\0".as_ptr() as *const _;
-            desc.vs.entry = b"main\0".as_ptr() as *const _;
+            desc.vs.d3d11_target = c"vs_4_0".as_ptr();
+            desc.vs.entry = c"main".as_ptr();
             desc.fs.source = &FS_DBG_SOURCE_HLSL4 as *const _ as *const _;
-            desc.fs.d3d11_target = b"ps_4_0\0".as_ptr() as *const _;
-            desc.fs.entry = b"main\0".as_ptr() as *const _;
+            desc.fs.d3d11_target = c"ps_4_0".as_ptr();
+            desc.fs.entry = c"main".as_ptr();
             desc.fs.images[0].used = true;
             desc.fs.images[0].multisampled = false;
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
@@ -1226,13 +1226,13 @@ pub fn dbg_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.image_sampler_pairs[0].used = true;
             desc.fs.image_sampler_pairs[0].image_slot = 0;
             desc.fs.image_sampler_pairs[0].sampler_slot = 0;
-            desc.label = b"dbg_shader\0".as_ptr() as *const _;
+            desc.label = c"dbg_shader".as_ptr();
         },
         sg::Backend::MetalMacos => {
             desc.vs.source = &VS_DBG_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.vs.entry = b"main0\0".as_ptr() as *const _;
+            desc.vs.entry = c"main0".as_ptr();
             desc.fs.source = &FS_DBG_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.fs.entry = b"main0\0".as_ptr() as *const _;
+            desc.fs.entry = c"main0".as_ptr();
             desc.fs.images[0].used = true;
             desc.fs.images[0].multisampled = false;
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
@@ -1242,7 +1242,7 @@ pub fn dbg_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.image_sampler_pairs[0].used = true;
             desc.fs.image_sampler_pairs[0].image_slot = 0;
             desc.fs.image_sampler_pairs[0].sampler_slot = 0;
-            desc.label = b"dbg_shader\0".as_ptr() as *const _;
+            desc.label = c"dbg_shader".as_ptr();
         },
         _ => {},
     }
@@ -1252,16 +1252,16 @@ pub fn fsq_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
     let mut desc = sg::ShaderDesc::new();
     match backend {
         sg::Backend::Glcore33 => {
-            desc.attrs[0].name = b"pos\0".as_ptr() as *const _;
+            desc.attrs[0].name = c"pos".as_ptr();
             desc.vs.source = &VS_FSQ_SOURCE_GLSL330 as *const _ as *const _;
-            desc.vs.entry = b"main\0".as_ptr() as *const _;
+            desc.vs.entry = c"main".as_ptr();
             desc.vs.uniform_blocks[0].size = 16;
             desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.vs.uniform_blocks[0].uniforms[0].name = b"fsq_params\0".as_ptr() as *const _;
+            desc.vs.uniform_blocks[0].uniforms[0].name = c"fsq_params".as_ptr();
             desc.vs.uniform_blocks[0].uniforms[0]._type = sg::UniformType::Float4;
             desc.vs.uniform_blocks[0].uniforms[0].array_count = 1;
             desc.fs.source = &FS_FSQ_SOURCE_GLSL330 as *const _ as *const _;
-            desc.fs.entry = b"main\0".as_ptr() as *const _;
+            desc.fs.entry = c"main".as_ptr();
             desc.fs.images[0].used = true;
             desc.fs.images[0].multisampled = false;
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
@@ -1279,28 +1279,28 @@ pub fn fsq_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.image_sampler_pairs[0].used = true;
             desc.fs.image_sampler_pairs[0].image_slot = 0;
             desc.fs.image_sampler_pairs[0].sampler_slot = 0;
-            desc.fs.image_sampler_pairs[0].glsl_name = b"tex0_smp\0".as_ptr() as *const _;
+            desc.fs.image_sampler_pairs[0].glsl_name = c"tex0_smp".as_ptr();
             desc.fs.image_sampler_pairs[1].used = true;
             desc.fs.image_sampler_pairs[1].image_slot = 1;
             desc.fs.image_sampler_pairs[1].sampler_slot = 0;
-            desc.fs.image_sampler_pairs[1].glsl_name = b"tex1_smp\0".as_ptr() as *const _;
+            desc.fs.image_sampler_pairs[1].glsl_name = c"tex1_smp".as_ptr();
             desc.fs.image_sampler_pairs[2].used = true;
             desc.fs.image_sampler_pairs[2].image_slot = 2;
             desc.fs.image_sampler_pairs[2].sampler_slot = 0;
-            desc.fs.image_sampler_pairs[2].glsl_name = b"tex2_smp\0".as_ptr() as *const _;
-            desc.label = b"fsq_shader\0".as_ptr() as *const _;
+            desc.fs.image_sampler_pairs[2].glsl_name = c"tex2_smp".as_ptr();
+            desc.label = c"fsq_shader".as_ptr();
         },
         sg::Backend::D3d11 => {
-            desc.attrs[0].sem_name = b"TEXCOORD\0".as_ptr() as *const _;
+            desc.attrs[0].sem_name = c"TEXCOORD".as_ptr();
             desc.attrs[0].sem_index = 0;
             desc.vs.source = &VS_FSQ_SOURCE_HLSL4 as *const _ as *const _;
-            desc.vs.d3d11_target = b"vs_4_0\0".as_ptr() as *const _;
-            desc.vs.entry = b"main\0".as_ptr() as *const _;
+            desc.vs.d3d11_target = c"vs_4_0".as_ptr();
+            desc.vs.entry = c"main".as_ptr();
             desc.vs.uniform_blocks[0].size = 16;
             desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
             desc.fs.source = &FS_FSQ_SOURCE_HLSL4 as *const _ as *const _;
-            desc.fs.d3d11_target = b"ps_4_0\0".as_ptr() as *const _;
-            desc.fs.entry = b"main\0".as_ptr() as *const _;
+            desc.fs.d3d11_target = c"ps_4_0".as_ptr();
+            desc.fs.entry = c"main".as_ptr();
             desc.fs.images[0].used = true;
             desc.fs.images[0].multisampled = false;
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
@@ -1324,15 +1324,15 @@ pub fn fsq_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.image_sampler_pairs[2].used = true;
             desc.fs.image_sampler_pairs[2].image_slot = 2;
             desc.fs.image_sampler_pairs[2].sampler_slot = 0;
-            desc.label = b"fsq_shader\0".as_ptr() as *const _;
+            desc.label = c"fsq_shader".as_ptr();
         },
         sg::Backend::MetalMacos => {
             desc.vs.source = &VS_FSQ_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.vs.entry = b"main0\0".as_ptr() as *const _;
+            desc.vs.entry = c"main0".as_ptr();
             desc.vs.uniform_blocks[0].size = 16;
             desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
             desc.fs.source = &FS_FSQ_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.fs.entry = b"main0\0".as_ptr() as *const _;
+            desc.fs.entry = c"main0".as_ptr();
             desc.fs.images[0].used = true;
             desc.fs.images[0].multisampled = false;
             desc.fs.images[0].image_type = sg::ImageType::Dim2;
@@ -1356,7 +1356,7 @@ pub fn fsq_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fs.image_sampler_pairs[2].used = true;
             desc.fs.image_sampler_pairs[2].image_slot = 2;
             desc.fs.image_sampler_pairs[2].sampler_slot = 0;
-            desc.label = b"fsq_shader\0".as_ptr() as *const _;
+            desc.label = c"fsq_shader".as_ptr();
         },
         _ => {},
     }
@@ -1366,42 +1366,42 @@ pub fn offscreen_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
     let mut desc = sg::ShaderDesc::new();
     match backend {
         sg::Backend::Glcore33 => {
-            desc.attrs[0].name = b"pos\0".as_ptr() as *const _;
-            desc.attrs[1].name = b"bright0\0".as_ptr() as *const _;
+            desc.attrs[0].name = c"pos".as_ptr();
+            desc.attrs[1].name = c"bright0".as_ptr();
             desc.vs.source = &VS_OFFSCREEN_SOURCE_GLSL330 as *const _ as *const _;
-            desc.vs.entry = b"main\0".as_ptr() as *const _;
+            desc.vs.entry = c"main".as_ptr();
             desc.vs.uniform_blocks[0].size = 64;
             desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.vs.uniform_blocks[0].uniforms[0].name = b"offscreen_params\0".as_ptr() as *const _;
+            desc.vs.uniform_blocks[0].uniforms[0].name = c"offscreen_params".as_ptr();
             desc.vs.uniform_blocks[0].uniforms[0]._type = sg::UniformType::Float4;
             desc.vs.uniform_blocks[0].uniforms[0].array_count = 4;
             desc.fs.source = &FS_OFFSCREEN_SOURCE_GLSL330 as *const _ as *const _;
-            desc.fs.entry = b"main\0".as_ptr() as *const _;
-            desc.label = b"offscreen_shader\0".as_ptr() as *const _;
+            desc.fs.entry = c"main".as_ptr();
+            desc.label = c"offscreen_shader".as_ptr();
         },
         sg::Backend::D3d11 => {
-            desc.attrs[0].sem_name = b"TEXCOORD\0".as_ptr() as *const _;
+            desc.attrs[0].sem_name = c"TEXCOORD".as_ptr();
             desc.attrs[0].sem_index = 0;
-            desc.attrs[1].sem_name = b"TEXCOORD\0".as_ptr() as *const _;
+            desc.attrs[1].sem_name = c"TEXCOORD".as_ptr();
             desc.attrs[1].sem_index = 1;
             desc.vs.source = &VS_OFFSCREEN_SOURCE_HLSL4 as *const _ as *const _;
-            desc.vs.d3d11_target = b"vs_4_0\0".as_ptr() as *const _;
-            desc.vs.entry = b"main\0".as_ptr() as *const _;
+            desc.vs.d3d11_target = c"vs_4_0".as_ptr();
+            desc.vs.entry = c"main".as_ptr();
             desc.vs.uniform_blocks[0].size = 64;
             desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
             desc.fs.source = &FS_OFFSCREEN_SOURCE_HLSL4 as *const _ as *const _;
-            desc.fs.d3d11_target = b"ps_4_0\0".as_ptr() as *const _;
-            desc.fs.entry = b"main\0".as_ptr() as *const _;
-            desc.label = b"offscreen_shader\0".as_ptr() as *const _;
+            desc.fs.d3d11_target = c"ps_4_0".as_ptr();
+            desc.fs.entry = c"main".as_ptr();
+            desc.label = c"offscreen_shader".as_ptr();
         },
         sg::Backend::MetalMacos => {
             desc.vs.source = &VS_OFFSCREEN_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.vs.entry = b"main0\0".as_ptr() as *const _;
+            desc.vs.entry = c"main0".as_ptr();
             desc.vs.uniform_blocks[0].size = 64;
             desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
             desc.fs.source = &FS_OFFSCREEN_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.fs.entry = b"main0\0".as_ptr() as *const _;
-            desc.label = b"offscreen_shader\0".as_ptr() as *const _;
+            desc.fs.entry = c"main0".as_ptr();
+            desc.label = c"offscreen_shader".as_ptr();
         },
         _ => {},
     }

@@ -152,8 +152,6 @@ extern "C" fn cleanup() {
 }
 
 fn main() {
-    let window_title = b"cube\0".as_ptr() as _;
-
     sapp::run(&sapp::Desc {
         init_cb: Some(init),
         frame_cb: Some(frame),
@@ -161,7 +159,7 @@ fn main() {
         width: 800,
         height: 600,
         sample_count: 4,
-        window_title,
+        window_title: c"cube".as_ptr(),
         logger: sapp::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },
 

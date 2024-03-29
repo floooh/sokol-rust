@@ -79,7 +79,7 @@ pub fn main() {
         width: 640,
         height: 480,
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },
-        window_title: b"saudio\0".as_ptr() as _,
+        window_title: c"saudio".as_ptr(),
         logger: sapp::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()
     });

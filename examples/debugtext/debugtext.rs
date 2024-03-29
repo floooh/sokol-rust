@@ -89,15 +89,13 @@ extern "C" fn cleanup() {
 }
 
 fn main() {
-    let window_title = b"debugtext\0".as_ptr() as *const _;
-
     sapp::run(&sapp::Desc {
         init_cb: Some(init),
         frame_cb: Some(frame),
         cleanup_cb: Some(cleanup),
         width: 1024,
         height: 600,
-        window_title,
+        window_title: c"debugtext".as_ptr(),
         logger: sapp::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },
         ..Default::default()
