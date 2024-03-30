@@ -187,7 +187,7 @@ fn main() {
         width: 800,
         height: 600,
         sample_count: 4,
-        window_title: b"instancing\0".as_ptr() as _,
+        window_title: c"instancing".as_ptr(),
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },
         logger: sapp::Logger { func: Some(slog::slog_func), ..Default::default() },
         ..Default::default()

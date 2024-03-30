@@ -46,8 +46,6 @@ extern "C" fn cleanup() {
 }
 
 fn main() {
-    let window_title = b"test\0".as_ptr() as _;
-
     let mut user_data = ExampleUserData { data: 0, map: std::collections::HashMap::default() };
 
     sapp::run(&sapp::Desc {
@@ -67,7 +65,7 @@ fn main() {
         width: 800,
         height: 600,
         sample_count: 4,
-        window_title,
+        window_title: c"test".as_ptr(),
         logger: sapp::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },
         ..Default::default()
