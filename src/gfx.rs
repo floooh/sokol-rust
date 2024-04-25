@@ -146,6 +146,7 @@ pub const MAX_VERTEX_BUFFERS: usize = 8;
 pub const MAX_SHADERSTAGE_IMAGES: usize = 12;
 pub const MAX_SHADERSTAGE_SAMPLERS: usize = 8;
 pub const MAX_SHADERSTAGE_IMAGESAMPLERPAIRS: usize = 12;
+pub const MAX_SHADERSTAGE_STORAGE_BUFFERS: usize = 8;
 pub const MAX_SHADERSTAGE_UBS: usize = 4;
 pub const MAX_UB_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
@@ -172,7 +173,7 @@ impl Default for Color {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(i32)]
 pub enum Backend {
-    Glcore33,
+    Glcore,
     Gles3,
     D3d11,
     MetalIos,
@@ -183,12 +184,12 @@ pub enum Backend {
 }
 impl Backend {
     pub const fn new() -> Self {
-        Self::Glcore33
+        Self::Glcore
     }
 }
 impl Default for Backend {
     fn default() -> Self {
-        Self::Glcore33
+        Self::Glcore
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -314,6 +315,7 @@ pub struct Features {
     pub image_clamp_to_border: bool,
     pub mrt_independent_blend_state: bool,
     pub mrt_independent_write_mask: bool,
+    pub storage_buffer: bool,
 }
 impl Features {
     pub const fn new() -> Self {
@@ -322,6 +324,7 @@ impl Features {
             image_clamp_to_border: false,
             mrt_independent_blend_state: false,
             mrt_independent_write_mask: false,
+            storage_buffer: false,
         }
     }
 }
@@ -405,6 +408,7 @@ pub enum BufferType {
     Default,
     Vertexbuffer,
     Indexbuffer,
+    Storagebuffer,
     Num,
 }
 impl BufferType {
@@ -1130,10 +1134,15 @@ impl Default for Pass {
 pub struct StageBindings {
     pub images: [Image; 12],
     pub samplers: [Sampler; 8],
+    pub storage_buffers: [Buffer; 8],
 }
 impl StageBindings {
     pub const fn new() -> Self {
-        Self { images: [Image::new(); 12], samplers: [Sampler::new(); 8] }
+        Self {
+            images: [Image::new(); 12],
+            samplers: [Sampler::new(); 8],
+            storage_buffers: [Buffer::new(); 8],
+        }
     }
 }
 impl Default for StageBindings {
@@ -1383,6 +1392,22 @@ impl Default for ShaderUniformBlockDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct ShaderStorageBufferDesc {
+    pub used: bool,
+    pub readonly: bool,
+}
+impl ShaderStorageBufferDesc {
+    pub const fn new() -> Self {
+        Self { used: false, readonly: false }
+    }
+}
+impl Default for ShaderStorageBufferDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ShaderImageDesc {
     pub used: bool,
     pub multisampled: bool,
@@ -1446,6 +1471,7 @@ pub struct ShaderStageDesc {
     pub entry: *const core::ffi::c_char,
     pub d3d11_target: *const core::ffi::c_char,
     pub uniform_blocks: [ShaderUniformBlockDesc; 4],
+    pub storage_buffers: [ShaderStorageBufferDesc; 8],
     pub images: [ShaderImageDesc; 12],
     pub samplers: [ShaderSamplerDesc; 8],
     pub image_sampler_pairs: [ShaderImageSamplerPairDesc; 12],
@@ -1458,6 +1484,7 @@ impl ShaderStageDesc {
             entry: core::ptr::null(),
             d3d11_target: core::ptr::null(),
             uniform_blocks: [ShaderUniformBlockDesc::new(); 4],
+            storage_buffers: [ShaderStorageBufferDesc::new(); 8],
             images: [ShaderImageDesc::new(); 12],
             samplers: [ShaderSamplerDesc::new(); 8],
             image_sampler_pairs: [ShaderImageSamplerPairDesc::new(); 12],
@@ -2260,6 +2287,7 @@ pub struct FrameStatsMetalBindings {
     pub num_set_vertex_buffer: u32,
     pub num_set_vertex_texture: u32,
     pub num_set_vertex_sampler_state: u32,
+    pub num_set_fragment_buffer: u32,
     pub num_set_fragment_texture: u32,
     pub num_set_fragment_sampler_state: u32,
 }
@@ -2269,6 +2297,7 @@ impl FrameStatsMetalBindings {
             num_set_vertex_buffer: 0,
             num_set_vertex_texture: 0,
             num_set_vertex_sampler_state: 0,
+            num_set_fragment_buffer: 0,
             num_set_fragment_texture: 0,
             num_set_fragment_sampler_state: 0,
         }
@@ -2461,6 +2490,7 @@ pub enum LogItem {
     GlFramebufferStatusIncompleteMultisample,
     GlFramebufferStatusUnknown,
     D3d11CreateBufferFailed,
+    D3d11CreateBufferSrvFailed,
     D3d11CreateDepthTextureUnsupportedPixelFormat,
     D3d11CreateDepthTextureFailed,
     D3d11Create2dTextureUnsupportedPixelFormat,
@@ -2507,6 +2537,7 @@ pub enum LogItem {
     WgpuCreateShaderModuleFailed,
     WgpuShaderTooManyImages,
     WgpuShaderTooManySamplers,
+    WgpuShaderTooManyStoragebuffers,
     WgpuShaderCreateBindgroupLayoutFailed,
     WgpuCreatePipelineLayoutFailed,
     WgpuCreateRenderPipelineFailed,
@@ -2551,6 +2582,8 @@ pub enum LogItem {
     ValidateBufferdescData,
     ValidateBufferdescDataSize,
     ValidateBufferdescNoData,
+    ValidateBufferdescStoragebufferSupported,
+    ValidateBufferdescStoragebufferSizeMultiple4,
     ValidateImagedataNodata,
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
@@ -2584,6 +2617,8 @@ pub enum LogItem {
     ValidateShaderdescUbSizeMismatch,
     ValidateShaderdescUbArrayCount,
     ValidateShaderdescUbStd140ArrayType,
+    ValidateShaderdescNoContStoragebuffers,
+    ValidateShaderdescStoragebufferReadonly,
     ValidateShaderdescNoContImages,
     ValidateShaderdescNoContSamplers,
     ValidateShaderdescImageSamplerPairImageSlotOutOfRange,
@@ -2597,11 +2632,10 @@ pub enum LogItem {
     ValidateShaderdescImageNotReferencedByImageSamplerPairs,
     ValidateShaderdescSamplerNotReferencedByImageSamplerPairs,
     ValidateShaderdescNoContImageSamplerPairs,
-    ValidateShaderdescAttrSemantics,
     ValidateShaderdescAttrStringTooLong,
     ValidatePipelinedescCanary,
     ValidatePipelinedescShader,
-    ValidatePipelinedescNoAttrs,
+    ValidatePipelinedescNoContAttrs,
     ValidatePipelinedescLayoutStride4,
     ValidatePipelinedescAttrSemantics,
     ValidateAttachmentsdescCanary,
@@ -2705,6 +2739,10 @@ pub enum LogItem {
     ValidateAbndVsExpectedNonfilteringSampler,
     ValidateAbndVsUnexpectedSamplerBinding,
     ValidateAbndVsSmpExists,
+    ValidateAbndVsExpectedStoragebufferBinding,
+    ValidateAbndVsStoragebufferExists,
+    ValidateAbndVsStoragebufferBindingBuffertype,
+    ValidateAbndVsUnexpectedStoragebufferBinding,
     ValidateAbndFsExpectedImageBinding,
     ValidateAbndFsImgExists,
     ValidateAbndFsImageTypeMismatch,
@@ -2718,6 +2756,10 @@ pub enum LogItem {
     ValidateAbndFsExpectedNonfilteringSampler,
     ValidateAbndFsUnexpectedSamplerBinding,
     ValidateAbndFsSmpExists,
+    ValidateAbndFsExpectedStoragebufferBinding,
+    ValidateAbndFsStoragebufferExists,
+    ValidateAbndFsStoragebufferBindingBuffertype,
+    ValidateAbndFsUnexpectedStoragebufferBinding,
     ValidateAubNoPipeline,
     ValidateAubNoUbAtSlot,
     ValidateAubSize,
@@ -2811,11 +2853,28 @@ impl Default for WgpuEnvironment {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct GlEnvironment {
+    pub major_version: i32,
+    pub minor_version: i32,
+}
+impl GlEnvironment {
+    pub const fn new() -> Self {
+        Self { major_version: 0, minor_version: 0 }
+    }
+}
+impl Default for GlEnvironment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Environment {
     pub defaults: EnvironmentDefaults,
     pub metal: MetalEnvironment,
     pub d3d11: D3d11Environment,
     pub wgpu: WgpuEnvironment,
+    pub gl: GlEnvironment,
 }
 impl Environment {
     pub const fn new() -> Self {
@@ -2824,6 +2883,7 @@ impl Environment {
             metal: MetalEnvironment::new(),
             d3d11: D3d11Environment::new(),
             wgpu: WgpuEnvironment::new(),
+            gl: GlEnvironment::new(),
         }
     }
 }
