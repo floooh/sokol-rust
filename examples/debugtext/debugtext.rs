@@ -95,7 +95,7 @@ fn main() {
         cleanup_cb: Some(cleanup),
         width: 1024,
         height: 600,
-        window_title: c"debugtext".as_ptr(),
+        window_title: c"debugtext.rs".as_ptr(),
         logger: sapp::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },
         ..Default::default()

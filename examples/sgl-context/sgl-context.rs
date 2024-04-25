@@ -216,7 +216,7 @@ fn main() {
         width: 800,
         height: 600,
         sample_count: 4,
-        window_title: c"sgl-context".as_ptr(),
+        window_title: c"sgl-context.rs".as_ptr(),
         logger: sapp::Logger { func: Some(sokol::log::slog_func), ..Default::default() },
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },
         ..Default::default()
