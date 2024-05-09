@@ -2853,28 +2853,11 @@ impl Default for WgpuEnvironment {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct GlEnvironment {
-    pub major_version: i32,
-    pub minor_version: i32,
-}
-impl GlEnvironment {
-    pub const fn new() -> Self {
-        Self { major_version: 0, minor_version: 0 }
-    }
-}
-impl Default for GlEnvironment {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
 pub struct Environment {
     pub defaults: EnvironmentDefaults,
     pub metal: MetalEnvironment,
     pub d3d11: D3d11Environment,
     pub wgpu: WgpuEnvironment,
-    pub gl: GlEnvironment,
 }
 impl Environment {
     pub const fn new() -> Self {
@@ -2883,7 +2866,6 @@ impl Environment {
             metal: MetalEnvironment::new(),
             d3d11: D3d11Environment::new(),
             wgpu: WgpuEnvironment::new(),
-            gl: GlEnvironment::new(),
         }
     }
 }
