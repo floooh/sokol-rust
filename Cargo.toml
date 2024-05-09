@@ -56,3 +56,7 @@ path = "examples/instancing/instancing.rs"
 [[example]]
 name = "texcube"
 path = "examples/texcube/texcube.rs"
+
+[[example]]
+name = "vertexpull"
+path = "examples/vertexpull/vertexpull.rs"

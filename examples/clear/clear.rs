@@ -23,7 +23,7 @@ extern "C" fn init() {
 
     let backend = sg::query_backend();
     match &backend {
-        sg::Backend::Glcore33 | sg::Backend::Gles3 => {
+        sg::Backend::Glcore | sg::Backend::Gles3 => {
             println!("Using GL Backend!");
             println!("Specifically the {:?} backend!", backend);
         },
@@ -71,7 +71,7 @@ fn main() {
         init_cb: Some(init),
         cleanup_cb: Some(cleanup),
         frame_cb: Some(frame),
-        window_title: c"clear".as_ptr(),
+        window_title: c"clear.rs".as_ptr(),
         width: 800,
         height: 600,
         sample_count: 4,

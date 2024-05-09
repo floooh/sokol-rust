@@ -791,6 +791,8 @@ pub mod ffi {
         pub fn sapp_wgpu_get_resolve_view() -> *const core::ffi::c_void;
         pub fn sapp_wgpu_get_depth_stencil_view() -> *const core::ffi::c_void;
         pub fn sapp_gl_get_framebuffer() -> u32;
+        pub fn sapp_gl_get_major_version() -> i32;
+        pub fn sapp_gl_get_minor_version() -> i32;
         pub fn sapp_android_get_native_activity() -> *const core::ffi::c_void;
     }
 }
@@ -1027,6 +1029,14 @@ pub fn wgpu_get_depth_stencil_view() -> *const core::ffi::c_void {
 #[inline]
 pub fn gl_get_framebuffer() -> u32 {
     unsafe { ffi::sapp_gl_get_framebuffer() }
+}
+#[inline]
+pub fn gl_get_major_version() -> i32 {
+    unsafe { ffi::sapp_gl_get_major_version() }
+}
+#[inline]
+pub fn gl_get_minor_version() -> i32 {
+    unsafe { ffi::sapp_gl_get_minor_version() }
 }
 #[inline]
 pub fn android_get_native_activity() -> *const core::ffi::c_void {

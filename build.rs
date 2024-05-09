@@ -107,7 +107,7 @@ fn select_sokol_backend(build: &mut cc::Build, config: &CompilationConfig) -> So
             build.define("SOKOL_GLES2", None);
         },
         SokolBackend::Gl => {
-            build.define("SOKOL_GLCORE33", None);
+            build.define("SOKOL_GLCORE", None);
         },
         SokolBackend::Wgpu => {
             build.define("SOKOL_WGPU", None);

@@ -102,6 +102,7 @@ cargo run --example blend
 cargo run --example audio
 cargo run --example instancing
 cargo run --example userdata
+cargo run --example vertexpull
 ```
 
 >NOTE: imgui support has been removed for now, the required cimgui submodule dependency caused trouble with
