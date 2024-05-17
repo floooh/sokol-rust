@@ -9,6 +9,7 @@ mod shader;
 
 use math as m;
 use sokol::{app as sapp, gfx as sg, glue as sglue};
+use std::ffi;
 
 const NUM_BLEND_FACTORS: usize = 15;
 
@@ -22,18 +23,8 @@ struct State {
     bg_fs_params: shader::BgFsParams,
 }
 
-static mut STATE: State = State {
-    pass_action: sg::PassAction::new(),
-    bind: sg::Bindings::new(),
-    pips: [[sg::Pipeline::new(); NUM_BLEND_FACTORS]; NUM_BLEND_FACTORS],
-    bg_pip: sg::Pipeline::new(),
-    r: 0.0,
-    quad_vs_params: shader::QuadVsParams { mvp: [[0.0; 4]; 4] },
-    bg_fs_params: shader::BgFsParams { tick: 0.0, _pad_4: [0; 12] },
-};
-
-extern "C" fn init() {
-    let state = unsafe { &mut STATE };
+extern "C" fn init(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     sg::setup(&sg::Desc {
         pipeline_pool_size: (NUM_BLEND_FACTORS * NUM_BLEND_FACTORS + 1) as _,
@@ -106,8 +97,8 @@ extern "C" fn init() {
     }
 }
 
-extern "C" fn frame() {
-    let state = unsafe { &mut STATE };
+extern "C" fn frame(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     let t = (sapp::frame_duration() * 60.0) as f32;
     state.r += 0.6 * t;
@@ -160,15 +151,30 @@ extern "C" fn frame() {
     sg::commit();
 }
 
-extern "C" fn cleanup() {
-    sg::shutdown()
+extern "C" fn cleanup(user_data: *mut ffi::c_void) {
+    sg::shutdown();
+
+    let _ = unsafe { Box::from_raw(user_data as *mut State) };
 }
 
 fn main() {
+    let state = Box::new(State {
+        pass_action: sg::PassAction::new(),
+        bind: sg::Bindings::new(),
+        pips: [[sg::Pipeline::new(); NUM_BLEND_FACTORS]; NUM_BLEND_FACTORS],
+        bg_pip: sg::Pipeline::new(),
+        r: 0.0,
+        quad_vs_params: shader::QuadVsParams { mvp: [[0.0; 4]; 4] },
+        bg_fs_params: shader::BgFsParams { tick: 0.0, _pad_4: [0; 12] },
+    });
+
+    let user_data = Box::into_raw(state) as *mut ffi::c_void;
+
     sapp::run(&sapp::Desc {
-        init_cb: Some(init),
-        frame_cb: Some(frame),
-        cleanup_cb: Some(cleanup),
+        init_userdata_cb: Some(init),
+        frame_userdata_cb: Some(frame),
+        cleanup_userdata_cb: Some(cleanup),
+        user_data,
         width: 800,
         height: 600,
         sample_count: 4,

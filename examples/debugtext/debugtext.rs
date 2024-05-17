@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 use sokol::{app as sapp, debugtext as sdtx, gfx as sg, glue as sglue};
+use std::ffi;
 
 const FONT_KC853: usize = 0;
 const FONT_KC854: usize = 1;
@@ -17,10 +18,8 @@ struct State {
     pass_action: sg::PassAction,
 }
 
-static mut STATE: State = State { pass_action: sg::PassAction::new() };
-
-extern "C" fn init() {
-    let state = unsafe { &mut STATE };
+extern "C" fn init(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
     state.pass_action.colors[0] = sg::ColorAttachmentAction {
         load_action: sg::LoadAction::Clear,
         clear_value: sg::Color { r: 0.0, g: 0.125, b: 0.25, a: 1.0 },
@@ -58,8 +57,8 @@ fn print_font(font_index: usize, title: &str, r: u8, g: u8, b: u8) {
     sdtx::crlf();
 }
 
-extern "C" fn frame() {
-    let state = unsafe { &mut STATE };
+extern "C" fn frame(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
     // set virtual canvas size to half display size so that
     // glyphs are 16x16 display pixels
     sdtx::canvas(sapp::widthf() * 0.5, sapp::heightf() * 0.5);
@@ -83,16 +82,23 @@ extern "C" fn frame() {
     sg::commit();
 }
 
-extern "C" fn cleanup() {
+extern "C" fn cleanup(user_data: *mut ffi::c_void) {
     sdtx::shutdown();
     sg::shutdown();
+
+    let _ = unsafe { Box::from_raw(user_data as *mut State) };
 }
 
 fn main() {
+    let state = Box::new(State { pass_action: sg::PassAction::new() });
+
+    let user_data = Box::into_raw(state) as *mut ffi::c_void;
+
     sapp::run(&sapp::Desc {
-        init_cb: Some(init),
-        frame_cb: Some(frame),
-        cleanup_cb: Some(cleanup),
+        init_userdata_cb: Some(init),
+        frame_userdata_cb: Some(frame),
+        cleanup_userdata_cb: Some(cleanup),
+        user_data,
         width: 1024,
         height: 600,
         window_title: c"debugtext.rs".as_ptr(),

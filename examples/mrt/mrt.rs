@@ -14,6 +14,7 @@ mod shader;
 
 use math as m;
 use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
+use std::ffi;
 
 const OFFSCREEN_SAMPLE_COUNT: usize = 1;
 
@@ -49,24 +50,8 @@ struct State {
     pub view: m::Mat4,
 }
 
-static mut STATE: State = State {
-    offscreen: Offscreen {
-        pass_action: sg::PassAction::new(),
-        attachments_desc: sg::AttachmentsDesc::new(),
-        attachments: sg::Attachments::new(),
-        pip: sg::Pipeline::new(),
-        bind: sg::Bindings::new(),
-    },
-    fsq: Fsq { pip: sg::Pipeline::new(), bind: sg::Bindings::new() },
-    dbg: Dbg { pip: sg::Pipeline::new(), bind: sg::Bindings::new() },
-    dflt: Dflt { pass_action: sg::PassAction::new() },
-    rx: 0.0,
-    ry: 0.0,
-    view: [[0.0; 4]; 4],
-};
-
-extern "C" fn init() {
-    let state = unsafe { &mut STATE };
+extern "C" fn init(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     state.view = m::lookat_mat4(m::vec3(0.0, 1.5, 6.0), m::Vec3::ZERO, m::vec3(0.0, 1.0, 0.0));
 
@@ -103,7 +88,7 @@ extern "C" fn init() {
 
     // setup the offscreen render pass and render target images,
     // this will also be called when the window resizes
-    create_offscreen_attachments(sapp::width(), sapp::height());
+    create_offscreen_attachments(sapp::width(), sapp::height(), state);
 
     #[rustfmt::skip]
     const VERTICES: &[f32] = &[
@@ -230,8 +215,8 @@ extern "C" fn init() {
     state.dbg.bind.fs.samplers[0] = smp;
 }
 
-extern "C" fn frame() {
-    let state = unsafe { &mut STATE };
+extern "C" fn frame(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     let dt = (sapp::frame_duration() * 60.0) as f32;
     state.rx += 1.0 * dt;
@@ -282,18 +267,17 @@ extern "C" fn frame() {
     sg::commit();
 }
 
-extern "C" fn event(event: *const sapp::Event) {
+extern "C" fn event(event: *const sapp::Event, user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
     let event = unsafe { &*event };
 
     if event._type == sapp::EventType::Resized {
-        create_offscreen_attachments(event.framebuffer_width, event.framebuffer_height);
+        create_offscreen_attachments(event.framebuffer_width, event.framebuffer_height, state);
     }
 }
 
 // helper function to create or re-create render target images and attachments object for offscreen rendering
-fn create_offscreen_attachments(width: i32, height: i32) {
-    let state = unsafe { &mut STATE };
-
+fn create_offscreen_attachments(width: i32, height: i32, state: &mut State) {
     // destroy previous resources (can be called with invalid ids)
     sg::destroy_attachments(state.offscreen.attachments);
     for att in state.offscreen.attachments_desc.colors {
@@ -337,16 +321,37 @@ pub fn compute_mvp(rx: f32, ry: f32) -> [[f32; 4]; 4] {
     m::mul_mat4(view_proj, model)
 }
 
-extern "C" fn cleanup() {
-    sg::shutdown()
+extern "C" fn cleanup(user_data: *mut ffi::c_void) {
+    sg::shutdown();
+
+    let _ = unsafe { Box::from_raw(user_data as *mut State) };
 }
 
 fn main() {
+    let state = Box::new(State {
+        offscreen: Offscreen {
+            pass_action: sg::PassAction::new(),
+            attachments_desc: sg::AttachmentsDesc::new(),
+            attachments: sg::Attachments::new(),
+            pip: sg::Pipeline::new(),
+            bind: sg::Bindings::new(),
+        },
+        fsq: Fsq { pip: sg::Pipeline::new(), bind: sg::Bindings::new() },
+        dbg: Dbg { pip: sg::Pipeline::new(), bind: sg::Bindings::new() },
+        dflt: Dflt { pass_action: sg::PassAction::new() },
+        rx: 0.0,
+        ry: 0.0,
+        view: [[0.0; 4]; 4],
+    });
+
+    let user_data = Box::into_raw(state) as *mut ffi::c_void;
+
     sapp::run(&sapp::Desc {
-        init_cb: Some(init),
-        frame_cb: Some(frame),
-        cleanup_cb: Some(cleanup),
-        event_cb: Some(event),
+        init_userdata_cb: Some(init),
+        frame_userdata_cb: Some(frame),
+        cleanup_userdata_cb: Some(cleanup),
+        event_userdata_cb: Some(event),
+        user_data,
         width: 800,
         height: 600,
         sample_count: 1,
