@@ -10,6 +10,7 @@ mod shader;
 
 use math as m;
 use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
+use std::ffi;
 
 pub const MAX_PARTICLES: usize = 512 * 1024;
 pub const NUM_PARTICLES_EMITTED_PER_FRAME: usize = 10;
@@ -20,22 +21,13 @@ struct State {
     pub bind: sg::Bindings,
     pub ry: f32,
     pub cur_num_particles: usize,
-    pub pos: [m::Vec3; MAX_PARTICLES],
-    pub vel: [m::Vec3; MAX_PARTICLES],
+    pub pos: Vec<m::Vec3>,
+    pub vel: Vec<m::Vec3>,
 }
 
-static mut STATE: State = State {
-    pass_action: sg::PassAction::new(),
-    pip: sg::Pipeline::new(),
-    bind: sg::Bindings::new(),
-    ry: 0.0,
-    cur_num_particles: 0,
-    pos: [m::Vec3::ZERO; MAX_PARTICLES],
-    vel: [m::Vec3::ZERO; MAX_PARTICLES],
-};
+extern "C" fn init(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
-extern "C" fn init() {
-    let state = unsafe { &mut STATE };
     sg::setup(&sg::Desc {
         environment: sglue::environment(),
         logger: sg::Logger { func: Some(slog::slog_func), ..Default::default() },
@@ -122,8 +114,8 @@ extern "C" fn init() {
     state.pip = pip;
 }
 
-extern "C" fn frame() {
-    let state = unsafe { &mut STATE };
+extern "C" fn frame(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     let frame_time = sapp::frame_duration() as f32;
 
@@ -151,7 +143,7 @@ extern "C" fn frame() {
     }
 
     // update instance data
-    sg::update_buffer(state.bind.vertex_buffers[1], &sg::slice_as_range(&state.pos));
+    sg::update_buffer(state.bind.vertex_buffers[1], &sg::slice_as_range(state.pos.as_slice()));
 
     // vertex shader uniform data with model-view-projection matrix
     let proj = m::persp_mat4(60.0, sapp::widthf() / sapp::heightf(), 0.01, 50.0);
@@ -175,15 +167,30 @@ extern "C" fn frame() {
     sg::commit();
 }
 
-extern "C" fn cleanup() {
-    sg::shutdown()
+extern "C" fn cleanup(user_data: *mut ffi::c_void) {
+    sg::shutdown();
+
+    let _ = unsafe { Box::from_raw(user_data as *mut State) };
 }
 
 fn main() {
+    let state = Box::new(State {
+        pass_action: sg::PassAction::new(),
+        pip: sg::Pipeline::new(),
+        bind: sg::Bindings::new(),
+        ry: 0.0,
+        cur_num_particles: 0,
+        pos: vec![m::Vec3::ZERO; MAX_PARTICLES],
+        vel: vec![m::Vec3::ZERO; MAX_PARTICLES],
+    });
+
+    let user_data = Box::into_raw(state) as *mut ffi::c_void;
+
     sapp::run(&sapp::Desc {
-        init_cb: Some(init),
-        frame_cb: Some(frame),
-        cleanup_cb: Some(cleanup),
+        init_userdata_cb: Some(init),
+        frame_userdata_cb: Some(frame),
+        cleanup_userdata_cb: Some(cleanup),
+        user_data,
         width: 800,
         height: 600,
         sample_count: 4,

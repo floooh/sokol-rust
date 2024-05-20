@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------
 
 use sokol::{app as sapp, gfx as sg, gl as sgl, glue as sglue, log as slog};
+use std::ffi;
 
 const OFFSCREEN_PIXELFORMAT: sg::PixelFormat = sg::PixelFormat::Rgba8;
 const OFFSCREEN_SAMPLECOUNT: i32 = 1;
@@ -30,22 +31,8 @@ struct State {
     display: Display,
 }
 
-static mut STATE: State = State {
-    offscreen: Offscreen {
-        pass_action: sg::PassAction::new(),
-        attachments: sg::Attachments::new(),
-        img: sg::Image::new(),
-        sgl_context: sgl::Context::new(),
-    },
-    display: Display {
-        pass_action: sg::PassAction::new(),
-        smp: sg::Sampler::new(),
-        sgl_pip: sgl::Pipeline::new(),
-    },
-};
-
-extern "C" fn init() {
-    let state = unsafe { &mut STATE };
+extern "C" fn init(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     sg::setup(&sg::Desc {
         environment: sglue::environment(),
@@ -117,8 +104,8 @@ extern "C" fn init() {
     });
 }
 
-extern "C" fn frame() {
-    let state = unsafe { &mut STATE };
+extern "C" fn frame(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     let t = (sapp::frame_duration() * 60.0) as f32;
     let a = ((sapp::frame_count() as f32) * t).to_radians();
@@ -203,16 +190,35 @@ fn draw_cube() {
     sgl::end();
 }
 
-extern "C" fn cleanup() {
+extern "C" fn cleanup(user_data: *mut ffi::c_void) {
     sgl::shutdown();
     sg::shutdown();
+
+    let _ = unsafe { Box::from_raw(user_data as *mut State) };
 }
 
 fn main() {
+    let state = Box::new(State {
+        offscreen: Offscreen {
+            pass_action: sg::PassAction::new(),
+            attachments: sg::Attachments::new(),
+            img: sg::Image::new(),
+            sgl_context: sgl::Context::new(),
+        },
+        display: Display {
+            pass_action: sg::PassAction::new(),
+            smp: sg::Sampler::new(),
+            sgl_pip: sgl::Pipeline::new(),
+        },
+    });
+    
+    let user_data = Box::into_raw(state) as *mut ffi::c_void;
+
     sapp::run(&sapp::Desc {
-        init_cb: Some(init),
-        frame_cb: Some(frame),
-        cleanup_cb: Some(cleanup),
+        init_userdata_cb: Some(init),
+        frame_userdata_cb: Some(frame),
+        cleanup_userdata_cb: Some(cleanup),
+        user_data,
         width: 800,
         height: 600,
         sample_count: 4,

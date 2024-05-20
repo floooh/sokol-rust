@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------
 
 use sokol::{app as sapp, audio as saudio, gfx as sg, glue as sglue, log as slog};
+use std::ffi;
 
 const NUM_SAMPLES: usize = 32;
 
@@ -14,15 +15,8 @@ struct State {
     pub samples: [f32; NUM_SAMPLES],
 }
 
-static mut STATE: State = State {
-    pass_action: sg::PassAction::new(),
-    even_odd: 0,
-    sample_pos: 0,
-    samples: [0.0; NUM_SAMPLES],
-};
-
-extern "C" fn init() {
-    let state = unsafe { &mut STATE };
+extern "C" fn init(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     sg::setup(&sg::Desc {
         environment: sglue::environment(),
@@ -40,8 +34,8 @@ extern "C" fn init() {
     };
 }
 
-extern "C" fn frame() {
-    let state = unsafe { &mut STATE };
+extern "C" fn frame(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     let num_frames = saudio::expect();
 
@@ -66,16 +60,28 @@ extern "C" fn frame() {
     sg::commit();
 }
 
-extern "C" fn cleanup() {
+extern "C" fn cleanup(user_data: *mut ffi::c_void) {
     saudio::shutdown();
     sg::shutdown();
+
+    let _ = unsafe { Box::from_raw(user_data as *mut State) };
 }
 
 pub fn main() {
+    let state = Box::new(State {
+        pass_action: sg::PassAction::new(),
+        even_odd: 0,
+        sample_pos: 0,
+        samples: [0.0; NUM_SAMPLES],
+    });
+
+    let user_data = Box::into_raw(state) as *mut ffi::c_void;
+
     sapp::run(&sapp::Desc {
-        init_cb: Some(init),
-        frame_cb: Some(frame),
-        cleanup_cb: Some(cleanup),
+        init_userdata_cb: Some(init),
+        frame_userdata_cb: Some(frame),
+        cleanup_userdata_cb: Some(cleanup),
+        user_data,
         width: 640,
         height: 480,
         icon: sapp::IconDesc { sokol_default: true, ..Default::default() },

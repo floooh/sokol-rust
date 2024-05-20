@@ -10,6 +10,7 @@ mod shader;
 use math as m;
 use shader as shd;
 use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
+use std::ffi;
 
 struct State {
     rx: f32,
@@ -19,16 +20,8 @@ struct State {
     pass_action: sg::PassAction,
 }
 
-static mut STATE: State = State {
-    rx: 0.0,
-    ry: 0.0,
-    pip: sg::Pipeline::new(),
-    bind: sg::Bindings::new(),
-    pass_action: sg::PassAction::new(),
-};
-
-extern "C" fn init() {
-    let state = unsafe { &mut STATE };
+extern "C" fn init(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     sg::setup(&sg::Desc {
         environment: sglue::environment(),
@@ -121,8 +114,8 @@ extern "C" fn init() {
     });
 }
 
-extern "C" fn frame() {
-    let state = unsafe { &mut STATE };
+extern "C" fn frame(user_data: *mut ffi::c_void) {
+    let state = unsafe { &mut *(user_data as *mut State) };
 
     let t = (sapp::frame_duration() * 60.0) as f32;
     state.rx += 1.0 * t;
@@ -156,15 +149,28 @@ pub fn compute_mvp(rx: f32, ry: f32) -> [[f32; 4]; 4] {
     m::mul_mat4(view_proj, model)
 }
 
-extern "C" fn cleanup() {
+extern "C" fn cleanup(user_data: *mut ffi::c_void) {
     sg::shutdown();
+
+    let _ = unsafe { Box::from_raw(user_data as *mut State) };
 }
 
 fn main() {
+    let state = Box::new(State {
+        rx: 0.0,
+        ry: 0.0,
+        pip: sg::Pipeline::new(),
+        bind: sg::Bindings::new(),
+        pass_action: sg::PassAction::new(),
+    });
+
+    let user_data = Box::into_raw(state) as *mut ffi::c_void;
+
     sapp::run(&sapp::Desc {
-        init_cb: Some(init),
-        frame_cb: Some(frame),
-        cleanup_cb: Some(cleanup),
+        init_userdata_cb: Some(init),
+        frame_userdata_cb: Some(frame),
+        cleanup_userdata_cb: Some(cleanup),
+        user_data,
         width: 800,
         height: 600,
         sample_count: 4,
