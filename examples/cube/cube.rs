@@ -157,12 +157,7 @@ extern "C" fn cleanup(user_data: *mut ffi::c_void) {
 
 fn main() {
     // Heap allocated state struct, passed to app callbacks via user_data
-    let state = Box::new(State {
-        rx: 0.0,
-        ry: 0.0,
-        pip: sg::Pipeline::new(),
-        bind: sg::Bindings::new(),
-    });
+    let state = Box::new(State { rx: 0.0, ry: 0.0, pip: sg::Pipeline::new(), bind: sg::Bindings::new() });
 
     // Forget the ownership so we can pass as a user_data pointer
     let user_data = Box::into_raw(state) as *mut ffi::c_void;

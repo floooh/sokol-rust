@@ -204,7 +204,7 @@ fn main() {
         rx: 0.0,
         ry: 0.0,
     });
-    
+
     let user_data = Box::into_raw(state) as *mut ffi::c_void;
 
     sapp::run(&sapp::Desc {

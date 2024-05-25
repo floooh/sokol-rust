@@ -211,7 +211,7 @@ fn main() {
             sgl_pip: sgl::Pipeline::new(),
         },
     });
-    
+
     let user_data = Box::into_raw(state) as *mut ffi::c_void;
 
     sapp::run(&sapp::Desc {
