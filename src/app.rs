@@ -415,7 +415,7 @@ pub enum LogItem {
     Win32WglSetPixelformatFailed,
     Win32WglArbCreateContextRequired,
     Win32WglArbCreateContextProfileRequired,
-    Win32WglOpengl32NotSupported,
+    Win32WglOpenglVersionNotSupported,
     Win32WglOpenglProfileNotSupported,
     Win32WglIncompatibleDeviceContext,
     Win32WglCreateContextAttribsFailedOther,
