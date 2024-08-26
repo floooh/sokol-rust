@@ -89,25 +89,33 @@ impl Default for Context {
         Self::new()
     }
 }
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
-pub enum Error {
-    Error = 0,
-    VerticesFull,
-    UniformsFull,
-    CommandsFull,
-    StackOverflow,
-    StackUnderflow,
-    NoContext,
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct Error {
+    pub any: bool,
+    pub vertices_full: bool,
+    pub uniforms_full: bool,
+    pub commands_full: bool,
+    pub stack_overflow: bool,
+    pub stack_underflow: bool,
+    pub no_context: bool,
 }
 impl Error {
     pub const fn new() -> Self {
-        Self::Error
+        Self {
+            any: false,
+            vertices_full: false,
+            uniforms_full: false,
+            commands_full: false,
+            stack_overflow: false,
+            stack_underflow: false,
+            no_context: false,
+        }
     }
 }
 impl Default for Error {
     fn default() -> Self {
-        Self::Error
+        Self::new()
     }
 }
 #[repr(C)]
@@ -202,6 +210,8 @@ pub mod ffi {
         pub fn sgl_set_context(ctx: Context);
         pub fn sgl_get_context() -> Context;
         pub fn sgl_default_context() -> Context;
+        pub fn sgl_num_vertices() -> i32;
+        pub fn sgl_num_commands() -> i32;
         pub fn sgl_draw();
         pub fn sgl_context_draw(ctx: Context);
         pub fn sgl_draw_layer(layer_id: i32);
@@ -332,6 +342,14 @@ pub fn get_context() -> Context {
 #[inline]
 pub fn default_context() -> Context {
     unsafe { ffi::sgl_default_context() }
+}
+#[inline]
+pub fn num_vertices() -> i32 {
+    unsafe { ffi::sgl_num_vertices() }
+}
+#[inline]
+pub fn num_commands() -> i32 {
+    unsafe { ffi::sgl_num_commands() }
 }
 #[inline]
 pub fn draw() {
