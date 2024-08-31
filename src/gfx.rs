@@ -2379,6 +2379,7 @@ pub struct FrameStatsWgpuBindings {
     pub num_bindgroup_cache_hits: u32,
     pub num_bindgroup_cache_misses: u32,
     pub num_bindgroup_cache_collisions: u32,
+    pub num_bindgroup_cache_invalidates: u32,
     pub num_bindgroup_cache_hash_vs_key_mismatch: u32,
 }
 impl FrameStatsWgpuBindings {
@@ -2395,6 +2396,7 @@ impl FrameStatsWgpuBindings {
             num_bindgroup_cache_hits: 0,
             num_bindgroup_cache_misses: 0,
             num_bindgroup_cache_collisions: 0,
+            num_bindgroup_cache_invalidates: 0,
             num_bindgroup_cache_hash_vs_key_mismatch: 0,
         }
     }
