@@ -564,7 +564,6 @@ impl Default for PrimitiveType {
 #[repr(u32)]
 pub enum Filter {
     Default,
-    None,
     Nearest,
     Linear,
     Num,
@@ -2606,8 +2605,6 @@ pub enum LogItem {
     ValidateImagedescDynamicNoData,
     ValidateImagedescCompressedImmutable,
     ValidateSamplerdescCanary,
-    ValidateSamplerdescMinfilterNone,
-    ValidateSamplerdescMagfilterNone,
     ValidateSamplerdescAnistropicRequiresLinearFiltering,
     ValidateShaderdescCanary,
     ValidateShaderdescSource,
