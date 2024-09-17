@@ -451,6 +451,7 @@ pub enum LogItem {
     LinuxX11OpenDisplayFailed,
     LinuxX11QuerySystemDpiFailed,
     LinuxX11DroppedFileUriWrongScheme,
+    LinuxX11FailedToBecomeOwnerOfClipboard,
     AndroidUnsupportedInputEventInputCb,
     AndroidUnsupportedInputEventMainCb,
     AndroidReadMsgFailed,
