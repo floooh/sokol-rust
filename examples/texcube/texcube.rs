@@ -111,10 +111,10 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     // NOTE: SLOT_tex is provided by shader code generation
     let mut image_desc = sg::ImageDesc { width: 4, height: 4, ..Default::default() };
     image_desc.data.subimage[0][0] = sg::slice_as_range(&pixels);
-    state.bind.fs.images[shader::SLOT_TEX] = sg::make_image(&image_desc);
+    state.bind.images[shader::IMG_TEX] = sg::make_image(&image_desc);
 
     // create a sampler object
-    state.bind.fs.samplers[shader::SLOT_SMP] = sg::make_sampler(&sg::SamplerDesc {
+    state.bind.samplers[shader::SMP_SMP] = sg::make_sampler(&sg::SamplerDesc {
         min_filter: sg::Filter::Nearest,
         mag_filter: sg::Filter::Nearest,
         wrap_u: sg::Wrap::Repeat,
@@ -130,9 +130,9 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
             attrs: {
                 let mut attrs = [sg::VertexAttrState::new(); sg::MAX_VERTEX_ATTRIBUTES];
 
-                attrs[shader::ATTR_VS_POS] = sg::VertexAttrState { format: sg::VertexFormat::Float3, ..Default::default() };
-                attrs[shader::ATTR_VS_COLOR0] = sg::VertexAttrState { format: sg::VertexFormat::Ubyte4n, ..Default::default() };
-                attrs[shader::ATTR_VS_TEXCOORD0] = sg::VertexAttrState { format: sg::VertexFormat::Short2n, ..Default::default() };
+                attrs[shader::ATTR_TEXCUBE_POS] = sg::VertexAttrState { format: sg::VertexFormat::Float3, ..Default::default() };
+                attrs[shader::ATTR_TEXCUBE_COLOR0] = sg::VertexAttrState { format: sg::VertexFormat::Ubyte4n, ..Default::default() };
+                attrs[shader::ATTR_TEXCUBE_TEXCOORD0] = sg::VertexAttrState { format: sg::VertexFormat::Short2n, ..Default::default() };
 
                 attrs
             },
@@ -173,7 +173,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     });
     sg::apply_pipeline(state.pip);
     sg::apply_bindings(&state.bind);
-    sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_VS_PARAMS, &sg::value_as_range(&vs_params));
+    sg::apply_uniforms(shader::UB_VS_PARAMS, &sg::value_as_range(&vs_params));
     sg::draw(0, 36, 1);
     sg::end_pass();
     sg::commit();

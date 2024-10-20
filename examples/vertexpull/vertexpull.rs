@@ -77,7 +77,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
          1.0,  1.0,  1.0,   0.0,     1.0, 0.0, 0.5, 1.0,
          1.0,  1.0, -1.0,   0.0,     1.0, 0.0, 0.5, 1.0,
     ];
-    state.bind.vs.storage_buffers[shd::SLOT_SSBO] = sg::make_buffer(&sg::BufferDesc {
+    state.bind.storage_buffers[shd::SBUF_SSBO] = sg::make_buffer(&sg::BufferDesc {
         _type: sg::BufferType::Storagebuffer,
         data: sg::slice_as_range(VERTICES),
         ..Default::default()
@@ -132,7 +132,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     if sg::query_features().storage_buffer {
         sg::apply_pipeline(state.pip);
         sg::apply_bindings(&state.bind);
-        sg::apply_uniforms(sg::ShaderStage::Vs, shd::SLOT_VS_PARAMS, &sg::value_as_range(&vs_params));
+        sg::apply_uniforms(shd::UB_VS_PARAMS, &sg::value_as_range(&vs_params));
         sg::draw(0, 36, 1);
     }
     sg::end_pass();
