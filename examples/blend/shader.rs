@@ -13,29 +13,30 @@ use sokol::gfx as sg;
     =========
     Shader program: 'bg':
         Get shader desc: bg_shader_desc(sg::query_backend());
-        Vertex shader: vs_bg
-            Attributes:
-                ATTR_VS_BG_POSITION => 0
-        Fragment shader: fs_bg
-            Uniform block 'bg_fs_params':
-                Rust struct: BgFsParams
-                Bind slot: SLOT_BG_FS_PARAMS => 0
+        Vertex Shader: vs_bg
+        Fragment Shader: fs_bg
+        Attributes:
+            ATTR_BG_POSITION => 0
     Shader program: 'quad':
         Get shader desc: quad_shader_desc(sg::query_backend());
-        Vertex shader: vs_quad
-            Attributes:
-                ATTR_VS_QUAD_POSITION => 0
-                ATTR_VS_QUAD_COLOR0 => 1
-            Uniform block 'quad_vs_params':
-                Rust struct: QuadVsParams
-                Bind slot: SLOT_QUAD_VS_PARAMS => 0
-        Fragment shader: fs_quad
+        Vertex Shader: vs_quad
+        Fragment Shader: fs_quad
+        Attributes:
+            ATTR_QUAD_POSITION => 0
+            ATTR_QUAD_COLOR0 => 1
+    Bindings:
+        Uniform block 'bg_fs_params':
+            Rust struct: BgFsParams
+            Bind slot: UB_BG_FS_PARAMS => 0
+        Uniform block 'quad_vs_params':
+            Rust struct: QuadVsParams
+            Bind slot: UB_QUAD_VS_PARAMS => 0
 */
-pub const ATTR_VS_BG_POSITION: usize = 0;
-pub const ATTR_VS_QUAD_POSITION: usize = 0;
-pub const ATTR_VS_QUAD_COLOR0: usize = 1;
-pub const SLOT_BG_FS_PARAMS: usize = 0;
-pub const SLOT_QUAD_VS_PARAMS: usize = 0;
+pub const ATTR_BG_POSITION: usize = 0;
+pub const ATTR_QUAD_POSITION: usize = 0;
+pub const ATTR_QUAD_COLOR0: usize = 1;
+pub const UB_BG_FS_PARAMS: usize = 0;
+pub const UB_QUAD_VS_PARAMS: usize = 0;
 #[repr(C, align(16))]
 pub struct BgFsParams {
     pub tick: f32,
@@ -660,36 +661,41 @@ pub fn bg_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
     desc.label = c"bg_shader".as_ptr();
     match backend {
         sg::Backend::Glcore => {
-            desc.attrs[0].name = c"position".as_ptr();
-            desc.vs.source = &VS_BG_SOURCE_GLSL430 as *const _ as *const _;
-            desc.vs.entry = c"main".as_ptr();
-            desc.fs.source = &FS_BG_SOURCE_GLSL430 as *const _ as *const _;
-            desc.fs.entry = c"main".as_ptr();
-            desc.fs.uniform_blocks[0].size = 16;
-            desc.fs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.fs.uniform_blocks[0].uniforms[0].name = c"bg_fs_params".as_ptr();
-            desc.fs.uniform_blocks[0].uniforms[0]._type = sg::UniformType::Float4;
-            desc.fs.uniform_blocks[0].uniforms[0].array_count = 1;
+            desc.vertex_func.source = &VS_BG_SOURCE_GLSL430 as *const _ as *const _;
+            desc.vertex_func.entry = c"main".as_ptr();
+            desc.fragment_func.source = &FS_BG_SOURCE_GLSL430 as *const _ as *const _;
+            desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].glsl_name = c"position".as_ptr();
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Fragment;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 16;
+            desc.uniform_blocks[0].glsl_uniforms[0]._type = sg::UniformType::Float4;
+            desc.uniform_blocks[0].glsl_uniforms[0].array_count = 1;
+            desc.uniform_blocks[0].glsl_uniforms[0].glsl_name = c"bg_fs_params".as_ptr();
         },
         sg::Backend::D3d11 => {
-            desc.attrs[0].sem_name = c"TEXCOORD".as_ptr();
-            desc.attrs[0].sem_index = 0;
-            desc.vs.source = &VS_BG_SOURCE_HLSL5 as *const _ as *const _;
-            desc.vs.d3d11_target = c"vs_5_0".as_ptr();
-            desc.vs.entry = c"main".as_ptr();
-            desc.fs.source = &FS_BG_SOURCE_HLSL5 as *const _ as *const _;
-            desc.fs.d3d11_target = c"ps_5_0".as_ptr();
-            desc.fs.entry = c"main".as_ptr();
-            desc.fs.uniform_blocks[0].size = 16;
-            desc.fs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.vertex_func.source = &VS_BG_SOURCE_HLSL5 as *const _ as *const _;
+            desc.vertex_func.d3d11_target = c"vs_5_0".as_ptr();
+            desc.vertex_func.entry = c"main".as_ptr();
+            desc.fragment_func.source = &FS_BG_SOURCE_HLSL5 as *const _ as *const _;
+            desc.fragment_func.d3d11_target = c"ps_5_0".as_ptr();
+            desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].hlsl_sem_name = c"TEXCOORD".as_ptr();
+            desc.attrs[0].hlsl_sem_index = 0;
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Fragment;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 16;
+            desc.uniform_blocks[0].hlsl_register_b_n = 0;
         },
         sg::Backend::MetalMacos => {
-            desc.vs.source = &VS_BG_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.vs.entry = c"main0".as_ptr();
-            desc.fs.source = &FS_BG_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.fs.entry = c"main0".as_ptr();
-            desc.fs.uniform_blocks[0].size = 16;
-            desc.fs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.vertex_func.source = &VS_BG_SOURCE_METAL_MACOS as *const _ as *const _;
+            desc.vertex_func.entry = c"main0".as_ptr();
+            desc.fragment_func.source = &FS_BG_SOURCE_METAL_MACOS as *const _ as *const _;
+            desc.fragment_func.entry = c"main0".as_ptr();
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Fragment;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 16;
+            desc.uniform_blocks[0].msl_buffer_n = 0;
         },
         _ => {},
     }
@@ -700,39 +706,44 @@ pub fn quad_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
     desc.label = c"quad_shader".as_ptr();
     match backend {
         sg::Backend::Glcore => {
-            desc.attrs[0].name = c"position".as_ptr();
-            desc.attrs[1].name = c"color0".as_ptr();
-            desc.vs.source = &VS_QUAD_SOURCE_GLSL430 as *const _ as *const _;
-            desc.vs.entry = c"main".as_ptr();
-            desc.vs.uniform_blocks[0].size = 64;
-            desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.vs.uniform_blocks[0].uniforms[0].name = c"quad_vs_params".as_ptr();
-            desc.vs.uniform_blocks[0].uniforms[0]._type = sg::UniformType::Float4;
-            desc.vs.uniform_blocks[0].uniforms[0].array_count = 4;
-            desc.fs.source = &FS_QUAD_SOURCE_GLSL430 as *const _ as *const _;
-            desc.fs.entry = c"main".as_ptr();
+            desc.vertex_func.source = &VS_QUAD_SOURCE_GLSL430 as *const _ as *const _;
+            desc.vertex_func.entry = c"main".as_ptr();
+            desc.fragment_func.source = &FS_QUAD_SOURCE_GLSL430 as *const _ as *const _;
+            desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].glsl_name = c"position".as_ptr();
+            desc.attrs[1].glsl_name = c"color0".as_ptr();
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 64;
+            desc.uniform_blocks[0].glsl_uniforms[0]._type = sg::UniformType::Float4;
+            desc.uniform_blocks[0].glsl_uniforms[0].array_count = 4;
+            desc.uniform_blocks[0].glsl_uniforms[0].glsl_name = c"quad_vs_params".as_ptr();
         },
         sg::Backend::D3d11 => {
-            desc.attrs[0].sem_name = c"TEXCOORD".as_ptr();
-            desc.attrs[0].sem_index = 0;
-            desc.attrs[1].sem_name = c"TEXCOORD".as_ptr();
-            desc.attrs[1].sem_index = 1;
-            desc.vs.source = &VS_QUAD_SOURCE_HLSL5 as *const _ as *const _;
-            desc.vs.d3d11_target = c"vs_5_0".as_ptr();
-            desc.vs.entry = c"main".as_ptr();
-            desc.vs.uniform_blocks[0].size = 64;
-            desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.fs.source = &FS_QUAD_SOURCE_HLSL5 as *const _ as *const _;
-            desc.fs.d3d11_target = c"ps_5_0".as_ptr();
-            desc.fs.entry = c"main".as_ptr();
+            desc.vertex_func.source = &VS_QUAD_SOURCE_HLSL5 as *const _ as *const _;
+            desc.vertex_func.d3d11_target = c"vs_5_0".as_ptr();
+            desc.vertex_func.entry = c"main".as_ptr();
+            desc.fragment_func.source = &FS_QUAD_SOURCE_HLSL5 as *const _ as *const _;
+            desc.fragment_func.d3d11_target = c"ps_5_0".as_ptr();
+            desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].hlsl_sem_name = c"TEXCOORD".as_ptr();
+            desc.attrs[0].hlsl_sem_index = 0;
+            desc.attrs[1].hlsl_sem_name = c"TEXCOORD".as_ptr();
+            desc.attrs[1].hlsl_sem_index = 1;
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 64;
+            desc.uniform_blocks[0].hlsl_register_b_n = 0;
         },
         sg::Backend::MetalMacos => {
-            desc.vs.source = &VS_QUAD_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.vs.entry = c"main0".as_ptr();
-            desc.vs.uniform_blocks[0].size = 64;
-            desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.fs.source = &FS_QUAD_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.fs.entry = c"main0".as_ptr();
+            desc.vertex_func.source = &VS_QUAD_SOURCE_METAL_MACOS as *const _ as *const _;
+            desc.vertex_func.entry = c"main0".as_ptr();
+            desc.fragment_func.source = &FS_QUAD_SOURCE_METAL_MACOS as *const _ as *const _;
+            desc.fragment_func.entry = c"main0".as_ptr();
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 64;
+            desc.uniform_blocks[0].msl_buffer_n = 0;
         },
         _ => {},
     }

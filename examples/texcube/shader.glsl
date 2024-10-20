@@ -11,7 +11,7 @@
 @ctype vec2 m::Vec2
 
 @vs vs
-uniform vs_params {
+layout(binding=0) uniform vs_params {
     mat4 mvp;
 };
 
@@ -30,8 +30,8 @@ void main() {
 @end
 
 @fs fs
-uniform texture2D tex;
-uniform sampler smp;
+layout(binding=0) uniform texture2D tex;
+layout(binding=0) uniform sampler smp;
 
 in vec4 color;
 in vec2 uv;

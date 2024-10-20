@@ -85,7 +85,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         shader: sg::make_shader(&shader::instancing_shader_desc(sg::query_backend())),
         layout: sg::VertexLayoutState {
             buffers: {
-                let mut buffers = [sg::VertexBufferLayoutState::new(); sg::MAX_VERTEX_BUFFERS];
+                let mut buffers = [sg::VertexBufferLayoutState::new(); sg::MAX_VERTEXBUFFER_BINDSLOTS];
 
                 // vertex buffer at slot 1 must step per instance
                 buffers[1] = sg::VertexBufferLayoutState { step_func: sg::VertexStep::PerInstance, ..Default::default() };
@@ -95,9 +95,9 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
             attrs: {
                 let mut attrs = [sg::VertexAttrState::new(); sg::MAX_VERTEX_ATTRIBUTES];
 
-                attrs[shader::ATTR_VS_POS     ] = sg::VertexAttrState { format: sg::VertexFormat::Float3, buffer_index: 0, ..Default::default() };
-                attrs[shader::ATTR_VS_COLOR0  ] = sg::VertexAttrState { format: sg::VertexFormat::Float4, buffer_index: 0, ..Default::default() };
-                attrs[shader::ATTR_VS_INST_POS] = sg::VertexAttrState { format: sg::VertexFormat::Float3, buffer_index: 1, ..Default::default() };
+                attrs[shader::ATTR_INSTANCING_POS     ] = sg::VertexAttrState { format: sg::VertexFormat::Float3, buffer_index: 0, ..Default::default() };
+                attrs[shader::ATTR_INSTANCING_COLOR0  ] = sg::VertexAttrState { format: sg::VertexFormat::Float4, buffer_index: 0, ..Default::default() };
+                attrs[shader::ATTR_INSTANCING_INST_POS] = sg::VertexAttrState { format: sg::VertexFormat::Float3, buffer_index: 1, ..Default::default() };
 
                 attrs
             },
@@ -161,7 +161,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     });
     sg::apply_pipeline(state.pip);
     sg::apply_bindings(&state.bind);
-    sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_VS_PARAMS, &sg::value_as_range(&vs_params));
+    sg::apply_uniforms(shader::UB_VS_PARAMS, &sg::value_as_range(&vs_params));
     sg::draw(0, 24, state.cur_num_particles);
     sg::end_pass();
     sg::commit();

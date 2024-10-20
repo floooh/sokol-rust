@@ -59,7 +59,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         layout: {
             let mut layout = sg::VertexLayoutState::new();
             layout.buffers[0].stride = 28;
-            layout.attrs[shader::ATTR_VS_BG_POSITION].format = sg::VertexFormat::Float2;
+            layout.attrs[shader::ATTR_BG_POSITION].format = sg::VertexFormat::Float2;
             layout
         },
         primitive_type: sg::PrimitiveType::TriangleStrip,
@@ -73,8 +73,8 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     let mut pip_desc = sg::PipelineDesc {
         layout: {
             let mut layout = sg::VertexLayoutState::new();
-            layout.attrs[shader::ATTR_VS_QUAD_POSITION].format = sg::VertexFormat::Float3;
-            layout.attrs[shader::ATTR_VS_QUAD_COLOR0].format = sg::VertexFormat::Float4;
+            layout.attrs[shader::ATTR_QUAD_POSITION].format = sg::VertexFormat::Float3;
+            layout.attrs[shader::ATTR_QUAD_COLOR0].format = sg::VertexFormat::Float4;
             layout
         },
         shader: quad_shd,
@@ -119,11 +119,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     // draw a background quad
     sg::apply_pipeline(state.bg_pip);
     sg::apply_bindings(&state.bind);
-    sg::apply_uniforms(
-        sg::ShaderStage::Fs,
-        shader::SLOT_BG_FS_PARAMS,
-        &sg::value_as_range(&state.bg_fs_params),
-    );
+    sg::apply_uniforms(shader::UB_BG_FS_PARAMS, &sg::value_as_range(&state.bg_fs_params));
     sg::draw(0, 4, 1);
 
     // draw the blended quads
@@ -139,11 +135,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
 
             sg::apply_pipeline(state.pips[src][dst]);
             sg::apply_bindings(&state.bind);
-            sg::apply_uniforms(
-                sg::ShaderStage::Vs,
-                shader::SLOT_QUAD_VS_PARAMS,
-                &sg::value_as_range(&state.quad_vs_params),
-            );
+            sg::apply_uniforms(shader::UB_QUAD_VS_PARAMS, &sg::value_as_range(&state.quad_vs_params));
             sg::draw(0, 4, 1);
         }
     }

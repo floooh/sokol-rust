@@ -164,8 +164,8 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         color_count: 3,
         ..Default::default()
     };
-    offscreen_pip_desc.layout.attrs[shader::ATTR_VS_OFFSCREEN_POS].format = sg::VertexFormat::Float3;
-    offscreen_pip_desc.layout.attrs[shader::ATTR_VS_OFFSCREEN_BRIGHT0].format = sg::VertexFormat::Float;
+    offscreen_pip_desc.layout.attrs[shader::ATTR_OFFSCREEN_POS].format = sg::VertexFormat::Float3;
+    offscreen_pip_desc.layout.attrs[shader::ATTR_OFFSCREEN_BRIGHT0].format = sg::VertexFormat::Float;
     state.offscreen.pip = sg::make_pipeline(&offscreen_pip_desc);
 
     const QUAD_VERTICES: &[f32] = &[0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0];
@@ -180,7 +180,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         primitive_type: sg::PrimitiveType::TriangleStrip,
         ..Default::default()
     };
-    fsq_pip_desc.layout.attrs[shader::ATTR_VS_FSQ_POS].format = sg::VertexFormat::Float2;
+    fsq_pip_desc.layout.attrs[shader::ATTR_FSQ_POS].format = sg::VertexFormat::Float2;
     state.fsq.pip = sg::make_pipeline(&fsq_pip_desc);
 
     // a sampler to sample the offscreen render targets as texture
@@ -196,9 +196,9 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     // offscreen render target textures
     state.fsq.bind.vertex_buffers[0] = quad_vbuf;
     for i in 0..=2 {
-        state.fsq.bind.fs.images[i] = state.offscreen.attachments_desc.colors[i].image;
+        state.fsq.bind.images[i] = state.offscreen.attachments_desc.colors[i].image;
     }
-    state.fsq.bind.fs.samplers[0] = smp;
+    state.fsq.bind.samplers[shader::SMP_SMP] = smp;
 
     // shader, pipeline and resource bindings to render debug visualization quads
     let mut dbg_pip_desc = sg::PipelineDesc {
@@ -206,13 +206,13 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         primitive_type: sg::PrimitiveType::TriangleStrip,
         ..Default::default()
     };
-    dbg_pip_desc.layout.attrs[shader::ATTR_VS_DBG_POS].format = sg::VertexFormat::Float2;
+    dbg_pip_desc.layout.attrs[shader::ATTR_DBG_POS].format = sg::VertexFormat::Float2;
     state.dbg.pip = sg::make_pipeline(&dbg_pip_desc);
 
     // resource bindings to render the debug visualization
     // (the required images will be filled in during rendering)
     state.dbg.bind.vertex_buffers[0] = quad_vbuf;
-    state.dbg.bind.fs.samplers[0] = smp;
+    state.dbg.bind.samplers[shader::SMP_SMP] = smp;
 }
 
 extern "C" fn frame(user_data: *mut ffi::c_void) {
@@ -237,11 +237,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     });
     sg::apply_pipeline(state.offscreen.pip);
     sg::apply_bindings(&state.offscreen.bind);
-    sg::apply_uniforms(
-        sg::ShaderStage::Vs,
-        shader::SLOT_OFFSCREEN_PARAMS,
-        &sg::value_as_range(&offscreen_params),
-    );
+    sg::apply_uniforms(shader::UB_OFFSCREEN_PARAMS, &sg::value_as_range(&offscreen_params));
     sg::draw(0, 36, 1);
     sg::end_pass();
 
@@ -254,12 +250,12 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     });
     sg::apply_pipeline(state.fsq.pip);
     sg::apply_bindings(&state.fsq.bind);
-    sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_FSQ_PARAMS, &sg::value_as_range(&fsq_params));
+    sg::apply_uniforms(shader::UB_FSQ_PARAMS, &sg::value_as_range(&fsq_params));
     sg::draw(0, 4, 1);
     sg::apply_pipeline(state.dbg.pip);
     for i in 0..=2 {
         sg::apply_viewport(i * 100, 0, 100, 100, false);
-        state.dbg.bind.fs.images[0] = state.offscreen.attachments_desc.colors[i as usize].image;
+        state.dbg.bind.images[shader::IMG_TEX] = state.offscreen.attachments_desc.colors[i as usize].image;
         sg::apply_bindings(&state.dbg.bind);
         sg::draw(0, 4, 1);
     }
@@ -306,7 +302,7 @@ fn create_offscreen_attachments(width: i32, height: i32, state: &mut State) {
 
     // update the fullscreen-quad texture bindings
     for i in 0..=2 {
-        state.fsq.bind.fs.images[i] = state.offscreen.attachments_desc.colors[i].image;
+        state.fsq.bind.images[i] = state.offscreen.attachments_desc.colors[i].image;
     }
 }
 

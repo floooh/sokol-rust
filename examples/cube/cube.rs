@@ -90,8 +90,8 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
             let mut layout = sg::VertexLayoutState::new();
             layout.buffers[0].stride = 28;
 
-            layout.attrs[shader::ATTR_VS_POSITION].format = sg::VertexFormat::Float3;
-            layout.attrs[shader::ATTR_VS_COLOR0].format = sg::VertexFormat::Float4;
+            layout.attrs[shader::ATTR_CUBE_POSITION].format = sg::VertexFormat::Float3;
+            layout.attrs[shader::ATTR_CUBE_COLOR0].format = sg::VertexFormat::Float4;
 
             layout
         },
@@ -131,7 +131,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     sg::begin_pass(&sg::Pass { action: pass_action, swapchain: sglue::swapchain(), ..Default::default() });
     sg::apply_pipeline(state.pip);
     sg::apply_bindings(&state.bind);
-    sg::apply_uniforms(sg::ShaderStage::Vs, shader::SLOT_VS_PARAMS, &sg::value_as_range(&vs_params));
+    sg::apply_uniforms(shader::UB_VS_PARAMS, &sg::value_as_range(&vs_params));
     sg::draw(0, 36, 1);
     sg::end_pass();
     sg::commit();

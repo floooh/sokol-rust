@@ -13,18 +13,19 @@ use sokol::gfx as sg;
     =========
     Shader program: 'cube':
         Get shader desc: cube_shader_desc(sg::query_backend());
-        Vertex shader: vs
-            Attributes:
-                ATTR_VS_POSITION => 0
-                ATTR_VS_COLOR0 => 1
-            Uniform block 'vs_params':
-                Rust struct: VsParams
-                Bind slot: SLOT_VS_PARAMS => 0
-        Fragment shader: fs
+        Vertex Shader: vs
+        Fragment Shader: fs
+        Attributes:
+            ATTR_CUBE_POSITION => 0
+            ATTR_CUBE_COLOR0 => 1
+    Bindings:
+        Uniform block 'vs_params':
+            Rust struct: VsParams
+            Bind slot: UB_VS_PARAMS => 0
 */
-pub const ATTR_VS_POSITION: usize = 0;
-pub const ATTR_VS_COLOR0: usize = 1;
-pub const SLOT_VS_PARAMS: usize = 0;
+pub const ATTR_CUBE_POSITION: usize = 0;
+pub const ATTR_CUBE_COLOR0: usize = 1;
+pub const UB_VS_PARAMS: usize = 0;
 #[repr(C, align(16))]
 pub struct VsParams {
     pub mvp: m::Mat4,
@@ -342,39 +343,44 @@ pub fn cube_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
     desc.label = c"cube_shader".as_ptr();
     match backend {
         sg::Backend::Glcore => {
-            desc.attrs[0].name = c"position".as_ptr();
-            desc.attrs[1].name = c"color0".as_ptr();
-            desc.vs.source = &VS_SOURCE_GLSL430 as *const _ as *const _;
-            desc.vs.entry = c"main".as_ptr();
-            desc.vs.uniform_blocks[0].size = 64;
-            desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.vs.uniform_blocks[0].uniforms[0].name = c"vs_params".as_ptr();
-            desc.vs.uniform_blocks[0].uniforms[0]._type = sg::UniformType::Float4;
-            desc.vs.uniform_blocks[0].uniforms[0].array_count = 4;
-            desc.fs.source = &FS_SOURCE_GLSL430 as *const _ as *const _;
-            desc.fs.entry = c"main".as_ptr();
+            desc.vertex_func.source = &VS_SOURCE_GLSL430 as *const _ as *const _;
+            desc.vertex_func.entry = c"main".as_ptr();
+            desc.fragment_func.source = &FS_SOURCE_GLSL430 as *const _ as *const _;
+            desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].glsl_name = c"position".as_ptr();
+            desc.attrs[1].glsl_name = c"color0".as_ptr();
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 64;
+            desc.uniform_blocks[0].glsl_uniforms[0]._type = sg::UniformType::Float4;
+            desc.uniform_blocks[0].glsl_uniforms[0].array_count = 4;
+            desc.uniform_blocks[0].glsl_uniforms[0].glsl_name = c"vs_params".as_ptr();
         },
         sg::Backend::D3d11 => {
-            desc.attrs[0].sem_name = c"TEXCOORD".as_ptr();
-            desc.attrs[0].sem_index = 0;
-            desc.attrs[1].sem_name = c"TEXCOORD".as_ptr();
-            desc.attrs[1].sem_index = 1;
-            desc.vs.source = &VS_SOURCE_HLSL5 as *const _ as *const _;
-            desc.vs.d3d11_target = c"vs_5_0".as_ptr();
-            desc.vs.entry = c"main".as_ptr();
-            desc.vs.uniform_blocks[0].size = 64;
-            desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.fs.source = &FS_SOURCE_HLSL5 as *const _ as *const _;
-            desc.fs.d3d11_target = c"ps_5_0".as_ptr();
-            desc.fs.entry = c"main".as_ptr();
+            desc.vertex_func.source = &VS_SOURCE_HLSL5 as *const _ as *const _;
+            desc.vertex_func.d3d11_target = c"vs_5_0".as_ptr();
+            desc.vertex_func.entry = c"main".as_ptr();
+            desc.fragment_func.source = &FS_SOURCE_HLSL5 as *const _ as *const _;
+            desc.fragment_func.d3d11_target = c"ps_5_0".as_ptr();
+            desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].hlsl_sem_name = c"TEXCOORD".as_ptr();
+            desc.attrs[0].hlsl_sem_index = 0;
+            desc.attrs[1].hlsl_sem_name = c"TEXCOORD".as_ptr();
+            desc.attrs[1].hlsl_sem_index = 1;
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 64;
+            desc.uniform_blocks[0].hlsl_register_b_n = 0;
         },
         sg::Backend::MetalMacos => {
-            desc.vs.source = &VS_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.vs.entry = c"main0".as_ptr();
-            desc.vs.uniform_blocks[0].size = 64;
-            desc.vs.uniform_blocks[0].layout = sg::UniformLayout::Std140;
-            desc.fs.source = &FS_SOURCE_METAL_MACOS as *const _ as *const _;
-            desc.fs.entry = c"main0".as_ptr();
+            desc.vertex_func.source = &VS_SOURCE_METAL_MACOS as *const _ as *const _;
+            desc.vertex_func.entry = c"main0".as_ptr();
+            desc.fragment_func.source = &FS_SOURCE_METAL_MACOS as *const _ as *const _;
+            desc.fragment_func.entry = c"main0".as_ptr();
+            desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
+            desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
+            desc.uniform_blocks[0].size = 64;
+            desc.uniform_blocks[0].msl_buffer_n = 0;
         },
         _ => {},
     }
