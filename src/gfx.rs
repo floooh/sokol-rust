@@ -1323,6 +1323,29 @@ impl Default for ShaderStage {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct ShaderFunction {
+    pub source: *const core::ffi::c_char,
+    pub bytecode: Range,
+    pub entry: *const core::ffi::c_char,
+    pub d3d11_target: *const core::ffi::c_char,
+}
+impl ShaderFunction {
+    pub const fn new() -> Self {
+        Self {
+            source: core::ptr::null(),
+            bytecode: Range::new(),
+            entry: core::ptr::null(),
+            d3d11_target: core::ptr::null(),
+        }
+    }
+}
+impl Default for ShaderFunction {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ShaderVertexAttr {
     pub glsl_name: *const core::ffi::c_char,
     pub hlsl_sem_name: *const core::ffi::c_char,
@@ -1346,18 +1369,12 @@ impl Default for ShaderVertexAttr {
 #[derive(Copy, Clone, Debug)]
 pub struct GlslShaderUniform {
     pub _type: UniformType,
-    pub offset: u32,
     pub array_count: u16,
     pub glsl_name: *const core::ffi::c_char,
 }
 impl GlslShaderUniform {
     pub const fn new() -> Self {
-        Self {
-            _type: UniformType::new(),
-            offset: 0,
-            array_count: 0,
-            glsl_name: core::ptr::null(),
-        }
+        Self { _type: UniformType::new(), array_count: 0, glsl_name: core::ptr::null() }
     }
 }
 impl Default for GlslShaderUniform {
@@ -1369,22 +1386,22 @@ impl Default for GlslShaderUniform {
 #[derive(Copy, Clone, Debug)]
 pub struct ShaderUniformBlock {
     pub stage: ShaderStage,
-    pub layout: UniformLayout,
     pub size: u32,
     pub hlsl_register_b_n: u8,
     pub msl_buffer_n: u8,
     pub wgsl_group0_binding_n: u8,
+    pub layout: UniformLayout,
     pub glsl_uniforms: [GlslShaderUniform; 16],
 }
 impl ShaderUniformBlock {
     pub const fn new() -> Self {
         Self {
             stage: ShaderStage::new(),
-            layout: UniformLayout::new(),
             size: 0,
             hlsl_register_b_n: 0,
             msl_buffer_n: 0,
             wgsl_group0_binding_n: 0,
+            layout: UniformLayout::new(),
             glsl_uniforms: [GlslShaderUniform::new(); 16],
         }
     }
@@ -1494,29 +1511,6 @@ impl ShaderImageSamplerPair {
     }
 }
 impl Default for ShaderImageSamplerPair {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderFunction {
-    pub source: *const core::ffi::c_char,
-    pub bytecode: Range,
-    pub entry: *const core::ffi::c_char,
-    pub d3d11_target: *const core::ffi::c_char,
-}
-impl ShaderFunction {
-    pub const fn new() -> Self {
-        Self {
-            source: core::ptr::null(),
-            bytecode: Range::new(),
-            entry: core::ptr::null(),
-            d3d11_target: core::ptr::null(),
-        }
-    }
-}
-impl Default for ShaderFunction {
     fn default() -> Self {
         Self::new()
     }
@@ -2575,6 +2569,7 @@ pub enum LogItem {
     WgpuCreatePipelineLayoutFailed,
     WgpuCreateRenderPipelineFailed,
     WgpuAttachmentsCreateTextureViewFailed,
+    DrawRequiredBindingsOrUniformsMissing,
     IdenticalCommitListener,
     CommitListenerArrayFull,
     TraceHooksNotEnabled,
@@ -2769,7 +2764,7 @@ pub enum LogItem {
     ValidateAbndPipeline,
     ValidateAbndPipelineExists,
     ValidateAbndPipelineValid,
-    ValidateAbndVbs,
+    ValidateAbndExpectedVb,
     ValidateAbndVbExists,
     ValidateAbndVbType,
     ValidateAbndVbOverflow,
@@ -2784,17 +2779,14 @@ pub enum LogItem {
     ValidateAbndImageMsaa,
     ValidateAbndExpectedFilterableImage,
     ValidateAbndExpectedDepthImage,
-    ValidateAbndUnexpectedImageBinding,
     ValidateAbndExpectedSamplerBinding,
     ValidateAbndUnexpectedSamplerCompareNever,
     ValidateAbndExpectedSamplerCompareNever,
     ValidateAbndExpectedNonfilteringSampler,
-    ValidateAbndUnexpectedSamplerBinding,
     ValidateAbndSmpExists,
     ValidateAbndExpectedStoragebufferBinding,
     ValidateAbndStoragebufferExists,
     ValidateAbndStoragebufferBindingBuffertype,
-    ValidateAbndUnexpectedStoragebufferBinding,
     ValidateAubNoPipeline,
     ValidateAubNoUbAtSlot,
     ValidateAubSize,
