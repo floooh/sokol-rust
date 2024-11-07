@@ -13,7 +13,7 @@ void main() {
 @end
 
 @fs fs_bg
-uniform bg_fs_params {
+layout(binding=0) uniform bg_fs_params {
     float tick;
 };
 
@@ -28,7 +28,7 @@ void main() {
 @program bg vs_bg fs_bg
 
 @vs vs_quad
-uniform quad_vs_params {
+layout(binding=0) uniform quad_vs_params {
     mat4 mvp;
 };
 

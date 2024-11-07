@@ -139,19 +139,18 @@ impl Default for Range {
     }
 }
 pub const INVALID_ID: u32 = 0;
-pub const NUM_SHADER_STAGES: usize = 2;
 pub const NUM_INFLIGHT_FRAMES: usize = 2;
 pub const MAX_COLOR_ATTACHMENTS: usize = 4;
-pub const MAX_VERTEX_BUFFERS: usize = 8;
-pub const MAX_SHADERSTAGE_IMAGES: usize = 12;
-pub const MAX_SHADERSTAGE_SAMPLERS: usize = 8;
-pub const MAX_SHADERSTAGE_IMAGESAMPLERPAIRS: usize = 12;
-pub const MAX_SHADERSTAGE_STORAGEBUFFERS: usize = 8;
-pub const MAX_SHADERSTAGE_UBS: usize = 4;
-pub const MAX_UB_MEMBERS: usize = 16;
+pub const MAX_UNIFORMBLOCK_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
 pub const MAX_MIPMAPS: usize = 16;
 pub const MAX_TEXTUREARRAY_LAYERS: usize = 128;
+pub const MAX_UNIFORMBLOCK_BINDSLOTS: usize = 8;
+pub const MAX_VERTEXBUFFER_BINDSLOTS: usize = 8;
+pub const MAX_IMAGE_BINDSLOTS: usize = 16;
+pub const MAX_SAMPLER_BINDSLOTS: usize = 16;
+pub const MAX_STORAGEBUFFER_BINDSLOTS: usize = 8;
+pub const MAX_IMAGE_SAMPLER_PAIRS: usize = 16;
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Color {
@@ -521,22 +520,6 @@ impl CubeFace {
 impl Default for CubeFace {
     fn default() -> Self {
         Self::PosX
-    }
-}
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u32)]
-pub enum ShaderStage {
-    Vs,
-    Fs,
-}
-impl ShaderStage {
-    pub const fn new() -> Self {
-        Self::Vs
-    }
-}
-impl Default for ShaderStage {
-    fn default() -> Self {
-        Self::Vs
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1132,35 +1115,15 @@ impl Default for Pass {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct StageBindings {
-    pub images: [Image; 12],
-    pub samplers: [Sampler; 8],
-    pub storage_buffers: [Buffer; 8],
-}
-impl StageBindings {
-    pub const fn new() -> Self {
-        Self {
-            images: [Image::new(); 12],
-            samplers: [Sampler::new(); 8],
-            storage_buffers: [Buffer::new(); 8],
-        }
-    }
-}
-impl Default for StageBindings {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
 pub struct Bindings {
     pub _start_canary: u32,
     pub vertex_buffers: [Buffer; 8],
     pub vertex_buffer_offsets: [i32; 8],
     pub index_buffer: Buffer,
     pub index_buffer_offset: i32,
-    pub vs: StageBindings,
-    pub fs: StageBindings,
+    pub images: [Image; 16],
+    pub samplers: [Sampler; 16],
+    pub storage_buffers: [Buffer; 8],
     pub _end_canary: u32,
 }
 impl Bindings {
@@ -1171,8 +1134,9 @@ impl Bindings {
             vertex_buffer_offsets: [0; 8],
             index_buffer: Buffer::new(),
             index_buffer_offset: 0,
-            vs: StageBindings::new(),
-            fs: StageBindings::new(),
+            images: [Image::new(); 16],
+            samplers: [Sampler::new(); 16],
+            storage_buffers: [Buffer::new(); 8],
             _end_canary: 0,
         }
     }
@@ -1340,159 +1304,213 @@ impl Default for SamplerDesc {
         Self::new()
     }
 }
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderAttrDesc {
-    pub name: *const core::ffi::c_char,
-    pub sem_name: *const core::ffi::c_char,
-    pub sem_index: i32,
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(i32)]
+pub enum ShaderStage {
+    None,
+    Vertex,
+    Fragment,
 }
-impl ShaderAttrDesc {
+impl ShaderStage {
     pub const fn new() -> Self {
-        Self { name: core::ptr::null(), sem_name: core::ptr::null(), sem_index: 0 }
+        Self::None
     }
 }
-impl Default for ShaderAttrDesc {
+impl Default for ShaderStage {
     fn default() -> Self {
-        Self::new()
+        Self::None
     }
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct ShaderUniformDesc {
-    pub name: *const core::ffi::c_char,
-    pub _type: UniformType,
-    pub array_count: i32,
-}
-impl ShaderUniformDesc {
-    pub const fn new() -> Self {
-        Self { name: core::ptr::null(), _type: UniformType::new(), array_count: 0 }
-    }
-}
-impl Default for ShaderUniformDesc {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderUniformBlockDesc {
-    pub size: usize,
-    pub layout: UniformLayout,
-    pub uniforms: [ShaderUniformDesc; 16],
-}
-impl ShaderUniformBlockDesc {
-    pub const fn new() -> Self {
-        Self { size: 0, layout: UniformLayout::new(), uniforms: [ShaderUniformDesc::new(); 16] }
-    }
-}
-impl Default for ShaderUniformBlockDesc {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderStorageBufferDesc {
-    pub used: bool,
-    pub readonly: bool,
-}
-impl ShaderStorageBufferDesc {
-    pub const fn new() -> Self {
-        Self { used: false, readonly: false }
-    }
-}
-impl Default for ShaderStorageBufferDesc {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderImageDesc {
-    pub used: bool,
-    pub multisampled: bool,
-    pub image_type: ImageType,
-    pub sample_type: ImageSampleType,
-}
-impl ShaderImageDesc {
-    pub const fn new() -> Self {
-        Self {
-            used: false,
-            multisampled: false,
-            image_type: ImageType::new(),
-            sample_type: ImageSampleType::new(),
-        }
-    }
-}
-impl Default for ShaderImageDesc {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderSamplerDesc {
-    pub used: bool,
-    pub sampler_type: SamplerType,
-}
-impl ShaderSamplerDesc {
-    pub const fn new() -> Self {
-        Self { used: false, sampler_type: SamplerType::new() }
-    }
-}
-impl Default for ShaderSamplerDesc {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderImageSamplerPairDesc {
-    pub used: bool,
-    pub image_slot: i32,
-    pub sampler_slot: i32,
-    pub glsl_name: *const core::ffi::c_char,
-}
-impl ShaderImageSamplerPairDesc {
-    pub const fn new() -> Self {
-        Self { used: false, image_slot: 0, sampler_slot: 0, glsl_name: core::ptr::null() }
-    }
-}
-impl Default for ShaderImageSamplerPairDesc {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderStageDesc {
+pub struct ShaderFunction {
     pub source: *const core::ffi::c_char,
     pub bytecode: Range,
     pub entry: *const core::ffi::c_char,
     pub d3d11_target: *const core::ffi::c_char,
-    pub uniform_blocks: [ShaderUniformBlockDesc; 4],
-    pub storage_buffers: [ShaderStorageBufferDesc; 8],
-    pub images: [ShaderImageDesc; 12],
-    pub samplers: [ShaderSamplerDesc; 8],
-    pub image_sampler_pairs: [ShaderImageSamplerPairDesc; 12],
 }
-impl ShaderStageDesc {
+impl ShaderFunction {
     pub const fn new() -> Self {
         Self {
             source: core::ptr::null(),
             bytecode: Range::new(),
             entry: core::ptr::null(),
             d3d11_target: core::ptr::null(),
-            uniform_blocks: [ShaderUniformBlockDesc::new(); 4],
-            storage_buffers: [ShaderStorageBufferDesc::new(); 8],
-            images: [ShaderImageDesc::new(); 12],
-            samplers: [ShaderSamplerDesc::new(); 8],
-            image_sampler_pairs: [ShaderImageSamplerPairDesc::new(); 12],
         }
     }
 }
-impl Default for ShaderStageDesc {
+impl Default for ShaderFunction {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderVertexAttr {
+    pub glsl_name: *const core::ffi::c_char,
+    pub hlsl_sem_name: *const core::ffi::c_char,
+    pub hlsl_sem_index: u8,
+}
+impl ShaderVertexAttr {
+    pub const fn new() -> Self {
+        Self {
+            glsl_name: core::ptr::null(),
+            hlsl_sem_name: core::ptr::null(),
+            hlsl_sem_index: 0,
+        }
+    }
+}
+impl Default for ShaderVertexAttr {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlslShaderUniform {
+    pub _type: UniformType,
+    pub array_count: u16,
+    pub glsl_name: *const core::ffi::c_char,
+}
+impl GlslShaderUniform {
+    pub const fn new() -> Self {
+        Self { _type: UniformType::new(), array_count: 0, glsl_name: core::ptr::null() }
+    }
+}
+impl Default for GlslShaderUniform {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderUniformBlock {
+    pub stage: ShaderStage,
+    pub size: u32,
+    pub hlsl_register_b_n: u8,
+    pub msl_buffer_n: u8,
+    pub wgsl_group0_binding_n: u8,
+    pub layout: UniformLayout,
+    pub glsl_uniforms: [GlslShaderUniform; 16],
+}
+impl ShaderUniformBlock {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            size: 0,
+            hlsl_register_b_n: 0,
+            msl_buffer_n: 0,
+            wgsl_group0_binding_n: 0,
+            layout: UniformLayout::new(),
+            glsl_uniforms: [GlslShaderUniform::new(); 16],
+        }
+    }
+}
+impl Default for ShaderUniformBlock {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderImage {
+    pub stage: ShaderStage,
+    pub image_type: ImageType,
+    pub sample_type: ImageSampleType,
+    pub multisampled: bool,
+    pub hlsl_register_t_n: u8,
+    pub msl_texture_n: u8,
+    pub wgsl_group1_binding_n: u8,
+}
+impl ShaderImage {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            image_type: ImageType::new(),
+            sample_type: ImageSampleType::new(),
+            multisampled: false,
+            hlsl_register_t_n: 0,
+            msl_texture_n: 0,
+            wgsl_group1_binding_n: 0,
+        }
+    }
+}
+impl Default for ShaderImage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderSampler {
+    pub stage: ShaderStage,
+    pub sampler_type: SamplerType,
+    pub hlsl_register_s_n: u8,
+    pub msl_sampler_n: u8,
+    pub wgsl_group1_binding_n: u8,
+}
+impl ShaderSampler {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            sampler_type: SamplerType::new(),
+            hlsl_register_s_n: 0,
+            msl_sampler_n: 0,
+            wgsl_group1_binding_n: 0,
+        }
+    }
+}
+impl Default for ShaderSampler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderStorageBuffer {
+    pub stage: ShaderStage,
+    pub readonly: bool,
+    pub hlsl_register_t_n: u8,
+    pub msl_buffer_n: u8,
+    pub wgsl_group1_binding_n: u8,
+    pub glsl_binding_n: u8,
+}
+impl ShaderStorageBuffer {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            readonly: false,
+            hlsl_register_t_n: 0,
+            msl_buffer_n: 0,
+            wgsl_group1_binding_n: 0,
+            glsl_binding_n: 0,
+        }
+    }
+}
+impl Default for ShaderStorageBuffer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderImageSamplerPair {
+    pub stage: ShaderStage,
+    pub image_slot: u8,
+    pub sampler_slot: u8,
+    pub glsl_name: *const core::ffi::c_char,
+}
+impl ShaderImageSamplerPair {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            image_slot: 0,
+            sampler_slot: 0,
+            glsl_name: core::ptr::null(),
+        }
+    }
+}
+impl Default for ShaderImageSamplerPair {
     fn default() -> Self {
         Self::new()
     }
@@ -1501,9 +1519,14 @@ impl Default for ShaderStageDesc {
 #[derive(Copy, Clone, Debug)]
 pub struct ShaderDesc {
     pub _start_canary: u32,
-    pub attrs: [ShaderAttrDesc; 16],
-    pub vs: ShaderStageDesc,
-    pub fs: ShaderStageDesc,
+    pub vertex_func: ShaderFunction,
+    pub fragment_func: ShaderFunction,
+    pub attrs: [ShaderVertexAttr; 16],
+    pub uniform_blocks: [ShaderUniformBlock; 8],
+    pub storage_buffers: [ShaderStorageBuffer; 8],
+    pub images: [ShaderImage; 16],
+    pub samplers: [ShaderSampler; 16],
+    pub image_sampler_pairs: [ShaderImageSamplerPair; 16],
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
 }
@@ -1511,9 +1534,14 @@ impl ShaderDesc {
     pub const fn new() -> Self {
         Self {
             _start_canary: 0,
-            attrs: [ShaderAttrDesc::new(); 16],
-            vs: ShaderStageDesc::new(),
-            fs: ShaderStageDesc::new(),
+            vertex_func: ShaderFunction::new(),
+            fragment_func: ShaderFunction::new(),
+            attrs: [ShaderVertexAttr::new(); 16],
+            uniform_blocks: [ShaderUniformBlock::new(); 8],
+            storage_buffers: [ShaderStorageBuffer::new(); 8],
+            images: [ShaderImage::new(); 16],
+            samplers: [ShaderSampler::new(); 16],
+            image_sampler_pairs: [ShaderImageSamplerPair::new(); 16],
             label: core::ptr::null(),
             _end_canary: 0,
         }
@@ -1820,7 +1848,7 @@ pub struct TraceHooks {
     pub apply_scissor_rect: Option<extern "C" fn(i32, i32, i32, i32, bool, *mut core::ffi::c_void)>,
     pub apply_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
     pub apply_bindings: Option<extern "C" fn(*const Bindings, *mut core::ffi::c_void)>,
-    pub apply_uniforms: Option<extern "C" fn(ShaderStage, i32, *const Range, *mut core::ffi::c_void)>,
+    pub apply_uniforms: Option<extern "C" fn(i32, *const Range, *mut core::ffi::c_void)>,
     pub draw: Option<extern "C" fn(i32, i32, i32, *mut core::ffi::c_void)>,
     pub end_pass: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub commit: Option<extern "C" fn(*mut core::ffi::c_void)>,
@@ -2485,7 +2513,7 @@ pub enum LogItem {
     GlShaderCompilationFailed,
     GlShaderLinkingFailed,
     GlVertexAttributeNotFoundInShader,
-    GlTextureNameNotFoundInShader,
+    GlImageSamplerNameNotFoundInShader,
     GlFramebufferStatusUndefined,
     GlFramebufferStatusIncompleteAttachment,
     GlFramebufferStatusIncompleteMissingAttachment,
@@ -2524,8 +2552,7 @@ pub enum LogItem {
     MetalShaderCompilationFailed,
     MetalShaderCreationFailed,
     MetalShaderCompilationOutput,
-    MetalVertexShaderEntryNotFound,
-    MetalFragmentShaderEntryNotFound,
+    MetalShaderEntryNotFound,
     MetalCreateRpsFailed,
     MetalCreateRpsOutput,
     MetalCreateDssFailed,
@@ -2538,13 +2565,11 @@ pub enum LogItem {
     WgpuCreateTextureViewFailed,
     WgpuCreateSamplerFailed,
     WgpuCreateShaderModuleFailed,
-    WgpuShaderTooManyImages,
-    WgpuShaderTooManySamplers,
-    WgpuShaderTooManyStoragebuffers,
     WgpuShaderCreateBindgroupLayoutFailed,
     WgpuCreatePipelineLayoutFailed,
     WgpuCreateRenderPipelineFailed,
     WgpuAttachmentsCreateTextureViewFailed,
+    DrawRequiredBindingsOrUniformsMissing,
     IdenticalCommitListener,
     CommitListenerArrayFull,
     TraceHooksNotEnabled,
@@ -2611,28 +2636,49 @@ pub enum LogItem {
     ValidateShaderdescBytecode,
     ValidateShaderdescSourceOrBytecode,
     ValidateShaderdescNoBytecodeSize,
-    ValidateShaderdescNoContUbs,
     ValidateShaderdescNoContUbMembers,
+    ValidateShaderdescUbSizeIsZero,
+    ValidateShaderdescUbMetalBufferSlotOutOfRange,
+    ValidateShaderdescUbMetalBufferSlotCollision,
+    ValidateShaderdescUbHlslRegisterBOutOfRange,
+    ValidateShaderdescUbHlslRegisterBCollision,
+    ValidateShaderdescUbWgslGroup0BindingOutOfRange,
+    ValidateShaderdescUbWgslGroup0BindingCollision,
     ValidateShaderdescNoUbMembers,
-    ValidateShaderdescUbMemberName,
+    ValidateShaderdescUbUniformGlslName,
     ValidateShaderdescUbSizeMismatch,
     ValidateShaderdescUbArrayCount,
     ValidateShaderdescUbStd140ArrayType,
-    ValidateShaderdescNoContStoragebuffers,
+    ValidateShaderdescStoragebufferMetalBufferSlotOutOfRange,
+    ValidateShaderdescStoragebufferMetalBufferSlotCollision,
+    ValidateShaderdescStoragebufferHlslRegisterTOutOfRange,
+    ValidateShaderdescStoragebufferHlslRegisterTCollision,
+    ValidateShaderdescStoragebufferGlslBindingOutOfRange,
+    ValidateShaderdescStoragebufferGlslBindingCollision,
+    ValidateShaderdescStoragebufferWgslGroup1BindingOutOfRange,
+    ValidateShaderdescStoragebufferWgslGroup1BindingCollision,
     ValidateShaderdescStoragebufferReadonly,
-    ValidateShaderdescNoContImages,
-    ValidateShaderdescNoContSamplers,
+    ValidateShaderdescImageMetalTextureSlotOutOfRange,
+    ValidateShaderdescImageMetalTextureSlotCollision,
+    ValidateShaderdescImageHlslRegisterTOutOfRange,
+    ValidateShaderdescImageHlslRegisterTCollision,
+    ValidateShaderdescImageWgslGroup1BindingOutOfRange,
+    ValidateShaderdescImageWgslGroup1BindingCollision,
+    ValidateShaderdescSamplerMetalSamplerSlotOutOfRange,
+    ValidateShaderdescSamplerMetalSamplerSlotCollision,
+    ValidateShaderdescSamplerHlslRegisterSOutOfRange,
+    ValidateShaderdescSamplerHlslRegisterSCollision,
+    ValidateShaderdescSamplerWgslGroup1BindingOutOfRange,
+    ValidateShaderdescSamplerWgslGroup1BindingCollision,
     ValidateShaderdescImageSamplerPairImageSlotOutOfRange,
     ValidateShaderdescImageSamplerPairSamplerSlotOutOfRange,
-    ValidateShaderdescImageSamplerPairNameRequiredForGl,
-    ValidateShaderdescImageSamplerPairHasNameButNotUsed,
-    ValidateShaderdescImageSamplerPairHasImageButNotUsed,
-    ValidateShaderdescImageSamplerPairHasSamplerButNotUsed,
+    ValidateShaderdescImageSamplerPairImageStageMismatch,
+    ValidateShaderdescImageSamplerPairSamplerStageMismatch,
+    ValidateShaderdescImageSamplerPairGlslName,
     ValidateShaderdescNonfilteringSamplerRequired,
     ValidateShaderdescComparisonSamplerRequired,
     ValidateShaderdescImageNotReferencedByImageSamplerPairs,
     ValidateShaderdescSamplerNotReferencedByImageSamplerPairs,
-    ValidateShaderdescNoContImageSamplerPairs,
     ValidateShaderdescAttrStringTooLong,
     ValidatePipelinedescCanary,
     ValidatePipelinedescShader,
@@ -2718,7 +2764,7 @@ pub enum LogItem {
     ValidateAbndPipeline,
     ValidateAbndPipelineExists,
     ValidateAbndPipelineValid,
-    ValidateAbndVbs,
+    ValidateAbndExpectedVb,
     ValidateAbndVbExists,
     ValidateAbndVbType,
     ValidateAbndVbOverflow,
@@ -2727,40 +2773,20 @@ pub enum LogItem {
     ValidateAbndIbExists,
     ValidateAbndIbType,
     ValidateAbndIbOverflow,
-    ValidateAbndVsExpectedImageBinding,
-    ValidateAbndVsImgExists,
-    ValidateAbndVsImageTypeMismatch,
-    ValidateAbndVsImageMsaa,
-    ValidateAbndVsExpectedFilterableImage,
-    ValidateAbndVsExpectedDepthImage,
-    ValidateAbndVsUnexpectedImageBinding,
-    ValidateAbndVsExpectedSamplerBinding,
-    ValidateAbndVsUnexpectedSamplerCompareNever,
-    ValidateAbndVsExpectedSamplerCompareNever,
-    ValidateAbndVsExpectedNonfilteringSampler,
-    ValidateAbndVsUnexpectedSamplerBinding,
-    ValidateAbndVsSmpExists,
-    ValidateAbndVsExpectedStoragebufferBinding,
-    ValidateAbndVsStoragebufferExists,
-    ValidateAbndVsStoragebufferBindingBuffertype,
-    ValidateAbndVsUnexpectedStoragebufferBinding,
-    ValidateAbndFsExpectedImageBinding,
-    ValidateAbndFsImgExists,
-    ValidateAbndFsImageTypeMismatch,
-    ValidateAbndFsImageMsaa,
-    ValidateAbndFsExpectedFilterableImage,
-    ValidateAbndFsExpectedDepthImage,
-    ValidateAbndFsUnexpectedImageBinding,
-    ValidateAbndFsExpectedSamplerBinding,
-    ValidateAbndFsUnexpectedSamplerCompareNever,
-    ValidateAbndFsExpectedSamplerCompareNever,
-    ValidateAbndFsExpectedNonfilteringSampler,
-    ValidateAbndFsUnexpectedSamplerBinding,
-    ValidateAbndFsSmpExists,
-    ValidateAbndFsExpectedStoragebufferBinding,
-    ValidateAbndFsStoragebufferExists,
-    ValidateAbndFsStoragebufferBindingBuffertype,
-    ValidateAbndFsUnexpectedStoragebufferBinding,
+    ValidateAbndExpectedImageBinding,
+    ValidateAbndImgExists,
+    ValidateAbndImageTypeMismatch,
+    ValidateAbndImageMsaa,
+    ValidateAbndExpectedFilterableImage,
+    ValidateAbndExpectedDepthImage,
+    ValidateAbndExpectedSamplerBinding,
+    ValidateAbndUnexpectedSamplerCompareNever,
+    ValidateAbndExpectedSamplerCompareNever,
+    ValidateAbndExpectedNonfilteringSampler,
+    ValidateAbndSmpExists,
+    ValidateAbndExpectedStoragebufferBinding,
+    ValidateAbndStoragebufferExists,
+    ValidateAbndStoragebufferBindingBuffertype,
     ValidateAubNoPipeline,
     ValidateAubNoUbAtSlot,
     ValidateAubSize,
@@ -3043,19 +3069,13 @@ impl Default for D3d11SamplerInfo {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct D3d11ShaderInfo {
-    pub vs_cbufs: [*const core::ffi::c_void; 4],
-    pub fs_cbufs: [*const core::ffi::c_void; 4],
+    pub cbufs: [*const core::ffi::c_void; 8],
     pub vs: *const core::ffi::c_void,
     pub fs: *const core::ffi::c_void,
 }
 impl D3d11ShaderInfo {
     pub const fn new() -> Self {
-        Self {
-            vs_cbufs: [core::ptr::null(); 4],
-            fs_cbufs: [core::ptr::null(); 4],
-            vs: core::ptr::null(),
-            fs: core::ptr::null(),
-        }
+        Self { cbufs: [core::ptr::null(); 8], vs: core::ptr::null(), fs: core::ptr::null() }
     }
 }
 impl Default for D3d11ShaderInfo {
@@ -3157,18 +3177,18 @@ impl Default for MtlSamplerInfo {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct MtlShaderInfo {
-    pub vs_lib: *const core::ffi::c_void,
-    pub fs_lib: *const core::ffi::c_void,
-    pub vs_func: *const core::ffi::c_void,
-    pub fs_func: *const core::ffi::c_void,
+    pub vertex_lib: *const core::ffi::c_void,
+    pub fragment_lib: *const core::ffi::c_void,
+    pub vertex_func: *const core::ffi::c_void,
+    pub fragment_func: *const core::ffi::c_void,
 }
 impl MtlShaderInfo {
     pub const fn new() -> Self {
         Self {
-            vs_lib: core::ptr::null(),
-            fs_lib: core::ptr::null(),
-            vs_func: core::ptr::null(),
-            fs_func: core::ptr::null(),
+            vertex_lib: core::ptr::null(),
+            fragment_lib: core::ptr::null(),
+            vertex_func: core::ptr::null(),
+            fragment_func: core::ptr::null(),
         }
     }
 }
@@ -3409,7 +3429,7 @@ pub mod ffi {
         pub fn sg_apply_scissor_rectf(x: f32, y: f32, width: f32, height: f32, origin_top_left: bool);
         pub fn sg_apply_pipeline(pip: Pipeline);
         pub fn sg_apply_bindings(bindings: *const Bindings);
-        pub fn sg_apply_uniforms(stage: ShaderStage, ub_index: usize, data: *const Range);
+        pub fn sg_apply_uniforms(ub_slot: usize, data: *const Range);
         pub fn sg_draw(base_element: usize, num_elements: usize, num_instances: usize);
         pub fn sg_end_pass();
         pub fn sg_commit();
@@ -3645,8 +3665,8 @@ pub fn apply_bindings(bindings: &Bindings) {
     unsafe { ffi::sg_apply_bindings(bindings) }
 }
 #[inline]
-pub fn apply_uniforms(stage: ShaderStage, ub_index: usize, data: &Range) {
-    unsafe { ffi::sg_apply_uniforms(stage, ub_index, data) }
+pub fn apply_uniforms(ub_slot: usize, data: &Range) {
+    unsafe { ffi::sg_apply_uniforms(ub_slot, data) }
 }
 #[inline]
 pub fn draw(base_element: usize, num_elements: usize, num_instances: usize) {
