@@ -317,6 +317,7 @@ pub struct Features {
     pub mrt_independent_blend_state: bool,
     pub mrt_independent_write_mask: bool,
     pub storage_buffer: bool,
+    pub msaa_image_bindings: bool,
 }
 impl Features {
     pub const fn new() -> Self {
@@ -326,6 +327,7 @@ impl Features {
             mrt_independent_blend_state: false,
             mrt_independent_write_mask: false,
             storage_buffer: false,
+            msaa_image_bindings: false,
         }
     }
 }
@@ -2623,6 +2625,7 @@ pub enum LogItem {
     ValidateImagedescNoMsaaRtSupport,
     ValidateImagedescMsaaNumMipmaps,
     ValidateImagedescMsaa3dImage,
+    ValidateImagedescMsaaCubeImage,
     ValidateImagedescDepth3dImage,
     ValidateImagedescRtImmutable,
     ValidateImagedescRtNoData,
@@ -2776,6 +2779,7 @@ pub enum LogItem {
     ValidateAbndExpectedImageBinding,
     ValidateAbndImgExists,
     ValidateAbndImageTypeMismatch,
+    ValidateAbndExpectedMultisampledImage,
     ValidateAbndImageMsaa,
     ValidateAbndExpectedFilterableImage,
     ValidateAbndExpectedDepthImage,
