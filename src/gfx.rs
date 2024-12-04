@@ -3444,7 +3444,7 @@ pub mod ffi {
         pub fn sg_query_pixelformat(fmt: PixelFormat) -> PixelformatInfo;
         pub fn sg_query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i32;
         pub fn sg_query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32)
-            -> i32;
+        -> i32;
         pub fn sg_query_buffer_state(buf: Buffer) -> ResourceState;
         pub fn sg_query_image_state(img: Image) -> ResourceState;
         pub fn sg_query_sampler_state(smp: Sampler) -> ResourceState;
