@@ -3469,6 +3469,17 @@ pub mod ffi {
         pub fn sg_query_shader_defaults(desc: *const ShaderDesc) -> ShaderDesc;
         pub fn sg_query_pipeline_defaults(desc: *const PipelineDesc) -> PipelineDesc;
         pub fn sg_query_attachments_defaults(desc: *const AttachmentsDesc) -> AttachmentsDesc;
+        pub fn sg_query_buffer_size(buf: Buffer) -> usize;
+        pub fn sg_query_buffer_type(buf: Buffer) -> BufferType;
+        pub fn sg_query_buffer_usage(buf: Buffer) -> Usage;
+        pub fn sg_query_image_type(img: Image) -> ImageType;
+        pub fn sg_query_image_width(img: Image) -> i32;
+        pub fn sg_query_image_height(img: Image) -> i32;
+        pub fn sg_query_image_num_slices(img: Image) -> i32;
+        pub fn sg_query_image_num_mipmaps(img: Image) -> i32;
+        pub fn sg_query_image_pixelformat(img: Image) -> PixelFormat;
+        pub fn sg_query_image_usage(img: Image) -> Usage;
+        pub fn sg_query_image_sample_count(img: Image) -> i32;
         pub fn sg_alloc_buffer() -> Buffer;
         pub fn sg_alloc_image() -> Image;
         pub fn sg_alloc_sampler() -> Sampler;
@@ -3807,6 +3818,50 @@ pub fn query_pipeline_defaults(desc: &PipelineDesc) -> PipelineDesc {
 #[inline]
 pub fn query_attachments_defaults(desc: &AttachmentsDesc) -> AttachmentsDesc {
     unsafe { ffi::sg_query_attachments_defaults(desc) }
+}
+#[inline]
+pub fn query_buffer_size(buf: Buffer) -> usize {
+    unsafe { ffi::sg_query_buffer_size(buf) }
+}
+#[inline]
+pub fn query_buffer_type(buf: Buffer) -> BufferType {
+    unsafe { ffi::sg_query_buffer_type(buf) }
+}
+#[inline]
+pub fn query_buffer_usage(buf: Buffer) -> Usage {
+    unsafe { ffi::sg_query_buffer_usage(buf) }
+}
+#[inline]
+pub fn query_image_type(img: Image) -> ImageType {
+    unsafe { ffi::sg_query_image_type(img) }
+}
+#[inline]
+pub fn query_image_width(img: Image) -> i32 {
+    unsafe { ffi::sg_query_image_width(img) }
+}
+#[inline]
+pub fn query_image_height(img: Image) -> i32 {
+    unsafe { ffi::sg_query_image_height(img) }
+}
+#[inline]
+pub fn query_image_num_slices(img: Image) -> i32 {
+    unsafe { ffi::sg_query_image_num_slices(img) }
+}
+#[inline]
+pub fn query_image_num_mipmaps(img: Image) -> i32 {
+    unsafe { ffi::sg_query_image_num_mipmaps(img) }
+}
+#[inline]
+pub fn query_image_pixelformat(img: Image) -> PixelFormat {
+    unsafe { ffi::sg_query_image_pixelformat(img) }
+}
+#[inline]
+pub fn query_image_usage(img: Image) -> Usage {
+    unsafe { ffi::sg_query_image_usage(img) }
+}
+#[inline]
+pub fn query_image_sample_count(img: Image) -> i32 {
+    unsafe { ffi::sg_query_image_sample_count(img) }
 }
 #[inline]
 pub fn alloc_buffer() -> Buffer {
