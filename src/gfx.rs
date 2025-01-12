@@ -2515,6 +2515,7 @@ pub enum LogItem {
     GlShaderCompilationFailed,
     GlShaderLinkingFailed,
     GlVertexAttributeNotFoundInShader,
+    GlUniformblockNameNotFoundInShader,
     GlImageSamplerNameNotFoundInShader,
     GlFramebufferStatusUndefined,
     GlFramebufferStatusIncompleteAttachment,
