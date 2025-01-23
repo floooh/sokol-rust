@@ -2512,6 +2512,7 @@ pub enum LogItem {
     GlTextureFormatNotSupported,
     Gl3dTexturesNotSupported,
     GlArrayTexturesNotSupported,
+    GlStoragebufferGlslBindingOutOfRange,
     GlShaderCompilationFailed,
     GlShaderLinkingFailed,
     GlVertexAttributeNotFoundInShader,
