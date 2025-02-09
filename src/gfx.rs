@@ -819,6 +819,8 @@ pub enum BlendOp {
     Add,
     Subtract,
     ReverseSubtract,
+    Min,
+    Max,
     Num,
 }
 impl BlendOp {
@@ -2702,6 +2704,7 @@ pub enum LogItem {
     ValidatePipelinedescNoContAttrs,
     ValidatePipelinedescLayoutStride4,
     ValidatePipelinedescAttrSemantics,
+    ValidatePipelinedescBlendopMinmaxRequiresBlendfactorOne,
     ValidateAttachmentsdescCanary,
     ValidateAttachmentsdescNoAttachments,
     ValidateAttachmentsdescNoContColorAtts,
