@@ -21,8 +21,9 @@ use sokol::gfx as sg;
             Rust struct: VsParams
             Bind slot: UB_VS_PARAMS => 0
         Storage buffer 'ssbo':
-            Rust struct: Ssbo
+            Rust struct: SbVertex
             Bind slot: SBUF_SSBO => 0
+            Readonly: true
 */
 pub const UB_VS_PARAMS: usize = 0;
 pub const SBUF_SSBO: usize = 0;

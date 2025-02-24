@@ -60,18 +60,6 @@ use sokol::gfx as sg;
         Sampler 'smp':
             Type: sg::SamplerType::Filtering
             Bind slot: SMP_SMP => 0
-        Image Sampler Pair 'tex_smp':
-            Image: tex
-            Sampler: smp
-        Image Sampler Pair 'tex0_smp':
-            Image: tex0
-            Sampler: smp
-        Image Sampler Pair 'tex1_smp':
-            Image: tex1
-            Sampler: smp
-        Image Sampler Pair 'tex2_smp':
-            Image: tex2
-            Sampler: smp
 */
 pub const ATTR_DBG_POS: usize = 0;
 pub const ATTR_FSQ_POS: usize = 0;
