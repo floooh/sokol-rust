@@ -30,7 +30,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     });
 
     // if no storage buffers supported by 3D backend, set clear color to red and return now
-    if !sg::query_features().storage_buffer {
+    if !sg::query_features().compute {
         state.pass_action.colors[0] = sg::ColorAttachmentAction {
             load_action: sg::LoadAction::Clear,
             clear_value: sg::Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
@@ -129,7 +129,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
         swapchain: sglue::swapchain(),
         ..Default::default()
     });
-    if sg::query_features().storage_buffer {
+    if sg::query_features().compute {
         sg::apply_pipeline(state.pip);
         sg::apply_bindings(&state.bind);
         sg::apply_uniforms(shd::UB_VS_PARAMS, &sg::value_as_range(&vs_params));

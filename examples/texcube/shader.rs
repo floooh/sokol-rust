@@ -31,9 +31,6 @@ use sokol::gfx as sg;
         Sampler 'smp':
             Type: sg::SamplerType::Filtering
             Bind slot: SMP_SMP => 0
-        Image Sampler Pair 'tex_smp':
-            Image: tex
-            Sampler: smp
 */
 pub const ATTR_TEXCUBE_POS: usize = 0;
 pub const ATTR_TEXCUBE_COLOR0: usize = 1;

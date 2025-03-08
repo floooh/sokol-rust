@@ -312,7 +312,7 @@ pub struct Features {
     pub image_clamp_to_border: bool,
     pub mrt_independent_blend_state: bool,
     pub mrt_independent_write_mask: bool,
-    pub storage_buffer: bool,
+    pub compute: bool,
     pub msaa_image_bindings: bool,
 }
 impl Features {
@@ -322,7 +322,7 @@ impl Features {
             image_clamp_to_border: false,
             mrt_independent_blend_state: false,
             mrt_independent_write_mask: false,
-            storage_buffer: false,
+            compute: false,
             msaa_image_bindings: false,
         }
     }
@@ -1090,6 +1090,7 @@ impl Default for Swapchain {
 #[derive(Copy, Clone, Debug)]
 pub struct Pass {
     pub _start_canary: u32,
+    pub compute: bool,
     pub action: PassAction,
     pub attachments: Attachments,
     pub swapchain: Swapchain,
@@ -1100,6 +1101,7 @@ impl Pass {
     pub const fn new() -> Self {
         Self {
             _start_canary: 0,
+            compute: false,
             action: PassAction::new(),
             attachments: Attachments::new(),
             swapchain: Swapchain::new(),
@@ -1310,6 +1312,7 @@ pub enum ShaderStage {
     None,
     Vertex,
     Fragment,
+    Compute,
 }
 impl ShaderStage {
     pub const fn new() -> Self {
@@ -1471,6 +1474,7 @@ pub struct ShaderStorageBuffer {
     pub stage: ShaderStage,
     pub readonly: bool,
     pub hlsl_register_t_n: u8,
+    pub hlsl_register_u_n: u8,
     pub msl_buffer_n: u8,
     pub wgsl_group1_binding_n: u8,
     pub glsl_binding_n: u8,
@@ -1481,6 +1485,7 @@ impl ShaderStorageBuffer {
             stage: ShaderStage::new(),
             readonly: false,
             hlsl_register_t_n: 0,
+            hlsl_register_u_n: 0,
             msl_buffer_n: 0,
             wgsl_group1_binding_n: 0,
             glsl_binding_n: 0,
@@ -1517,16 +1522,35 @@ impl Default for ShaderImageSamplerPair {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct MtlShaderThreadsPerThreadgroup {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+}
+impl MtlShaderThreadsPerThreadgroup {
+    pub const fn new() -> Self {
+        Self { x: 0, y: 0, z: 0 }
+    }
+}
+impl Default for MtlShaderThreadsPerThreadgroup {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ShaderDesc {
     pub _start_canary: u32,
     pub vertex_func: ShaderFunction,
     pub fragment_func: ShaderFunction,
+    pub compute_func: ShaderFunction,
     pub attrs: [ShaderVertexAttr; 16],
     pub uniform_blocks: [ShaderUniformBlock; 8],
     pub storage_buffers: [ShaderStorageBuffer; 8],
     pub images: [ShaderImage; 16],
     pub samplers: [ShaderSampler; 16],
     pub image_sampler_pairs: [ShaderImageSamplerPair; 16],
+    pub mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup,
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
 }
@@ -1536,12 +1560,14 @@ impl ShaderDesc {
             _start_canary: 0,
             vertex_func: ShaderFunction::new(),
             fragment_func: ShaderFunction::new(),
+            compute_func: ShaderFunction::new(),
             attrs: [ShaderVertexAttr::new(); 16],
             uniform_blocks: [ShaderUniformBlock::new(); 8],
             storage_buffers: [ShaderStorageBuffer::new(); 8],
             images: [ShaderImage::new(); 16],
             samplers: [ShaderSampler::new(); 16],
             image_sampler_pairs: [ShaderImageSamplerPair::new(); 16],
+            mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup::new(),
             label: core::ptr::null(),
             _end_canary: 0,
         }
@@ -1736,6 +1762,7 @@ impl Default for ColorTargetState {
 #[derive(Copy, Clone, Debug)]
 pub struct PipelineDesc {
     pub _start_canary: u32,
+    pub compute: bool,
     pub shader: Shader,
     pub layout: VertexLayoutState,
     pub depth: DepthState,
@@ -1756,6 +1783,7 @@ impl PipelineDesc {
     pub const fn new() -> Self {
         Self {
             _start_canary: 0,
+            compute: false,
             shader: Shader::new(),
             layout: VertexLayoutState::new(),
             depth: DepthState::new(),
@@ -1850,6 +1878,7 @@ pub struct TraceHooks {
     pub apply_bindings: Option<extern "C" fn(*const Bindings, *mut core::ffi::c_void)>,
     pub apply_uniforms: Option<extern "C" fn(i32, *const Range, *mut core::ffi::c_void)>,
     pub draw: Option<extern "C" fn(i32, i32, i32, *mut core::ffi::c_void)>,
+    pub dispatch: Option<extern "C" fn(i32, i32, i32, *mut core::ffi::c_void)>,
     pub end_pass: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub commit: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub alloc_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
@@ -1912,6 +1941,7 @@ impl TraceHooks {
             apply_bindings: None,
             apply_uniforms: None,
             draw: None,
+            dispatch: None,
             end_pass: None,
             commit: None,
             alloc_buffer: None,
@@ -2091,6 +2121,7 @@ pub struct FrameStatsGl {
     pub num_enable_vertex_attrib_array: u32,
     pub num_disable_vertex_attrib_array: u32,
     pub num_uniform: u32,
+    pub num_memory_barriers: u32,
 }
 impl FrameStatsGl {
     pub const fn new() -> Self {
@@ -2106,6 +2137,7 @@ impl FrameStatsGl {
             num_enable_vertex_attrib_array: 0,
             num_disable_vertex_attrib_array: 0,
             num_uniform: 0,
+            num_memory_barriers: 0,
         }
     }
 }
@@ -2149,6 +2181,8 @@ pub struct FrameStatsD3d11Pipeline {
     pub num_vs_set_constant_buffers: u32,
     pub num_ps_set_shader: u32,
     pub num_ps_set_constant_buffers: u32,
+    pub num_cs_set_shader: u32,
+    pub num_cs_set_constant_buffers: u32,
 }
 impl FrameStatsD3d11Pipeline {
     pub const fn new() -> Self {
@@ -2162,6 +2196,8 @@ impl FrameStatsD3d11Pipeline {
             num_vs_set_constant_buffers: 0,
             num_ps_set_shader: 0,
             num_ps_set_constant_buffers: 0,
+            num_cs_set_shader: 0,
+            num_cs_set_constant_buffers: 0,
         }
     }
 }
@@ -2176,9 +2212,12 @@ pub struct FrameStatsD3d11Bindings {
     pub num_ia_set_vertex_buffers: u32,
     pub num_ia_set_index_buffer: u32,
     pub num_vs_set_shader_resources: u32,
-    pub num_ps_set_shader_resources: u32,
     pub num_vs_set_samplers: u32,
+    pub num_ps_set_shader_resources: u32,
     pub num_ps_set_samplers: u32,
+    pub num_cs_set_shader_resources: u32,
+    pub num_cs_set_samplers: u32,
+    pub num_cs_set_unordered_access_views: u32,
 }
 impl FrameStatsD3d11Bindings {
     pub const fn new() -> Self {
@@ -2186,9 +2225,12 @@ impl FrameStatsD3d11Bindings {
             num_ia_set_vertex_buffers: 0,
             num_ia_set_index_buffer: 0,
             num_vs_set_shader_resources: 0,
-            num_ps_set_shader_resources: 0,
             num_vs_set_samplers: 0,
+            num_ps_set_shader_resources: 0,
             num_ps_set_samplers: 0,
+            num_cs_set_shader_resources: 0,
+            num_cs_set_samplers: 0,
+            num_cs_set_unordered_access_views: 0,
         }
     }
 }
@@ -2319,6 +2361,9 @@ pub struct FrameStatsMetalBindings {
     pub num_set_fragment_buffer: u32,
     pub num_set_fragment_texture: u32,
     pub num_set_fragment_sampler_state: u32,
+    pub num_set_compute_buffer: u32,
+    pub num_set_compute_texture: u32,
+    pub num_set_compute_sampler_state: u32,
 }
 impl FrameStatsMetalBindings {
     pub const fn new() -> Self {
@@ -2329,6 +2374,9 @@ impl FrameStatsMetalBindings {
             num_set_fragment_buffer: 0,
             num_set_fragment_texture: 0,
             num_set_fragment_sampler_state: 0,
+            num_set_compute_buffer: 0,
+            num_set_compute_texture: 0,
+            num_set_compute_sampler_state: 0,
         }
     }
 }
@@ -2342,10 +2390,15 @@ impl Default for FrameStatsMetalBindings {
 pub struct FrameStatsMetalUniforms {
     pub num_set_vertex_buffer_offset: u32,
     pub num_set_fragment_buffer_offset: u32,
+    pub num_set_compute_buffer_offset: u32,
 }
 impl FrameStatsMetalUniforms {
     pub const fn new() -> Self {
-        Self { num_set_vertex_buffer_offset: 0, num_set_fragment_buffer_offset: 0 }
+        Self {
+            num_set_vertex_buffer_offset: 0,
+            num_set_fragment_buffer_offset: 0,
+            num_set_compute_buffer_offset: 0,
+        }
     }
 }
 impl Default for FrameStatsMetalUniforms {
@@ -2460,6 +2513,7 @@ pub struct FrameStats {
     pub num_apply_bindings: u32,
     pub num_apply_uniforms: u32,
     pub num_draw: u32,
+    pub num_dispatch: u32,
     pub num_update_buffer: u32,
     pub num_append_buffer: u32,
     pub num_update_image: u32,
@@ -2483,6 +2537,7 @@ impl FrameStats {
             num_apply_bindings: 0,
             num_apply_uniforms: 0,
             num_draw: 0,
+            num_dispatch: 0,
             num_update_buffer: 0,
             num_append_buffer: 0,
             num_update_image: 0,
@@ -2524,6 +2579,7 @@ pub enum LogItem {
     GlFramebufferStatusUnknown,
     D3d11CreateBufferFailed,
     D3d11CreateBufferSrvFailed,
+    D3d11CreateBufferUavFailed,
     D3d11CreateDepthTextureUnsupportedPixelFormat,
     D3d11CreateDepthTextureFailed,
     D3d11Create2dTextureUnsupportedPixelFormat,
@@ -2536,6 +2592,7 @@ pub enum LogItem {
     D3d11CreateSamplerStateFailed,
     D3d11UniformblockHlslRegisterBOutOfRange,
     D3d11StoragebufferHlslRegisterTOutOfRange,
+    D3d11StoragebufferHlslRegisterUOutOfRange,
     D3d11ImageHlslRegisterTOutOfRange,
     D3d11SamplerHlslRegisterSOutOfRange,
     D3d11LoadD3dcompiler47DllFailed,
@@ -2563,6 +2620,8 @@ pub enum LogItem {
     MetalStoragebufferMslBufferSlotOutOfRange,
     MetalImageMslTextureSlotOutOfRange,
     MetalSamplerMslSamplerSlotOutOfRange,
+    MetalCreateCpsFailed,
+    MetalCreateCpsOutput,
     MetalCreateRpsFailed,
     MetalCreateRpsOutput,
     MetalCreateDssFailed,
@@ -2582,8 +2641,8 @@ pub enum LogItem {
     WgpuSamplerWgslGroup1BindingOutOfRange,
     WgpuCreatePipelineLayoutFailed,
     WgpuCreateRenderPipelineFailed,
+    WgpuCreateComputePipelineFailed,
     WgpuAttachmentsCreateTextureViewFailed,
-    DrawRequiredBindingsOrUniformsMissing,
     IdenticalCommitListener,
     CommitListenerArrayFull,
     TraceHooksNotEnabled,
@@ -2618,12 +2677,13 @@ pub enum LogItem {
     PipelinePoolExhausted,
     PassPoolExhausted,
     BeginpassAttachmentInvalid,
+    ApplyBindingsStorageBufferTrackerExhausted,
     DrawWithoutBindings,
     ValidateBufferdescCanary,
-    ValidateBufferdescSize,
-    ValidateBufferdescData,
-    ValidateBufferdescDataSize,
-    ValidateBufferdescNoData,
+    ValidateBufferdescExpectNonzeroSize,
+    ValidateBufferdescExpectMatchingDataSize,
+    ValidateBufferdescExpectZeroDataSize,
+    ValidateBufferdescExpectNoData,
     ValidateBufferdescStoragebufferSupported,
     ValidateBufferdescStoragebufferSizeMultiple4,
     ValidateImagedataNodata,
@@ -2647,10 +2707,15 @@ pub enum LogItem {
     ValidateSamplerdescCanary,
     ValidateSamplerdescAnistropicRequiresLinearFiltering,
     ValidateShaderdescCanary,
-    ValidateShaderdescSource,
-    ValidateShaderdescBytecode,
-    ValidateShaderdescSourceOrBytecode,
+    ValidateShaderdescVertexSource,
+    ValidateShaderdescFragmentSource,
+    ValidateShaderdescComputeSource,
+    ValidateShaderdescVertexSourceOrBytecode,
+    ValidateShaderdescFragmentSourceOrBytecode,
+    ValidateShaderdescComputeSourceOrBytecode,
+    ValidateShaderdescInvalidShaderCombo,
     ValidateShaderdescNoBytecodeSize,
+    ValidateShaderdescMetalThreadsPerThreadgroup,
     ValidateShaderdescUniformblockNoContMembers,
     ValidateShaderdescUniformblockSizeIsZero,
     ValidateShaderdescUniformblockMetalBufferSlotOutOfRange,
@@ -2668,11 +2733,12 @@ pub enum LogItem {
     ValidateShaderdescStoragebufferMetalBufferSlotCollision,
     ValidateShaderdescStoragebufferHlslRegisterTOutOfRange,
     ValidateShaderdescStoragebufferHlslRegisterTCollision,
+    ValidateShaderdescStoragebufferHlslRegisterUOutOfRange,
+    ValidateShaderdescStoragebufferHlslRegisterUCollision,
     ValidateShaderdescStoragebufferGlslBindingOutOfRange,
     ValidateShaderdescStoragebufferGlslBindingCollision,
     ValidateShaderdescStoragebufferWgslGroup1BindingOutOfRange,
     ValidateShaderdescStoragebufferWgslGroup1BindingCollision,
-    ValidateShaderdescStoragebufferReadonly,
     ValidateShaderdescImageMetalTextureSlotOutOfRange,
     ValidateShaderdescImageMetalTextureSlotCollision,
     ValidateShaderdescImageHlslRegisterTOutOfRange,
@@ -2697,9 +2763,12 @@ pub enum LogItem {
     ValidateShaderdescAttrStringTooLong,
     ValidatePipelinedescCanary,
     ValidatePipelinedescShader,
+    ValidatePipelinedescComputeShaderExpected,
+    ValidatePipelinedescNoComputeShaderExpected,
     ValidatePipelinedescNoContAttrs,
     ValidatePipelinedescLayoutStride4,
     ValidatePipelinedescAttrSemantics,
+    ValidatePipelinedescShaderReadonlyStoragebuffers,
     ValidatePipelinedescBlendopMinmaxRequiresBlendfactorOne,
     ValidateAttachmentsdescCanary,
     ValidateAttachmentsdescNoAttachments,
@@ -2733,6 +2802,7 @@ pub enum LogItem {
     ValidateAttachmentsdescDepthImageSizes,
     ValidateAttachmentsdescDepthImageSampleCount,
     ValidateBeginpassCanary,
+    ValidateBeginpassExpectNoAttachments,
     ValidateBeginpassAttachmentsExists,
     ValidateBeginpassAttachmentsValid,
     ValidateBeginpassColorAttachmentImage,
@@ -2766,20 +2836,28 @@ pub enum LogItem {
     ValidateBeginpassSwapchainWgpuExpectDepthstencilview,
     ValidateBeginpassSwapchainWgpuExpectDepthstencilviewNotset,
     ValidateBeginpassSwapchainGlExpectFramebufferNotset,
+    ValidateAvpRenderpassExpected,
+    ValidateAsrRenderpassExpected,
     ValidateApipPipelineValidId,
     ValidateApipPipelineExists,
     ValidateApipPipelineValid,
+    ValidateApipPassExpected,
     ValidateApipShaderExists,
     ValidateApipShaderValid,
+    ValidateApipComputepassExpected,
+    ValidateApipRenderpassExpected,
     ValidateApipCurpassAttachmentsExists,
     ValidateApipCurpassAttachmentsValid,
     ValidateApipAttCount,
     ValidateApipColorFormat,
     ValidateApipDepthFormat,
     ValidateApipSampleCount,
+    ValidateAbndPassExpected,
     ValidateAbndPipeline,
     ValidateAbndPipelineExists,
     ValidateAbndPipelineValid,
+    ValidateAbndComputeExpectedNoVbs,
+    ValidateAbndComputeExpectedNoIb,
     ValidateAbndExpectedVb,
     ValidateAbndVbExists,
     ValidateAbndVbType,
@@ -2804,9 +2882,20 @@ pub enum LogItem {
     ValidateAbndExpectedStoragebufferBinding,
     ValidateAbndStoragebufferExists,
     ValidateAbndStoragebufferBindingBuffertype,
-    ValidateAubNoPipeline,
-    ValidateAubNoUniformblockAtSlot,
-    ValidateAubSize,
+    ValidateAuPassExpected,
+    ValidateAuNoPipeline,
+    ValidateAuNoUniformblockAtSlot,
+    ValidateAuSize,
+    ValidateDrawRenderpassExpected,
+    ValidateDrawBaseelement,
+    ValidateDrawNumelements,
+    ValidateDrawNuminstances,
+    ValidateDrawRequiredBindingsOrUniformsMissing,
+    ValidateDispatchComputepassExpected,
+    ValidateDispatchNumgroupsx,
+    ValidateDispatchNumgroupsy,
+    ValidateDispatchNumgroupsz,
+    ValidateDispatchRequiredBindingsOrUniformsMissing,
     ValidateUpdatebufUsage,
     ValidateUpdatebufSize,
     ValidateUpdatebufOnce,
@@ -2988,6 +3077,7 @@ pub struct Desc {
     pub pipeline_pool_size: i32,
     pub attachments_pool_size: i32,
     pub uniform_buffer_size: i32,
+    pub max_dispatch_calls_per_pass: i32,
     pub max_commit_listeners: i32,
     pub disable_validation: bool,
     pub d3d11_shader_debugging: bool,
@@ -3011,6 +3101,7 @@ impl Desc {
             pipeline_pool_size: 0,
             attachments_pool_size: 0,
             uniform_buffer_size: 0,
+            max_dispatch_calls_per_pass: 0,
             max_commit_listeners: 0,
             disable_validation: false,
             d3d11_shader_debugging: false,
@@ -3296,11 +3387,12 @@ impl Default for WgpuShaderInfo {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct WgpuPipelineInfo {
-    pub pip: *const core::ffi::c_void,
+    pub render_pipeline: *const core::ffi::c_void,
+    pub compute_pipeline: *const core::ffi::c_void,
 }
 impl WgpuPipelineInfo {
     pub const fn new() -> Self {
-        Self { pip: core::ptr::null() }
+        Self { render_pipeline: core::ptr::null(), compute_pipeline: core::ptr::null() }
     }
 }
 impl Default for WgpuPipelineInfo {
@@ -3448,6 +3540,7 @@ pub mod ffi {
         pub fn sg_apply_bindings(bindings: *const Bindings);
         pub fn sg_apply_uniforms(ub_slot: usize, data: *const Range);
         pub fn sg_draw(base_element: usize, num_elements: usize, num_instances: usize);
+        pub fn sg_dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize);
         pub fn sg_end_pass();
         pub fn sg_commit();
         pub fn sg_query_desc() -> Desc;
@@ -3457,7 +3550,7 @@ pub mod ffi {
         pub fn sg_query_pixelformat(fmt: PixelFormat) -> PixelformatInfo;
         pub fn sg_query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i32;
         pub fn sg_query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32)
-        -> i32;
+            -> i32;
         pub fn sg_query_buffer_state(buf: Buffer) -> ResourceState;
         pub fn sg_query_image_state(img: Image) -> ResourceState;
         pub fn sg_query_sampler_state(smp: Sampler) -> ResourceState;
@@ -3537,6 +3630,7 @@ pub mod ffi {
         pub fn sg_d3d11_query_attachments_info(atts: Attachments) -> D3d11AttachmentsInfo;
         pub fn sg_mtl_device() -> *const core::ffi::c_void;
         pub fn sg_mtl_render_command_encoder() -> *const core::ffi::c_void;
+        pub fn sg_mtl_compute_command_encoder() -> *const core::ffi::c_void;
         pub fn sg_mtl_query_buffer_info(buf: Buffer) -> MtlBufferInfo;
         pub fn sg_mtl_query_image_info(img: Image) -> MtlImageInfo;
         pub fn sg_mtl_query_sampler_info(smp: Sampler) -> MtlSamplerInfo;
@@ -3546,6 +3640,7 @@ pub mod ffi {
         pub fn sg_wgpu_queue() -> *const core::ffi::c_void;
         pub fn sg_wgpu_command_encoder() -> *const core::ffi::c_void;
         pub fn sg_wgpu_render_pass_encoder() -> *const core::ffi::c_void;
+        pub fn sg_wgpu_compute_pass_encoder() -> *const core::ffi::c_void;
         pub fn sg_wgpu_query_buffer_info(buf: Buffer) -> WgpuBufferInfo;
         pub fn sg_wgpu_query_image_info(img: Image) -> WgpuImageInfo;
         pub fn sg_wgpu_query_sampler_info(smp: Sampler) -> WgpuSamplerInfo;
@@ -3699,6 +3794,10 @@ pub fn apply_uniforms(ub_slot: usize, data: &Range) {
 #[inline]
 pub fn draw(base_element: usize, num_elements: usize, num_instances: usize) {
     unsafe { ffi::sg_draw(base_element, num_elements, num_instances) }
+}
+#[inline]
+pub fn dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize) {
+    unsafe { ffi::sg_dispatch(num_groups_x, num_groups_y, num_groups_z) }
 }
 #[inline]
 pub fn end_pass() {
@@ -4053,6 +4152,10 @@ pub fn mtl_render_command_encoder() -> *const core::ffi::c_void {
     unsafe { ffi::sg_mtl_render_command_encoder() }
 }
 #[inline]
+pub fn mtl_compute_command_encoder() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_mtl_compute_command_encoder() }
+}
+#[inline]
 pub fn mtl_query_buffer_info(buf: Buffer) -> MtlBufferInfo {
     unsafe { ffi::sg_mtl_query_buffer_info(buf) }
 }
@@ -4087,6 +4190,10 @@ pub fn wgpu_command_encoder() -> *const core::ffi::c_void {
 #[inline]
 pub fn wgpu_render_pass_encoder() -> *const core::ffi::c_void {
     unsafe { ffi::sg_wgpu_render_pass_encoder() }
+}
+#[inline]
+pub fn wgpu_compute_pass_encoder() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_wgpu_compute_pass_encoder() }
 }
 #[inline]
 pub fn wgpu_query_buffer_info(buf: Buffer) -> WgpuBufferInfo {
