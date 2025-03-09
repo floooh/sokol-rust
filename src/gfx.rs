@@ -2882,6 +2882,7 @@ pub enum LogItem {
     ValidateAbndExpectedStoragebufferBinding,
     ValidateAbndStoragebufferExists,
     ValidateAbndStoragebufferBindingBuffertype,
+    ValidateAbndStoragebufferReadwriteImmutable,
     ValidateAuPassExpected,
     ValidateAuNoPipeline,
     ValidateAuNoUniformblockAtSlot,
