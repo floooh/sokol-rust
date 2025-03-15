@@ -606,15 +606,25 @@ pub enum VertexFormat {
     Float2,
     Float3,
     Float4,
+    Int,
+    Int2,
+    Int3,
+    Int4,
+    Uint,
+    Uint2,
+    Uint3,
+    Uint4,
     Byte4,
     Byte4n,
     Ubyte4,
     Ubyte4n,
     Short2,
     Short2n,
+    Ushort2,
     Ushort2n,
     Short4,
     Short4n,
+    Ushort4,
     Ushort4n,
     Uint10N2,
     Half2,
@@ -1307,7 +1317,7 @@ impl Default for SamplerDesc {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum ShaderStage {
     None,
     Vertex,
@@ -1347,9 +1357,28 @@ impl Default for ShaderFunction {
         Self::new()
     }
 }
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u32)]
+pub enum ShaderAttrBaseType {
+    Undefined,
+    Float,
+    Sint,
+    Uint,
+}
+impl ShaderAttrBaseType {
+    pub const fn new() -> Self {
+        Self::Undefined
+    }
+}
+impl Default for ShaderAttrBaseType {
+    fn default() -> Self {
+        Self::Undefined
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ShaderVertexAttr {
+    pub base_type: ShaderAttrBaseType,
     pub glsl_name: *const core::ffi::c_char,
     pub hlsl_sem_name: *const core::ffi::c_char,
     pub hlsl_sem_index: u8,
@@ -1357,6 +1386,7 @@ pub struct ShaderVertexAttr {
 impl ShaderVertexAttr {
     pub const fn new() -> Self {
         Self {
+            base_type: ShaderAttrBaseType::new(),
             glsl_name: core::ptr::null(),
             hlsl_sem_name: core::ptr::null(),
             hlsl_sem_index: 0,
@@ -2766,6 +2796,7 @@ pub enum LogItem {
     ValidatePipelinedescComputeShaderExpected,
     ValidatePipelinedescNoComputeShaderExpected,
     ValidatePipelinedescNoContAttrs,
+    ValidatePipelinedescAttrBasetypeMismatch,
     ValidatePipelinedescLayoutStride4,
     ValidatePipelinedescAttrSemantics,
     ValidatePipelinedescShaderReadonlyStoragebuffers,
