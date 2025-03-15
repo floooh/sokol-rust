@@ -367,8 +367,11 @@ pub fn instancing_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.vertex_func.entry = c"main".as_ptr();
             desc.fragment_func.source = &FS_SOURCE_GLSL430 as *const _ as *const _;
             desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].base_type = sg::ShaderAttrBaseType::Float;
             desc.attrs[0].glsl_name = c"pos".as_ptr();
+            desc.attrs[1].base_type = sg::ShaderAttrBaseType::Float;
             desc.attrs[1].glsl_name = c"color0".as_ptr();
+            desc.attrs[2].base_type = sg::ShaderAttrBaseType::Float;
             desc.attrs[2].glsl_name = c"inst_pos".as_ptr();
             desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
             desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
@@ -384,10 +387,13 @@ pub fn instancing_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.fragment_func.source = &FS_SOURCE_HLSL5 as *const _ as *const _;
             desc.fragment_func.d3d11_target = c"ps_5_0".as_ptr();
             desc.fragment_func.entry = c"main".as_ptr();
+            desc.attrs[0].base_type = sg::ShaderAttrBaseType::Float;
             desc.attrs[0].hlsl_sem_name = c"TEXCOORD".as_ptr();
             desc.attrs[0].hlsl_sem_index = 0;
+            desc.attrs[1].base_type = sg::ShaderAttrBaseType::Float;
             desc.attrs[1].hlsl_sem_name = c"TEXCOORD".as_ptr();
             desc.attrs[1].hlsl_sem_index = 1;
+            desc.attrs[2].base_type = sg::ShaderAttrBaseType::Float;
             desc.attrs[2].hlsl_sem_name = c"TEXCOORD".as_ptr();
             desc.attrs[2].hlsl_sem_index = 2;
             desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
@@ -400,6 +406,9 @@ pub fn instancing_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.vertex_func.entry = c"main0".as_ptr();
             desc.fragment_func.source = &FS_SOURCE_METAL_MACOS as *const _ as *const _;
             desc.fragment_func.entry = c"main0".as_ptr();
+            desc.attrs[0].base_type = sg::ShaderAttrBaseType::Float;
+            desc.attrs[1].base_type = sg::ShaderAttrBaseType::Float;
+            desc.attrs[2].base_type = sg::ShaderAttrBaseType::Float;
             desc.uniform_blocks[0].stage = sg::ShaderStage::Vertex;
             desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
             desc.uniform_blocks[0].size = 64;
