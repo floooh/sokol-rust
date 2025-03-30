@@ -2884,6 +2884,7 @@ pub enum LogItem {
     ValidateApipDepthFormat,
     ValidateApipSampleCount,
     ValidateAbndPassExpected,
+    ValidateAbndEmptyBindings,
     ValidateAbndPipeline,
     ValidateAbndPipelineExists,
     ValidateAbndPipelineValid,
