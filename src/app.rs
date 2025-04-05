@@ -796,6 +796,7 @@ pub mod ffi {
         pub fn sapp_gl_get_framebuffer() -> u32;
         pub fn sapp_gl_get_major_version() -> i32;
         pub fn sapp_gl_get_minor_version() -> i32;
+        pub fn sapp_gl_is_gles() -> bool;
         pub fn sapp_x11_get_window() -> *const core::ffi::c_void;
         pub fn sapp_x11_get_display() -> *const core::ffi::c_void;
         pub fn sapp_android_get_native_activity() -> *const core::ffi::c_void;
@@ -1042,6 +1043,10 @@ pub fn gl_get_major_version() -> i32 {
 #[inline]
 pub fn gl_get_minor_version() -> i32 {
     unsafe { ffi::sapp_gl_get_minor_version() }
+}
+#[inline]
+pub fn gl_is_gles() -> bool {
+    unsafe { ffi::sapp_gl_is_gles() }
 }
 #[inline]
 pub fn x11_get_window() -> *const core::ffi::c_void {
