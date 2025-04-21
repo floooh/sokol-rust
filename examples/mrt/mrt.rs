@@ -12,9 +12,10 @@
 mod math;
 mod shader;
 
+use std::ffi;
+
 use math as m;
 use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
-use std::ffi;
 
 const OFFSCREEN_SAMPLE_COUNT: usize = 1;
 

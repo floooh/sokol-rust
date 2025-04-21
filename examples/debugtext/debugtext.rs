@@ -4,8 +4,9 @@
 //  Text rendering with sokol_debugtext.h, test builtin fonts.
 //------------------------------------------------------------------------------
 
-use sokol::{app as sapp, debugtext as sdtx, gfx as sg, glue as sglue};
 use std::ffi;
+
+use sokol::{app as sapp, debugtext as sdtx, gfx as sg, glue as sglue};
 
 const FONT_KC853: usize = 0;
 const FONT_KC854: usize = 1;

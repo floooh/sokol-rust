@@ -7,10 +7,11 @@
 mod math;
 mod shader;
 
+use std::ffi;
+
 use math as m;
 use shader as shd;
 use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
-use std::ffi;
 
 struct State {
     rx: f32,

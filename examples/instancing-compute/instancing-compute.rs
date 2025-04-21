@@ -7,9 +7,10 @@
 mod math;
 mod shader;
 
+use std::ffi;
+
 use math as m;
 use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
-use std::ffi;
 
 const MAX_PARTICLES: usize = 512 * 1024;
 const NUM_PARTICLES_EMITTED_PER_FRAME: usize = 10;

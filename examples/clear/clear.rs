@@ -1,5 +1,6 @@
-use sokol::{app as sapp, gfx as sg, glue as sglue};
 use std::ffi;
+
+use sokol::{app as sapp, gfx as sg, glue as sglue};
 
 struct State {
     pass_action: sg::PassAction,

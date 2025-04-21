@@ -3,8 +3,9 @@
 //  Test sokol-audio Rust bindings
 //------------------------------------------------------------------------------
 
-use sokol::{app as sapp, audio as saudio, gfx as sg, glue as sglue, log as slog};
 use std::ffi;
+
+use sokol::{app as sapp, audio as saudio, gfx as sg, glue as sglue, log as slog};
 
 const NUM_SAMPLES: usize = 32;
 
