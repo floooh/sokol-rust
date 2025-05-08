@@ -79,7 +79,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
 
     // create an offscreen render target texture, pass, and pass_action
     state.offscreen.img = sg::make_image(&sg::ImageDesc {
-        render_target: true,
+        usage: sg::ImageUsage { render_attachment: true, ..Default::default() },
         width: OFFSCREEN_WIDTH,
         height: OFFSCREEN_HEIGHT,
         pixel_format: OFFSCREEN_PIXELFORMAT,

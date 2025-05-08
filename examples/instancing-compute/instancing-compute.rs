@@ -60,7 +60,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
 
     // a zero-initialized storage buffer for the particle state
     let sbuf = sg::make_buffer(&sg::BufferDesc {
-        _type: sg::BufferType::Storagebuffer,
+        usage: sg::BufferUsage { storage_buffer: true, ..Default::default() },
         size: MAX_PARTICLES * std::mem::size_of::<shader::Particle>(),
         ..Default::default()
     });
@@ -86,18 +86,15 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
           -r, 0.0, r,       0.0, 1.0, 1.0, 1.0,
         0.0,    r, 0.0,     1.0, 0.0, 1.0, 1.0,
     ];
-    state.display.bind.vertex_buffers[0] = sg::make_buffer(&sg::BufferDesc {
-        data: sg::slice_as_range(vertices),
-        _type: sg::BufferType::Vertexbuffer,
-        ..Default::default()
-    });
+    state.display.bind.vertex_buffers[0] =
+        sg::make_buffer(&sg::BufferDesc { data: sg::slice_as_range(vertices), ..Default::default() });
     #[rustfmt::skip]
     let indices: &[u16] = &[
         0, 1, 2,    0, 2, 3,    0, 3, 4,    0, 4, 1,
         5, 1, 2,    5, 2, 3,    5, 3, 4,    5, 4, 1,
     ];
     state.display.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
-        _type: sg::BufferType::Indexbuffer,
+        usage: sg::BufferUsage { index_buffer: true, ..Default::default() },
         data: sg::slice_as_range(indices),
         ..Default::default()
     });
