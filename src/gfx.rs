@@ -141,6 +141,7 @@ impl Default for Range {
 pub const INVALID_ID: u32 = 0;
 pub const NUM_INFLIGHT_FRAMES: usize = 2;
 pub const MAX_COLOR_ATTACHMENTS: usize = 4;
+pub const MAX_STORAGE_ATTACHMENTS: usize = 4;
 pub const MAX_UNIFORMBLOCK_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
 pub const MAX_MIPMAPS: usize = 16;
@@ -284,6 +285,8 @@ pub struct PixelformatInfo {
     pub msaa: bool,
     pub depth: bool,
     pub compressed: bool,
+    pub read: bool,
+    pub write: bool,
     pub bytes_per_pixel: i32,
 }
 impl PixelformatInfo {
@@ -296,6 +299,8 @@ impl PixelformatInfo {
             msaa: false,
             depth: false,
             compressed: false,
+            read: false,
+            write: false,
             bytes_per_pixel: 0,
         }
     }
@@ -314,6 +319,7 @@ pub struct Features {
     pub mrt_independent_write_mask: bool,
     pub compute: bool,
     pub msaa_image_bindings: bool,
+    pub separate_buffer_types: bool,
 }
 impl Features {
     pub const fn new() -> Self {
@@ -324,6 +330,7 @@ impl Features {
             mrt_independent_write_mask: false,
             compute: false,
             msaa_image_bindings: false,
+            separate_buffer_types: false,
         }
     }
 }
@@ -380,44 +387,6 @@ impl ResourceState {
 impl Default for ResourceState {
     fn default() -> Self {
         Self::Initial
-    }
-}
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u32)]
-pub enum Usage {
-    Default,
-    Immutable,
-    Dynamic,
-    Stream,
-    Num,
-}
-impl Usage {
-    pub const fn new() -> Self {
-        Self::Default
-    }
-}
-impl Default for Usage {
-    fn default() -> Self {
-        Self::Default
-    }
-}
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u32)]
-pub enum BufferType {
-    Default,
-    Vertexbuffer,
-    Indexbuffer,
-    Storagebuffer,
-    Num,
-}
-impl BufferType {
-    pub const fn new() -> Self {
-        Self::Default
-    }
-}
-impl Default for BufferType {
-    fn default() -> Self {
-        Self::Default
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1160,11 +1129,37 @@ impl Default for Bindings {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct BufferUsage {
+    pub vertex_buffer: bool,
+    pub index_buffer: bool,
+    pub storage_buffer: bool,
+    pub immutable: bool,
+    pub dynamic_update: bool,
+    pub stream_update: bool,
+}
+impl BufferUsage {
+    pub const fn new() -> Self {
+        Self {
+            vertex_buffer: false,
+            index_buffer: false,
+            storage_buffer: false,
+            immutable: false,
+            dynamic_update: false,
+            stream_update: false,
+        }
+    }
+}
+impl Default for BufferUsage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct BufferDesc {
     pub _start_canary: u32,
     pub size: usize,
-    pub _type: BufferType,
-    pub usage: Usage,
+    pub usage: BufferUsage,
     pub data: Range,
     pub label: *const core::ffi::c_char,
     pub gl_buffers: [u32; 2],
@@ -1178,8 +1173,7 @@ impl BufferDesc {
         Self {
             _start_canary: 0,
             size: 0,
-            _type: BufferType::new(),
-            usage: Usage::new(),
+            usage: BufferUsage::new(),
             data: Range::new(),
             label: core::ptr::null(),
             gl_buffers: [0; 2],
@@ -1191,6 +1185,31 @@ impl BufferDesc {
     }
 }
 impl Default for BufferDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ImageUsage {
+    pub render_attachment: bool,
+    pub storage_attachment: bool,
+    pub immutable: bool,
+    pub dynamic_update: bool,
+    pub stream_update: bool,
+}
+impl ImageUsage {
+    pub const fn new() -> Self {
+        Self {
+            render_attachment: false,
+            storage_attachment: false,
+            immutable: false,
+            dynamic_update: false,
+            stream_update: false,
+        }
+    }
+}
+impl Default for ImageUsage {
     fn default() -> Self {
         Self::new()
     }
@@ -1215,12 +1234,11 @@ impl Default for ImageData {
 pub struct ImageDesc {
     pub _start_canary: u32,
     pub _type: ImageType,
-    pub render_target: bool,
+    pub usage: ImageUsage,
     pub width: i32,
     pub height: i32,
     pub num_slices: i32,
     pub num_mipmaps: i32,
-    pub usage: Usage,
     pub pixel_format: PixelFormat,
     pub sample_count: i32,
     pub data: ImageData,
@@ -1239,12 +1257,11 @@ impl ImageDesc {
         Self {
             _start_canary: 0,
             _type: ImageType::new(),
-            render_target: false,
+            usage: ImageUsage::new(),
             width: 0,
             height: 0,
             num_slices: 0,
             num_mipmaps: 0,
-            usage: Usage::new(),
             pixel_format: PixelFormat::new(),
             sample_count: 0,
             data: ImageData::new(),
@@ -1529,6 +1546,37 @@ impl Default for ShaderStorageBuffer {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct ShaderStorageImage {
+    pub stage: ShaderStage,
+    pub image_type: ImageType,
+    pub access_format: PixelFormat,
+    pub writeonly: bool,
+    pub hlsl_register_u_n: u8,
+    pub msl_texture_n: u8,
+    pub wgsl_group2_binding_n: u8,
+    pub glsl_binding_n: u8,
+}
+impl ShaderStorageImage {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            image_type: ImageType::new(),
+            access_format: PixelFormat::new(),
+            writeonly: false,
+            hlsl_register_u_n: 0,
+            msl_texture_n: 0,
+            wgsl_group2_binding_n: 0,
+            glsl_binding_n: 0,
+        }
+    }
+}
+impl Default for ShaderStorageImage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ShaderImageSamplerPair {
     pub stage: ShaderStage,
     pub image_slot: u8,
@@ -1580,6 +1628,7 @@ pub struct ShaderDesc {
     pub images: [ShaderImage; 16],
     pub samplers: [ShaderSampler; 16],
     pub image_sampler_pairs: [ShaderImageSamplerPair; 16],
+    pub storage_images: [ShaderStorageImage; 4],
     pub mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup,
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
@@ -1597,6 +1646,7 @@ impl ShaderDesc {
             images: [ShaderImage::new(); 16],
             samplers: [ShaderSampler::new(); 16],
             image_sampler_pairs: [ShaderImageSamplerPair::new(); 16],
+            storage_images: [ShaderStorageImage::new(); 4],
             mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup::new(),
             label: core::ptr::null(),
             _end_canary: 0,
@@ -1861,6 +1911,7 @@ pub struct AttachmentsDesc {
     pub colors: [AttachmentDesc; 4],
     pub resolves: [AttachmentDesc; 4],
     pub depth_stencil: AttachmentDesc,
+    pub storages: [AttachmentDesc; 4],
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
 }
@@ -1871,6 +1922,7 @@ impl AttachmentsDesc {
             colors: [AttachmentDesc::new(); 4],
             resolves: [AttachmentDesc::new(); 4],
             depth_stencil: AttachmentDesc::new(),
+            storages: [AttachmentDesc::new(); 4],
             label: core::ptr::null(),
             _end_canary: 0,
         }
@@ -2596,6 +2648,7 @@ pub enum LogItem {
     Gl3dTexturesNotSupported,
     GlArrayTexturesNotSupported,
     GlStoragebufferGlslBindingOutOfRange,
+    GlStorageimageGlslBindingOutOfRange,
     GlShaderCompilationFailed,
     GlShaderLinkingFailed,
     GlVertexAttributeNotFoundInShader,
@@ -2625,6 +2678,7 @@ pub enum LogItem {
     D3d11StoragebufferHlslRegisterUOutOfRange,
     D3d11ImageHlslRegisterTOutOfRange,
     D3d11SamplerHlslRegisterSOutOfRange,
+    D3d11StorageimageHlslRegisterUOutOfRange,
     D3d11LoadD3dcompiler47DllFailed,
     D3d11ShaderCompilationFailed,
     D3d11ShaderCompilationOutput,
@@ -2635,6 +2689,7 @@ pub enum LogItem {
     D3d11CreateBlendStateFailed,
     D3d11CreateRtvFailed,
     D3d11CreateDsvFailed,
+    D3d11CreateUavFailed,
     D3d11MapForUpdateBufferFailed,
     D3d11MapForAppendBufferFailed,
     D3d11MapForUpdateImageFailed,
@@ -2648,6 +2703,7 @@ pub enum LogItem {
     MetalShaderEntryNotFound,
     MetalUniformblockMslBufferSlotOutOfRange,
     MetalStoragebufferMslBufferSlotOutOfRange,
+    MetalStorageimageMslTextureSlotOutOfRange,
     MetalImageMslTextureSlotOutOfRange,
     MetalSamplerMslSamplerSlotOutOfRange,
     MetalCreateCpsFailed,
@@ -2669,6 +2725,7 @@ pub enum LogItem {
     WgpuStoragebufferWgslGroup1BindingOutOfRange,
     WgpuImageWgslGroup1BindingOutOfRange,
     WgpuSamplerWgslGroup1BindingOutOfRange,
+    WgpuStorageimageWgslGroup2BindingOutOfRange,
     WgpuCreatePipelineLayoutFailed,
     WgpuCreateRenderPipelineFailed,
     WgpuCreateComputePipelineFailed,
@@ -2710,27 +2767,36 @@ pub enum LogItem {
     ApplyBindingsStorageBufferTrackerExhausted,
     DrawWithoutBindings,
     ValidateBufferdescCanary,
+    ValidateBufferdescImmutableDynamicStream,
+    ValidateBufferdescSeparateBufferTypes,
     ValidateBufferdescExpectNonzeroSize,
     ValidateBufferdescExpectMatchingDataSize,
     ValidateBufferdescExpectZeroDataSize,
+    ValiateExpectData,
     ValidateBufferdescExpectNoData,
+    ValidateBufferdescExpectData,
     ValidateBufferdescStoragebufferSupported,
     ValidateBufferdescStoragebufferSizeMultiple4,
     ValidateImagedataNodata,
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
+    ValidateImagedescImmutableDynamicStream,
+    ValidateImagedescRenderVsStorageAttachment,
     ValidateImagedescWidth,
     ValidateImagedescHeight,
-    ValidateImagedescRtPixelformat,
     ValidateImagedescNonrtPixelformat,
-    ValidateImagedescMsaaButNoRt,
-    ValidateImagedescNoMsaaRtSupport,
-    ValidateImagedescMsaaNumMipmaps,
-    ValidateImagedescMsaa3dImage,
-    ValidateImagedescMsaaCubeImage,
+    ValidateImagedescMsaaButNoAttachment,
     ValidateImagedescDepth3dImage,
-    ValidateImagedescRtImmutable,
-    ValidateImagedescRtNoData,
+    ValidateImagedescAttachmentExpectImmutable,
+    ValidateImagedescAttachmentExpectNoData,
+    ValidateImagedescRenderattachmentNoMsaaSupport,
+    ValidateImagedescRenderattachmentMsaaNumMipmaps,
+    ValidateImagedescRenderattachmentMsaa3dImage,
+    ValidateImagedescRenderattachmentMsaaCubeImage,
+    ValidateImagedescRenderattachmentMsaaArrayImage,
+    ValidateImagedescRenderattachmentPixelformat,
+    ValidateImagedescStorageattachmentPixelformat,
+    ValidateImagedescStorageattachmentExpectNoMsaa,
     ValidateImagedescInjectedNoData,
     ValidateImagedescDynamicNoData,
     ValidateImagedescCompressedImmutable,
@@ -2769,6 +2835,15 @@ pub enum LogItem {
     ValidateShaderdescStoragebufferGlslBindingCollision,
     ValidateShaderdescStoragebufferWgslGroup1BindingOutOfRange,
     ValidateShaderdescStoragebufferWgslGroup1BindingCollision,
+    ValidateShaderdescStorageimageExpectComputeStage,
+    ValidateShaderdescStorageimageMetalTextureSlotOutOfRange,
+    ValidateShaderdescStorageimageMetalTextureSlotCollision,
+    ValidateShaderdescStorageimageHlslRegisterUOutOfRange,
+    ValidateShaderdescStorageimageHlslRegisterUCollision,
+    ValidateShaderdescStorageimageGlslBindingOutOfRange,
+    ValidateShaderdescStorageimageGlslBindingCollision,
+    ValidateShaderdescStorageimageWgslGroup2BindingOutOfRange,
+    ValidateShaderdescStorageimageWgslGroup2BindingCollision,
     ValidateShaderdescImageMetalTextureSlotOutOfRange,
     ValidateShaderdescImageMetalTextureSlotCollision,
     ValidateShaderdescImageHlslRegisterTOutOfRange,
@@ -2804,14 +2879,13 @@ pub enum LogItem {
     ValidateAttachmentsdescCanary,
     ValidateAttachmentsdescNoAttachments,
     ValidateAttachmentsdescNoContColorAtts,
-    ValidateAttachmentsdescImage,
-    ValidateAttachmentsdescMiplevel,
-    ValidateAttachmentsdescFace,
-    ValidateAttachmentsdescLayer,
-    ValidateAttachmentsdescSlice,
-    ValidateAttachmentsdescImageNoRt,
+    ValidateAttachmentsdescColorImage,
+    ValidateAttachmentsdescColorMiplevel,
+    ValidateAttachmentsdescColorFace,
+    ValidateAttachmentsdescColorLayer,
+    ValidateAttachmentsdescColorSlice,
+    ValidateAttachmentsdescColorImageNoRenderattachment,
     ValidateAttachmentsdescColorInvPixelformat,
-    ValidateAttachmentsdescDepthInvPixelformat,
     ValidateAttachmentsdescImageSizes,
     ValidateAttachmentsdescImageSampleCounts,
     ValidateAttachmentsdescResolveColorImageMsaa,
@@ -2824,21 +2898,32 @@ pub enum LogItem {
     ValidateAttachmentsdescResolveImageNoRt,
     ValidateAttachmentsdescResolveImageSizes,
     ValidateAttachmentsdescResolveImageFormat,
+    ValidateAttachmentsdescDepthInvPixelformat,
     ValidateAttachmentsdescDepthImage,
     ValidateAttachmentsdescDepthMiplevel,
     ValidateAttachmentsdescDepthFace,
     ValidateAttachmentsdescDepthLayer,
     ValidateAttachmentsdescDepthSlice,
-    ValidateAttachmentsdescDepthImageNoRt,
+    ValidateAttachmentsdescDepthImageNoRenderattachment,
     ValidateAttachmentsdescDepthImageSizes,
     ValidateAttachmentsdescDepthImageSampleCount,
+    ValidateAttachmentsdescStorageImage,
+    ValidateAttachmentsdescStorageMiplevel,
+    ValidateAttachmentsdescStorageFace,
+    ValidateAttachmentsdescStorageLayer,
+    ValidateAttachmentsdescStorageSlice,
+    ValidateAttachmentsdescStorageImageNoStorageattachment,
+    ValidateAttachmentsdescStorageInvPixelformat,
+    ValidateAttachmentsdescRenderVsStorageAttachments,
     ValidateBeginpassCanary,
-    ValidateBeginpassExpectNoAttachments,
     ValidateBeginpassAttachmentsExists,
     ValidateBeginpassAttachmentsValid,
+    ValidateBeginpassComputepassStorageAttachmentsOnly,
+    ValidateBeginpassRenderpassRenderAttachmentsOnly,
     ValidateBeginpassColorAttachmentImage,
     ValidateBeginpassResolveAttachmentImage,
     ValidateBeginpassDepthstencilAttachmentImage,
+    ValidateBeginpassStorageAttachmentImage,
     ValidateBeginpassSwapchainExpectWidth,
     ValidateBeginpassSwapchainExpectWidthNotset,
     ValidateBeginpassSwapchainExpectHeight,
@@ -2883,6 +2968,11 @@ pub enum LogItem {
     ValidateApipColorFormat,
     ValidateApipDepthFormat,
     ValidateApipSampleCount,
+    ValidateApipExpectedStorageAttachmentImage,
+    ValidateApipStorageAttachmentImageExists,
+    ValidateApipStorageAttachmentImageValid,
+    ValidateApipStorageAttachmentPixelformat,
+    ValidateApipStorageAttachmentImageType,
     ValidateAbndPassExpected,
     ValidateAbndEmptyBindings,
     ValidateAbndPipeline,
@@ -2915,6 +3005,10 @@ pub enum LogItem {
     ValidateAbndStoragebufferExists,
     ValidateAbndStoragebufferBindingBuffertype,
     ValidateAbndStoragebufferReadwriteImmutable,
+    ValidateAbndImageBindingVsDepthstencilAttachment,
+    ValidateAbndImageBindingVsColorAttachment,
+    ValidateAbndImageBindingVsResolveAttachment,
+    ValidateAbndImageBindingVsStorageAttachment,
     ValidateAuPassExpected,
     ValidateAuNoPipeline,
     ValidateAuNoUniformblockAtSlot,
@@ -3609,15 +3703,14 @@ pub mod ffi {
         pub fn sg_query_pipeline_defaults(desc: *const PipelineDesc) -> PipelineDesc;
         pub fn sg_query_attachments_defaults(desc: *const AttachmentsDesc) -> AttachmentsDesc;
         pub fn sg_query_buffer_size(buf: Buffer) -> usize;
-        pub fn sg_query_buffer_type(buf: Buffer) -> BufferType;
-        pub fn sg_query_buffer_usage(buf: Buffer) -> Usage;
+        pub fn sg_query_buffer_usage(buf: Buffer) -> BufferUsage;
         pub fn sg_query_image_type(img: Image) -> ImageType;
         pub fn sg_query_image_width(img: Image) -> i32;
         pub fn sg_query_image_height(img: Image) -> i32;
         pub fn sg_query_image_num_slices(img: Image) -> i32;
         pub fn sg_query_image_num_mipmaps(img: Image) -> i32;
         pub fn sg_query_image_pixelformat(img: Image) -> PixelFormat;
-        pub fn sg_query_image_usage(img: Image) -> Usage;
+        pub fn sg_query_image_usage(img: Image) -> ImageUsage;
         pub fn sg_query_image_sample_count(img: Image) -> i32;
         pub fn sg_alloc_buffer() -> Buffer;
         pub fn sg_alloc_image() -> Image;
@@ -3969,11 +4062,7 @@ pub fn query_buffer_size(buf: Buffer) -> usize {
     unsafe { ffi::sg_query_buffer_size(buf) }
 }
 #[inline]
-pub fn query_buffer_type(buf: Buffer) -> BufferType {
-    unsafe { ffi::sg_query_buffer_type(buf) }
-}
-#[inline]
-pub fn query_buffer_usage(buf: Buffer) -> Usage {
+pub fn query_buffer_usage(buf: Buffer) -> BufferUsage {
     unsafe { ffi::sg_query_buffer_usage(buf) }
 }
 #[inline]
@@ -4001,7 +4090,7 @@ pub fn query_image_pixelformat(img: Image) -> PixelFormat {
     unsafe { ffi::sg_query_image_pixelformat(img) }
 }
 #[inline]
-pub fn query_image_usage(img: Image) -> Usage {
+pub fn query_image_usage(img: Image) -> ImageUsage {
     unsafe { ffi::sg_query_image_usage(img) }
 }
 #[inline]

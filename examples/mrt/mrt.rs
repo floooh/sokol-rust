@@ -141,7 +141,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
 
     // index buffer for a cube
     let cube_ibuf = sg::make_buffer(&sg::BufferDesc {
-        _type: sg::BufferType::Indexbuffer,
+        usage: sg::BufferUsage { index_buffer: true, ..Default::default() },
         data: sg::slice_as_range(INDICES),
         ..Default::default()
     });
@@ -284,7 +284,7 @@ fn create_offscreen_attachments(width: i32, height: i32, state: &mut State) {
 
     // create offscreen render target images and pass
     let color_img_desc = sg::ImageDesc {
-        render_target: true,
+        usage: sg::ImageUsage { render_attachment: true, ..Default::default() },
         width,
         height,
         sample_count: OFFSCREEN_SAMPLE_COUNT as _,

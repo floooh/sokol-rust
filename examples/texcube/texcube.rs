@@ -82,11 +82,8 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         Vertex { x:  1.0,  y:  1.0, z: -1.0,  color: 0xFF007FFF, u:     0, v: 32767 },
     ];
 
-    state.bind.vertex_buffers[0] = sg::make_buffer(&sg::BufferDesc {
-        data: sg::slice_as_range(VERTICES),
-        _type: sg::BufferType::Vertexbuffer,
-        ..Default::default()
-    });
+    state.bind.vertex_buffers[0] =
+        sg::make_buffer(&sg::BufferDesc { data: sg::slice_as_range(VERTICES), ..Default::default() });
 
     // create an index buffer for the cube
     #[rustfmt::skip]
@@ -100,7 +97,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     ];
     state.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
         data: sg::slice_as_range(INDICES),
-        _type: sg::BufferType::Indexbuffer,
+        usage: sg::BufferUsage { index_buffer: true, ..Default::default() },
         ..Default::default()
     });
 
