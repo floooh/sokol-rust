@@ -2772,7 +2772,6 @@ pub enum LogItem {
     ValidateBufferdescExpectNonzeroSize,
     ValidateBufferdescExpectMatchingDataSize,
     ValidateBufferdescExpectZeroDataSize,
-    ValiateExpectData,
     ValidateBufferdescExpectNoData,
     ValidateBufferdescExpectData,
     ValidateBufferdescStoragebufferSupported,
