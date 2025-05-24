@@ -54,11 +54,8 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
           -r, 0.0, r,       0.0, 1.0, 1.0, 1.0,
         0.0,    r, 0.0,     1.0, 0.0, 1.0, 1.0,
     ];
-    state.bind.vertex_buffers[0] = sg::make_buffer(&sg::BufferDesc {
-        data: sg::slice_as_range(vertices),
-        _type: sg::BufferType::Vertexbuffer,
-        ..Default::default()
-    });
+    state.bind.vertex_buffers[0] =
+        sg::make_buffer(&sg::BufferDesc { data: sg::slice_as_range(vertices), ..Default::default() });
 
     // index buffer for static geometry
     #[rustfmt::skip]
@@ -67,16 +64,15 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         5, 1, 2,    5, 2, 3,    5, 3, 4,    5, 4, 1,
     ];
     state.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
-        _type: sg::BufferType::Indexbuffer,
+        usage: sg::BufferUsage { index_buffer: true, ..Default::default() },
         data: sg::slice_as_range(indices),
         ..Default::default()
     });
 
     // empty, dynamic instance-data vertex buffer, goes into vertex-buffer-slot 1
     state.bind.vertex_buffers[1] = sg::make_buffer(&sg::BufferDesc {
-        _type: sg::BufferType::Vertexbuffer,
         size: MAX_PARTICLES * std::mem::size_of::<m::Vec3>(),
-        usage: sg::Usage::Stream,
+        usage: sg::BufferUsage { stream_update: true, ..Default::default() },
         ..Default::default()
     });
 

@@ -79,7 +79,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
 
     state.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
         data: sg::slice_as_range(INDICES),
-        _type: sg::BufferType::Indexbuffer,
+        usage: sg::BufferUsage { index_buffer: true, ..Default::default() },
         ..Default::default()
     });
 

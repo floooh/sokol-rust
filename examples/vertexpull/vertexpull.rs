@@ -79,7 +79,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
          1.0,  1.0, -1.0,   0.0,     1.0, 0.0, 0.5, 1.0,
     ];
     state.bind.storage_buffers[shd::SBUF_SSBO] = sg::make_buffer(&sg::BufferDesc {
-        _type: sg::BufferType::Storagebuffer,
+        usage: sg::BufferUsage { storage_buffer: true, ..Default::default() },
         data: sg::slice_as_range(VERTICES),
         ..Default::default()
     });
@@ -95,7 +95,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         22, 21, 20,  23, 22, 20,
     ];
     state.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
-        _type: sg::BufferType::Indexbuffer,
+        usage: sg::BufferUsage { index_buffer: true, ..Default::default() },
         data: sg::slice_as_range(INDICES),
         ..Default::default()
     });
