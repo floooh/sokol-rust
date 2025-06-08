@@ -2071,10 +2071,11 @@ impl Default for TraceHooks {
 pub struct SlotInfo {
     pub state: ResourceState,
     pub res_id: u32,
+    pub uninit_count: u32,
 }
 impl SlotInfo {
     pub const fn new() -> Self {
-        Self { state: ResourceState::new(), res_id: 0 }
+        Self { state: ResourceState::new(), res_id: 0, uninit_count: 0 }
     }
 }
 impl Default for SlotInfo {
@@ -2919,10 +2920,14 @@ pub enum LogItem {
     ValidateBeginpassAttachmentsValid,
     ValidateBeginpassComputepassStorageAttachmentsOnly,
     ValidateBeginpassRenderpassRenderAttachmentsOnly,
-    ValidateBeginpassColorAttachmentImage,
-    ValidateBeginpassResolveAttachmentImage,
-    ValidateBeginpassDepthstencilAttachmentImage,
-    ValidateBeginpassStorageAttachmentImage,
+    ValidateBeginpassColorAttachmentImageAlive,
+    ValidateBeginpassColorAttachmentImageValid,
+    ValidateBeginpassResolveAttachmentImageAlive,
+    ValidateBeginpassResolveAttachmentImageValid,
+    ValidateBeginpassDepthstencilAttachmentImageAlive,
+    ValidateBeginpassDepthstencilAttachmentImageValid,
+    ValidateBeginpassStorageAttachmentImageAlive,
+    ValidateBeginpassStorageAttachmentImageValid,
     ValidateBeginpassSwapchainExpectWidth,
     ValidateBeginpassSwapchainExpectWidthNotset,
     ValidateBeginpassSwapchainExpectHeight,
@@ -2957,39 +2962,45 @@ pub enum LogItem {
     ValidateApipPipelineExists,
     ValidateApipPipelineValid,
     ValidateApipPassExpected,
-    ValidateApipShaderExists,
-    ValidateApipShaderValid,
+    ValidateApipPipelineShaderAlive,
+    ValidateApipPipelineShaderValid,
     ValidateApipComputepassExpected,
     ValidateApipRenderpassExpected,
-    ValidateApipCurpassAttachmentsExists,
+    ValidateApipCurpassAttachmentsAlive,
     ValidateApipCurpassAttachmentsValid,
     ValidateApipAttCount,
+    ValidateApipColorAttachmentImageAlive,
+    ValidateApipColorAttachmentImageValid,
+    ValidateApipDepthstencilAttachmentImageAlive,
+    ValidateApipDepthstencilAttachmentImageValid,
     ValidateApipColorFormat,
     ValidateApipDepthFormat,
     ValidateApipSampleCount,
     ValidateApipExpectedStorageAttachmentImage,
-    ValidateApipStorageAttachmentImageExists,
+    ValidateApipStorageAttachmentImageAlive,
     ValidateApipStorageAttachmentImageValid,
     ValidateApipStorageAttachmentPixelformat,
     ValidateApipStorageAttachmentImageType,
     ValidateAbndPassExpected,
     ValidateAbndEmptyBindings,
-    ValidateAbndPipeline,
-    ValidateAbndPipelineExists,
+    ValidateAbndNoPipeline,
+    ValidateAbndPipelineAlive,
     ValidateAbndPipelineValid,
+    ValidateAbndPipelineShaderAlive,
+    ValidateAbndPipelineShaderValid,
     ValidateAbndComputeExpectedNoVbs,
     ValidateAbndComputeExpectedNoIb,
     ValidateAbndExpectedVb,
-    ValidateAbndVbExists,
+    ValidateAbndVbAlive,
     ValidateAbndVbType,
     ValidateAbndVbOverflow,
     ValidateAbndNoIb,
     ValidateAbndIb,
-    ValidateAbndIbExists,
+    ValidateAbndIbAlive,
     ValidateAbndIbType,
     ValidateAbndIbOverflow,
     ValidateAbndExpectedImageBinding,
-    ValidateAbndImgExists,
+    ValidateAbndImgAlive,
     ValidateAbndImageTypeMismatch,
     ValidateAbndExpectedMultisampledImage,
     ValidateAbndImageMsaa,
@@ -2999,9 +3010,10 @@ pub enum LogItem {
     ValidateAbndUnexpectedSamplerCompareNever,
     ValidateAbndExpectedSamplerCompareNever,
     ValidateAbndExpectedNonfilteringSampler,
-    ValidateAbndSmpExists,
+    ValidateAbndSmpAlive,
+    ValidateAbndSmpValid,
     ValidateAbndExpectedStoragebufferBinding,
-    ValidateAbndStoragebufferExists,
+    ValidateAbndStoragebufferAlive,
     ValidateAbndStoragebufferBindingBuffertype,
     ValidateAbndStoragebufferReadwriteImmutable,
     ValidateAbndImageBindingVsDepthstencilAttachment,
@@ -3010,6 +3022,10 @@ pub enum LogItem {
     ValidateAbndImageBindingVsStorageAttachment,
     ValidateAuPassExpected,
     ValidateAuNoPipeline,
+    ValidateAuPipelineAlive,
+    ValidateAuPipelineValid,
+    ValidateAuPipelineShaderAlive,
+    ValidateAuPipelineShaderValid,
     ValidateAuNoUniformblockAtSlot,
     ValidateAuSize,
     ValidateDrawRenderpassExpected,
@@ -3344,16 +3360,11 @@ impl Default for D3d11PipelineInfo {
 #[derive(Copy, Clone, Debug)]
 pub struct D3d11AttachmentsInfo {
     pub color_rtv: [*const core::ffi::c_void; 4],
-    pub resolve_rtv: [*const core::ffi::c_void; 4],
     pub dsv: *const core::ffi::c_void,
 }
 impl D3d11AttachmentsInfo {
     pub const fn new() -> Self {
-        Self {
-            color_rtv: [core::ptr::null(); 4],
-            resolve_rtv: [core::ptr::null(); 4],
-            dsv: core::ptr::null(),
-        }
+        Self { color_rtv: [core::ptr::null(); 4], dsv: core::ptr::null() }
     }
 }
 impl Default for D3d11AttachmentsInfo {
