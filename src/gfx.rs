@@ -1358,6 +1358,7 @@ pub struct ShaderFunction {
     pub bytecode: Range,
     pub entry: *const core::ffi::c_char,
     pub d3d11_target: *const core::ffi::c_char,
+    pub d3d11_filepath: *const core::ffi::c_char,
 }
 impl ShaderFunction {
     pub const fn new() -> Self {
@@ -1366,6 +1367,7 @@ impl ShaderFunction {
             bytecode: Range::new(),
             entry: core::ptr::null(),
             d3d11_target: core::ptr::null(),
+            d3d11_filepath: core::ptr::null(),
         }
     }
 }
