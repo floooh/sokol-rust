@@ -244,6 +244,7 @@ pub mod ffi {
         pub fn sdtx_putc(c: core::ffi::c_char);
         pub fn sdtx_puts(str: *const core::ffi::c_char);
         pub fn sdtx_putr(str: *const core::ffi::c_char, len: i32);
+        pub fn sdtx_get_cleared_fmt_buffer() -> Range;
     }
 }
 #[inline]
@@ -395,4 +396,8 @@ pub fn puts(str: &str) {
 pub fn putr(str: &str, len: i32) {
     let tmp_0 = std::ffi::CString::new(str).unwrap();
     unsafe { ffi::sdtx_putr(tmp_0.as_ptr(), len) }
+}
+#[inline]
+pub fn get_cleared_fmt_buffer() -> Range {
+    unsafe { ffi::sdtx_get_cleared_fmt_buffer() }
 }
