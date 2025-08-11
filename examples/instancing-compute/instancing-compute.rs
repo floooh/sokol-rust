@@ -58,14 +58,18 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         ..Default::default()
     };
 
-    // a zero-initialized storage buffer for the particle state
+    // a buffer and view for the particle state
     let sbuf = sg::make_buffer(&sg::BufferDesc {
         usage: sg::BufferUsage { storage_buffer: true, ..Default::default() },
         size: MAX_PARTICLES * std::mem::size_of::<shader::Particle>(),
         ..Default::default()
     });
-    state.compute.bind.storage_buffers[shader::SBUF_CS_SSBO] = sbuf;
-    state.display.bind.storage_buffers[shader::SBUF_VS_SSBO] = sbuf;
+    let sbuf_view = sg::make_view(&sg::ViewDesc {
+        storage_buffer: sg::BufferViewDesc { buffer: sbuf, ..Default::default() },
+        ..Default::default()
+    });
+    state.compute.bind.views[shader::VIEW_CS_SSBO] = sbuf_view;
+    state.display.bind.views[shader::VIEW_VS_SSBO] = sbuf_view;
 
     // a compute shader and pipeline object for updating the particle state
     state.compute.pip = sg::make_pipeline(&sg::PipelineDesc {

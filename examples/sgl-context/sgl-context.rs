@@ -15,14 +15,13 @@ const OFFSCREEN_WIDTH: i32 = 32;
 const OFFSCREEN_HEIGHT: i32 = 32;
 
 struct Offscreen {
-    pass_action: sg::PassAction,
-    attachments: sg::Attachments,
-    img: sg::Image,
+    pass: sg::Pass,
     sgl_context: sgl::Context,
 }
 
 struct Display {
     pass_action: sg::PassAction,
+    tex_view: sg::View,
     smp: sg::Sampler,
     sgl_pip: sgl::Pipeline,
 }
@@ -53,6 +52,12 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         clear_value: sg::Color { r: 0.5, g: 0.7, b: 1.0, a: 1.0 },
         ..Default::default()
     };
+    state.offscreen.pass.action.colors[0] = sg::ColorAttachmentAction {
+        load_action: sg::LoadAction::Clear,
+        clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        ..Default::default()
+    };
+
     state.display.sgl_pip = sgl::context_make_pipeline(
         sgl::default_context(),
         &sg::PipelineDesc {
@@ -77,23 +82,23 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         ..Default::default()
     });
 
-    // create an offscreen render target texture, pass, and pass_action
-    state.offscreen.img = sg::make_image(&sg::ImageDesc {
-        usage: sg::ImageUsage { render_attachment: true, ..Default::default() },
+    // an color attachment image and views
+    let img = sg::make_image(&sg::ImageDesc {
+        usage: sg::ImageUsage { color_attachment: true, ..Default::default() },
         width: OFFSCREEN_WIDTH,
         height: OFFSCREEN_HEIGHT,
         pixel_format: OFFSCREEN_PIXELFORMAT,
         sample_count: OFFSCREEN_SAMPLECOUNT,
         ..Default::default()
     });
-    let mut atts_desc = sg::AttachmentsDesc::new();
-    atts_desc.colors[0] = sg::AttachmentDesc { image: state.offscreen.img, ..Default::default() };
-    state.offscreen.attachments = sg::make_attachments(&atts_desc);
-    state.offscreen.pass_action.colors[0] = sg::ColorAttachmentAction {
-        load_action: sg::LoadAction::Clear,
-        clear_value: sg::Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+    state.offscreen.pass.attachments.colors[0] = sg::make_view(&sg::ViewDesc {
+        color_attachment: sg::ImageViewDesc { image: img, ..Default::default() },
         ..Default::default()
-    };
+    });
+    state.display.tex_view = sg::make_view(&sg::ViewDesc {
+        texture: sg::TextureViewDesc { image: img, ..Default::default() },
+        ..Default::default()
+    });
 
     // a sampler to sample the offscreen render target as texture
     state.display.smp = sg::make_sampler(&sg::SamplerDesc {
@@ -122,7 +127,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     sgl::set_context(sgl::default_context());
     sgl::defaults();
     sgl::enable_texture();
-    sgl::texture(state.offscreen.img, state.display.smp);
+    sgl::texture(state.display.tex_view, state.display.smp);
     sgl::load_pipeline(state.display.sgl_pip);
     sgl::matrix_mode_projection();
     sgl::perspective(f32::to_radians(45.0), sapp::widthf() / sapp::heightf(), 0.1, 100.0);
@@ -132,11 +137,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     draw_cube();
 
     // do the actual offscreen and display rendering in sokol-gfx passes
-    sg::begin_pass(&sg::Pass {
-        action: state.offscreen.pass_action,
-        attachments: state.offscreen.attachments,
-        ..Default::default()
-    });
+    sg::begin_pass(&state.offscreen.pass);
     sgl::context_draw(state.offscreen.sgl_context);
     sg::end_pass();
     sg::begin_pass(&sg::Pass {
@@ -200,14 +201,10 @@ extern "C" fn cleanup(user_data: *mut ffi::c_void) {
 
 fn main() {
     let state = Box::new(State {
-        offscreen: Offscreen {
-            pass_action: sg::PassAction::new(),
-            attachments: sg::Attachments::new(),
-            img: sg::Image::new(),
-            sgl_context: sgl::Context::new(),
-        },
+        offscreen: Offscreen { pass: sg::Pass::new(), sgl_context: sgl::Context::new() },
         display: Display {
             pass_action: sg::PassAction::new(),
+            tex_view: sg::View::new(),
             smp: sg::Sampler::new(),
             sgl_pip: sgl::Pipeline::new(),
         },

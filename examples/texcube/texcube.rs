@@ -101,7 +101,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         ..Default::default()
     });
 
-    // create a checkerboard texture
+    // create a checkerboard image and texture view
     let pixels: [u32; 4 * 4] = [
         0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF,
         0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFF000000, 0xFFFFFFFF, 0xFF000000, 0xFFFFFFFF,
@@ -109,7 +109,10 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     // NOTE: SLOT_tex is provided by shader code generation
     let mut image_desc = sg::ImageDesc { width: 4, height: 4, ..Default::default() };
     image_desc.data.subimage[0][0] = sg::slice_as_range(&pixels);
-    state.bind.images[shader::IMG_TEX] = sg::make_image(&image_desc);
+    state.bind.views[shader::VIEW_TEX] = sg::make_view(&sg::ViewDesc {
+        texture: sg::TextureViewDesc { image: sg::make_image(&image_desc), ..Default::default() },
+        ..Default::default()
+    });
 
     // create a sampler object
     state.bind.samplers[shader::SMP_SMP] = sg::make_sampler(&sg::SamplerDesc {
