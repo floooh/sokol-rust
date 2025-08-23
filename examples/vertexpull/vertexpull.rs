@@ -78,9 +78,15 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
          1.0,  1.0,  1.0,   0.0,     1.0, 0.0, 0.5, 1.0,
          1.0,  1.0, -1.0,   0.0,     1.0, 0.0, 0.5, 1.0,
     ];
-    state.bind.storage_buffers[shd::SBUF_SSBO] = sg::make_buffer(&sg::BufferDesc {
-        usage: sg::BufferUsage { storage_buffer: true, ..Default::default() },
-        data: sg::slice_as_range(VERTICES),
+    state.bind.views[shd::VIEW_SSBO] = sg::make_view(&sg::ViewDesc {
+        storage_buffer: sg::BufferViewDesc {
+            buffer: sg::make_buffer(&sg::BufferDesc {
+                usage: sg::BufferUsage { storage_buffer: true, ..Default::default() },
+                data: sg::slice_as_range(VERTICES),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
         ..Default::default()
     });
 

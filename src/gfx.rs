@@ -109,15 +109,15 @@ impl Default for Pipeline {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Attachments {
+pub struct View {
     pub id: u32,
 }
-impl Attachments {
+impl View {
     pub const fn new() -> Self {
         Self { id: 0 }
     }
 }
-impl Default for Attachments {
+impl Default for View {
     fn default() -> Self {
         Self::new()
     }
@@ -141,17 +141,15 @@ impl Default for Range {
 pub const INVALID_ID: u32 = 0;
 pub const NUM_INFLIGHT_FRAMES: usize = 2;
 pub const MAX_COLOR_ATTACHMENTS: usize = 4;
-pub const MAX_STORAGE_ATTACHMENTS: usize = 4;
 pub const MAX_UNIFORMBLOCK_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
 pub const MAX_MIPMAPS: usize = 16;
 pub const MAX_TEXTUREARRAY_LAYERS: usize = 128;
-pub const MAX_UNIFORMBLOCK_BINDSLOTS: usize = 8;
 pub const MAX_VERTEXBUFFER_BINDSLOTS: usize = 8;
-pub const MAX_IMAGE_BINDSLOTS: usize = 16;
+pub const MAX_UNIFORMBLOCK_BINDSLOTS: usize = 8;
+pub const MAX_VIEW_BINDSLOTS: usize = 28;
 pub const MAX_SAMPLER_BINDSLOTS: usize = 16;
-pub const MAX_STORAGEBUFFER_BINDSLOTS: usize = 8;
-pub const MAX_IMAGE_SAMPLER_PAIRS: usize = 16;
+pub const MAX_TEXTURE_SAMPLER_PAIRS: usize = 16;
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Color {
@@ -318,8 +316,9 @@ pub struct Features {
     pub mrt_independent_blend_state: bool,
     pub mrt_independent_write_mask: bool,
     pub compute: bool,
-    pub msaa_image_bindings: bool,
+    pub msaa_texture_bindings: bool,
     pub separate_buffer_types: bool,
+    pub gl_texture_views: bool,
 }
 impl Features {
     pub const fn new() -> Self {
@@ -329,8 +328,9 @@ impl Features {
             mrt_independent_blend_state: false,
             mrt_independent_write_mask: false,
             compute: false,
-            msaa_image_bindings: false,
+            msaa_texture_bindings: false,
             separate_buffer_types: false,
+            gl_texture_views: false,
         }
     }
 }
@@ -1067,6 +1067,23 @@ impl Default for Swapchain {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct Attachments {
+    pub colors: [View; 4],
+    pub resolves: [View; 4],
+    pub depth_stencil: View,
+}
+impl Attachments {
+    pub const fn new() -> Self {
+        Self { colors: [View::new(); 4], resolves: [View::new(); 4], depth_stencil: View::new() }
+    }
+}
+impl Default for Attachments {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Pass {
     pub _start_canary: u32,
     pub compute: bool,
@@ -1102,9 +1119,8 @@ pub struct Bindings {
     pub vertex_buffer_offsets: [i32; 8],
     pub index_buffer: Buffer,
     pub index_buffer_offset: i32,
-    pub images: [Image; 16],
+    pub views: [View; 28],
     pub samplers: [Sampler; 16],
-    pub storage_buffers: [Buffer; 8],
     pub _end_canary: u32,
 }
 impl Bindings {
@@ -1115,9 +1131,8 @@ impl Bindings {
             vertex_buffer_offsets: [0; 8],
             index_buffer: Buffer::new(),
             index_buffer_offset: 0,
-            images: [Image::new(); 16],
+            views: [View::new(); 28],
             samplers: [Sampler::new(); 16],
-            storage_buffers: [Buffer::new(); 8],
             _end_canary: 0,
         }
     }
@@ -1192,8 +1207,10 @@ impl Default for BufferDesc {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ImageUsage {
-    pub render_attachment: bool,
-    pub storage_attachment: bool,
+    pub storage_image: bool,
+    pub color_attachment: bool,
+    pub resolve_attachment: bool,
+    pub depth_stencil_attachment: bool,
     pub immutable: bool,
     pub dynamic_update: bool,
     pub stream_update: bool,
@@ -1201,8 +1218,10 @@ pub struct ImageUsage {
 impl ImageUsage {
     pub const fn new() -> Self {
         Self {
-            render_attachment: false,
-            storage_attachment: false,
+            storage_image: false,
+            color_attachment: false,
+            resolve_attachment: false,
+            depth_stencil_attachment: false,
             immutable: false,
             dynamic_update: false,
             stream_update: false,
@@ -1212,6 +1231,27 @@ impl ImageUsage {
 impl Default for ImageUsage {
     fn default() -> Self {
         Self::new()
+    }
+}
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u32)]
+pub enum ViewType {
+    Invalid,
+    Storagebuffer,
+    Storageimage,
+    Texture,
+    Colorattachment,
+    Resolveattachment,
+    Depthstencilattachment,
+}
+impl ViewType {
+    pub const fn new() -> Self {
+        Self::Invalid
+    }
+}
+impl Default for ViewType {
+    fn default() -> Self {
+        Self::Invalid
     }
 }
 #[repr(C)]
@@ -1247,9 +1287,7 @@ pub struct ImageDesc {
     pub gl_texture_target: u32,
     pub mtl_textures: [*const core::ffi::c_void; 2],
     pub d3d11_texture: *const core::ffi::c_void,
-    pub d3d11_shader_resource_view: *const core::ffi::c_void,
     pub wgpu_texture: *const core::ffi::c_void,
-    pub wgpu_texture_view: *const core::ffi::c_void,
     pub _end_canary: u32,
 }
 impl ImageDesc {
@@ -1270,9 +1308,7 @@ impl ImageDesc {
             gl_texture_target: 0,
             mtl_textures: [core::ptr::null(); 2],
             d3d11_texture: core::ptr::null(),
-            d3d11_shader_resource_view: core::ptr::null(),
             wgpu_texture: core::ptr::null(),
-            wgpu_texture_view: core::ptr::null(),
             _end_canary: 0,
         }
     }
@@ -1465,7 +1501,7 @@ impl Default for ShaderUniformBlock {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct ShaderImage {
+pub struct ShaderTextureView {
     pub stage: ShaderStage,
     pub image_type: ImageType,
     pub sample_type: ImageSampleType,
@@ -1474,7 +1510,7 @@ pub struct ShaderImage {
     pub msl_texture_n: u8,
     pub wgsl_group1_binding_n: u8,
 }
-impl ShaderImage {
+impl ShaderTextureView {
     pub const fn new() -> Self {
         Self {
             stage: ShaderStage::new(),
@@ -1487,7 +1523,88 @@ impl ShaderImage {
         }
     }
 }
-impl Default for ShaderImage {
+impl Default for ShaderTextureView {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderStorageBufferView {
+    pub stage: ShaderStage,
+    pub readonly: bool,
+    pub hlsl_register_t_n: u8,
+    pub hlsl_register_u_n: u8,
+    pub msl_buffer_n: u8,
+    pub wgsl_group1_binding_n: u8,
+    pub glsl_binding_n: u8,
+}
+impl ShaderStorageBufferView {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            readonly: false,
+            hlsl_register_t_n: 0,
+            hlsl_register_u_n: 0,
+            msl_buffer_n: 0,
+            wgsl_group1_binding_n: 0,
+            glsl_binding_n: 0,
+        }
+    }
+}
+impl Default for ShaderStorageBufferView {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderStorageImageView {
+    pub stage: ShaderStage,
+    pub image_type: ImageType,
+    pub access_format: PixelFormat,
+    pub writeonly: bool,
+    pub hlsl_register_u_n: u8,
+    pub msl_texture_n: u8,
+    pub wgsl_group1_binding_n: u8,
+    pub glsl_binding_n: u8,
+}
+impl ShaderStorageImageView {
+    pub const fn new() -> Self {
+        Self {
+            stage: ShaderStage::new(),
+            image_type: ImageType::new(),
+            access_format: PixelFormat::new(),
+            writeonly: false,
+            hlsl_register_u_n: 0,
+            msl_texture_n: 0,
+            wgsl_group1_binding_n: 0,
+            glsl_binding_n: 0,
+        }
+    }
+}
+impl Default for ShaderStorageImageView {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ShaderView {
+    pub texture: ShaderTextureView,
+    pub storage_buffer: ShaderStorageBufferView,
+    pub storage_image: ShaderStorageImageView,
+}
+impl ShaderView {
+    pub const fn new() -> Self {
+        Self {
+            texture: ShaderTextureView::new(),
+            storage_buffer: ShaderStorageBufferView::new(),
+            storage_image: ShaderStorageImageView::new(),
+        }
+    }
+}
+impl Default for ShaderView {
     fn default() -> Self {
         Self::new()
     }
@@ -1519,83 +1636,23 @@ impl Default for ShaderSampler {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct ShaderStorageBuffer {
+pub struct ShaderTextureSamplerPair {
     pub stage: ShaderStage,
-    pub readonly: bool,
-    pub hlsl_register_t_n: u8,
-    pub hlsl_register_u_n: u8,
-    pub msl_buffer_n: u8,
-    pub wgsl_group1_binding_n: u8,
-    pub glsl_binding_n: u8,
-}
-impl ShaderStorageBuffer {
-    pub const fn new() -> Self {
-        Self {
-            stage: ShaderStage::new(),
-            readonly: false,
-            hlsl_register_t_n: 0,
-            hlsl_register_u_n: 0,
-            msl_buffer_n: 0,
-            wgsl_group1_binding_n: 0,
-            glsl_binding_n: 0,
-        }
-    }
-}
-impl Default for ShaderStorageBuffer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderStorageImage {
-    pub stage: ShaderStage,
-    pub image_type: ImageType,
-    pub access_format: PixelFormat,
-    pub writeonly: bool,
-    pub hlsl_register_u_n: u8,
-    pub msl_texture_n: u8,
-    pub wgsl_group2_binding_n: u8,
-    pub glsl_binding_n: u8,
-}
-impl ShaderStorageImage {
-    pub const fn new() -> Self {
-        Self {
-            stage: ShaderStage::new(),
-            image_type: ImageType::new(),
-            access_format: PixelFormat::new(),
-            writeonly: false,
-            hlsl_register_u_n: 0,
-            msl_texture_n: 0,
-            wgsl_group2_binding_n: 0,
-            glsl_binding_n: 0,
-        }
-    }
-}
-impl Default for ShaderStorageImage {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ShaderImageSamplerPair {
-    pub stage: ShaderStage,
-    pub image_slot: u8,
+    pub view_slot: u8,
     pub sampler_slot: u8,
     pub glsl_name: *const core::ffi::c_char,
 }
-impl ShaderImageSamplerPair {
+impl ShaderTextureSamplerPair {
     pub const fn new() -> Self {
         Self {
             stage: ShaderStage::new(),
-            image_slot: 0,
+            view_slot: 0,
             sampler_slot: 0,
             glsl_name: core::ptr::null(),
         }
     }
 }
-impl Default for ShaderImageSamplerPair {
+impl Default for ShaderTextureSamplerPair {
     fn default() -> Self {
         Self::new()
     }
@@ -1626,11 +1683,9 @@ pub struct ShaderDesc {
     pub compute_func: ShaderFunction,
     pub attrs: [ShaderVertexAttr; 16],
     pub uniform_blocks: [ShaderUniformBlock; 8],
-    pub storage_buffers: [ShaderStorageBuffer; 8],
-    pub images: [ShaderImage; 16],
+    pub views: [ShaderView; 28],
     pub samplers: [ShaderSampler; 16],
-    pub image_sampler_pairs: [ShaderImageSamplerPair; 16],
-    pub storage_images: [ShaderStorageImage; 4],
+    pub texture_sampler_pairs: [ShaderTextureSamplerPair; 16],
     pub mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup,
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
@@ -1644,11 +1699,9 @@ impl ShaderDesc {
             compute_func: ShaderFunction::new(),
             attrs: [ShaderVertexAttr::new(); 16],
             uniform_blocks: [ShaderUniformBlock::new(); 8],
-            storage_buffers: [ShaderStorageBuffer::new(); 8],
-            images: [ShaderImage::new(); 16],
+            views: [ShaderView::new(); 28],
             samplers: [ShaderSampler::new(); 16],
-            image_sampler_pairs: [ShaderImageSamplerPair::new(); 16],
-            storage_images: [ShaderStorageImage::new(); 4],
+            texture_sampler_pairs: [ShaderTextureSamplerPair::new(); 16],
             mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup::new(),
             label: core::ptr::null(),
             _end_canary: 0,
@@ -1891,46 +1944,103 @@ impl Default for PipelineDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct AttachmentDesc {
-    pub image: Image,
-    pub mip_level: i32,
-    pub slice: i32,
+pub struct BufferViewDesc {
+    pub buffer: Buffer,
+    pub offset: i32,
 }
-impl AttachmentDesc {
+impl BufferViewDesc {
     pub const fn new() -> Self {
-        Self { image: Image::new(), mip_level: 0, slice: 0 }
+        Self { buffer: Buffer::new(), offset: 0 }
     }
 }
-impl Default for AttachmentDesc {
+impl Default for BufferViewDesc {
     fn default() -> Self {
         Self::new()
     }
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct AttachmentsDesc {
+pub struct ImageViewDesc {
+    pub image: Image,
+    pub mip_level: i32,
+    pub slice: i32,
+}
+impl ImageViewDesc {
+    pub const fn new() -> Self {
+        Self { image: Image::new(), mip_level: 0, slice: 0 }
+    }
+}
+impl Default for ImageViewDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct TextureViewRange {
+    pub base: i32,
+    pub count: i32,
+}
+impl TextureViewRange {
+    pub const fn new() -> Self {
+        Self { base: 0, count: 0 }
+    }
+}
+impl Default for TextureViewRange {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct TextureViewDesc {
+    pub image: Image,
+    pub mip_levels: TextureViewRange,
+    pub slices: TextureViewRange,
+}
+impl TextureViewDesc {
+    pub const fn new() -> Self {
+        Self {
+            image: Image::new(),
+            mip_levels: TextureViewRange::new(),
+            slices: TextureViewRange::new(),
+        }
+    }
+}
+impl Default for TextureViewDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ViewDesc {
     pub _start_canary: u32,
-    pub colors: [AttachmentDesc; 4],
-    pub resolves: [AttachmentDesc; 4],
-    pub depth_stencil: AttachmentDesc,
-    pub storages: [AttachmentDesc; 4],
+    pub texture: TextureViewDesc,
+    pub storage_buffer: BufferViewDesc,
+    pub storage_image: ImageViewDesc,
+    pub color_attachment: ImageViewDesc,
+    pub resolve_attachment: ImageViewDesc,
+    pub depth_stencil_attachment: ImageViewDesc,
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
 }
-impl AttachmentsDesc {
+impl ViewDesc {
     pub const fn new() -> Self {
         Self {
             _start_canary: 0,
-            colors: [AttachmentDesc::new(); 4],
-            resolves: [AttachmentDesc::new(); 4],
-            depth_stencil: AttachmentDesc::new(),
-            storages: [AttachmentDesc::new(); 4],
+            texture: TextureViewDesc::new(),
+            storage_buffer: BufferViewDesc::new(),
+            storage_image: ImageViewDesc::new(),
+            color_attachment: ImageViewDesc::new(),
+            resolve_attachment: ImageViewDesc::new(),
+            depth_stencil_attachment: ImageViewDesc::new(),
             label: core::ptr::null(),
             _end_canary: 0,
         }
     }
 }
-impl Default for AttachmentsDesc {
+impl Default for ViewDesc {
     fn default() -> Self {
         Self::new()
     }
@@ -1945,13 +2055,13 @@ pub struct TraceHooks {
     pub make_sampler: Option<extern "C" fn(*const SamplerDesc, Sampler, *mut core::ffi::c_void)>,
     pub make_shader: Option<extern "C" fn(*const ShaderDesc, Shader, *mut core::ffi::c_void)>,
     pub make_pipeline: Option<extern "C" fn(*const PipelineDesc, Pipeline, *mut core::ffi::c_void)>,
-    pub make_attachments: Option<extern "C" fn(*const AttachmentsDesc, Attachments, *mut core::ffi::c_void)>,
+    pub make_view: Option<extern "C" fn(*const ViewDesc, View, *mut core::ffi::c_void)>,
     pub destroy_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub destroy_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
     pub destroy_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub destroy_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub destroy_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
-    pub destroy_attachments: Option<extern "C" fn(Attachments, *mut core::ffi::c_void)>,
+    pub destroy_view: Option<extern "C" fn(View, *mut core::ffi::c_void)>,
     pub update_buffer: Option<extern "C" fn(Buffer, *const Range, *mut core::ffi::c_void)>,
     pub update_image: Option<extern "C" fn(Image, *const ImageData, *mut core::ffi::c_void)>,
     pub append_buffer: Option<extern "C" fn(Buffer, *const Range, i32, *mut core::ffi::c_void)>,
@@ -1970,31 +2080,31 @@ pub struct TraceHooks {
     pub alloc_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub alloc_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub alloc_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
-    pub alloc_attachments: Option<extern "C" fn(Attachments, *mut core::ffi::c_void)>,
+    pub alloc_view: Option<extern "C" fn(View, *mut core::ffi::c_void)>,
     pub dealloc_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub dealloc_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
     pub dealloc_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub dealloc_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub dealloc_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
-    pub dealloc_attachments: Option<extern "C" fn(Attachments, *mut core::ffi::c_void)>,
+    pub dealloc_view: Option<extern "C" fn(View, *mut core::ffi::c_void)>,
     pub init_buffer: Option<extern "C" fn(Buffer, *const BufferDesc, *mut core::ffi::c_void)>,
     pub init_image: Option<extern "C" fn(Image, *const ImageDesc, *mut core::ffi::c_void)>,
     pub init_sampler: Option<extern "C" fn(Sampler, *const SamplerDesc, *mut core::ffi::c_void)>,
     pub init_shader: Option<extern "C" fn(Shader, *const ShaderDesc, *mut core::ffi::c_void)>,
     pub init_pipeline: Option<extern "C" fn(Pipeline, *const PipelineDesc, *mut core::ffi::c_void)>,
-    pub init_attachments: Option<extern "C" fn(Attachments, *const AttachmentsDesc, *mut core::ffi::c_void)>,
+    pub init_view: Option<extern "C" fn(View, *const ViewDesc, *mut core::ffi::c_void)>,
     pub uninit_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub uninit_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
     pub uninit_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub uninit_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub uninit_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
-    pub uninit_attachments: Option<extern "C" fn(Attachments, *mut core::ffi::c_void)>,
+    pub uninit_view: Option<extern "C" fn(View, *mut core::ffi::c_void)>,
     pub fail_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub fail_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
     pub fail_sampler: Option<extern "C" fn(Sampler, *mut core::ffi::c_void)>,
     pub fail_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub fail_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
-    pub fail_attachments: Option<extern "C" fn(Attachments, *mut core::ffi::c_void)>,
+    pub fail_view: Option<extern "C" fn(View, *mut core::ffi::c_void)>,
     pub push_debug_group: Option<extern "C" fn(*const core::ffi::c_char, *mut core::ffi::c_void)>,
     pub pop_debug_group: Option<extern "C" fn(*mut core::ffi::c_void)>,
 }
@@ -2008,13 +2118,13 @@ impl TraceHooks {
             make_sampler: None,
             make_shader: None,
             make_pipeline: None,
-            make_attachments: None,
+            make_view: None,
             destroy_buffer: None,
             destroy_image: None,
             destroy_sampler: None,
             destroy_shader: None,
             destroy_pipeline: None,
-            destroy_attachments: None,
+            destroy_view: None,
             update_buffer: None,
             update_image: None,
             append_buffer: None,
@@ -2033,31 +2143,31 @@ impl TraceHooks {
             alloc_sampler: None,
             alloc_shader: None,
             alloc_pipeline: None,
-            alloc_attachments: None,
+            alloc_view: None,
             dealloc_buffer: None,
             dealloc_image: None,
             dealloc_sampler: None,
             dealloc_shader: None,
             dealloc_pipeline: None,
-            dealloc_attachments: None,
+            dealloc_view: None,
             init_buffer: None,
             init_image: None,
             init_sampler: None,
             init_shader: None,
             init_pipeline: None,
-            init_attachments: None,
+            init_view: None,
             uninit_buffer: None,
             uninit_image: None,
             uninit_sampler: None,
             uninit_shader: None,
             uninit_pipeline: None,
-            uninit_attachments: None,
+            uninit_view: None,
             fail_buffer: None,
             fail_image: None,
             fail_sampler: None,
             fail_shader: None,
             fail_pipeline: None,
-            fail_attachments: None,
+            fail_view: None,
             push_debug_group: None,
             pop_debug_group: None,
         }
@@ -2179,15 +2289,15 @@ impl Default for PipelineInfo {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct AttachmentsInfo {
+pub struct ViewInfo {
     pub slot: SlotInfo,
 }
-impl AttachmentsInfo {
+impl ViewInfo {
     pub const fn new() -> Self {
         Self { slot: SlotInfo::new() }
     }
 }
-impl Default for AttachmentsInfo {
+impl Default for ViewInfo {
     fn default() -> Self {
         Self::new()
     }
@@ -2199,6 +2309,7 @@ pub struct FrameStatsGl {
     pub num_active_texture: u32,
     pub num_bind_texture: u32,
     pub num_bind_sampler: u32,
+    pub num_bind_image_texture: u32,
     pub num_use_program: u32,
     pub num_render_state: u32,
     pub num_vertex_attrib_pointer: u32,
@@ -2215,6 +2326,7 @@ impl FrameStatsGl {
             num_active_texture: 0,
             num_bind_texture: 0,
             num_bind_sampler: 0,
+            num_bind_image_texture: 0,
             num_use_program: 0,
             num_render_state: 0,
             num_vertex_attrib_pointer: 0,
@@ -2441,27 +2553,51 @@ impl Default for FrameStatsMetalPipeline {
 #[derive(Copy, Clone, Debug)]
 pub struct FrameStatsMetalBindings {
     pub num_set_vertex_buffer: u32,
+    pub num_set_vertex_buffer_offset: u32,
+    pub num_skip_redundant_vertex_buffer: u32,
     pub num_set_vertex_texture: u32,
+    pub num_skip_redundant_vertex_texture: u32,
     pub num_set_vertex_sampler_state: u32,
+    pub num_skip_redundant_vertex_sampler_state: u32,
     pub num_set_fragment_buffer: u32,
+    pub num_set_fragment_buffer_offset: u32,
+    pub num_skip_redundant_fragment_buffer: u32,
     pub num_set_fragment_texture: u32,
+    pub num_skip_redundant_fragment_texture: u32,
     pub num_set_fragment_sampler_state: u32,
+    pub num_skip_redundant_fragment_sampler_state: u32,
     pub num_set_compute_buffer: u32,
+    pub num_set_compute_buffer_offset: u32,
+    pub num_skip_redundant_compute_buffer: u32,
     pub num_set_compute_texture: u32,
+    pub num_skip_redundant_compute_texture: u32,
     pub num_set_compute_sampler_state: u32,
+    pub num_skip_redundant_compute_sampler_state: u32,
 }
 impl FrameStatsMetalBindings {
     pub const fn new() -> Self {
         Self {
             num_set_vertex_buffer: 0,
+            num_set_vertex_buffer_offset: 0,
+            num_skip_redundant_vertex_buffer: 0,
             num_set_vertex_texture: 0,
+            num_skip_redundant_vertex_texture: 0,
             num_set_vertex_sampler_state: 0,
+            num_skip_redundant_vertex_sampler_state: 0,
             num_set_fragment_buffer: 0,
+            num_set_fragment_buffer_offset: 0,
+            num_skip_redundant_fragment_buffer: 0,
             num_set_fragment_texture: 0,
+            num_skip_redundant_fragment_texture: 0,
             num_set_fragment_sampler_state: 0,
+            num_skip_redundant_fragment_sampler_state: 0,
             num_set_compute_buffer: 0,
+            num_set_compute_buffer_offset: 0,
+            num_skip_redundant_compute_buffer: 0,
             num_set_compute_texture: 0,
+            num_skip_redundant_compute_texture: 0,
             num_set_compute_sampler_state: 0,
+            num_skip_redundant_compute_sampler_state: 0,
         }
     }
 }
@@ -2680,8 +2816,8 @@ pub enum LogItem {
     D3d11StoragebufferHlslRegisterTOutOfRange,
     D3d11StoragebufferHlslRegisterUOutOfRange,
     D3d11ImageHlslRegisterTOutOfRange,
-    D3d11SamplerHlslRegisterSOutOfRange,
     D3d11StorageimageHlslRegisterUOutOfRange,
+    D3d11SamplerHlslRegisterSOutOfRange,
     D3d11LoadD3dcompiler47DllFailed,
     D3d11ShaderCompilationFailed,
     D3d11ShaderCompilationOutput,
@@ -2725,14 +2861,13 @@ pub enum LogItem {
     WgpuCreateShaderModuleFailed,
     WgpuShaderCreateBindgroupLayoutFailed,
     WgpuUniformblockWgslGroup0BindingOutOfRange,
+    WgpuTextureWgslGroup1BindingOutOfRange,
     WgpuStoragebufferWgslGroup1BindingOutOfRange,
-    WgpuImageWgslGroup1BindingOutOfRange,
+    WgpuStorageimageWgslGroup1BindingOutOfRange,
     WgpuSamplerWgslGroup1BindingOutOfRange,
-    WgpuStorageimageWgslGroup2BindingOutOfRange,
     WgpuCreatePipelineLayoutFailed,
     WgpuCreateRenderPipelineFailed,
     WgpuCreateComputePipelineFailed,
-    WgpuAttachmentsCreateTextureViewFailed,
     IdenticalCommitListener,
     CommitListenerArrayFull,
     TraceHooksNotEnabled,
@@ -2741,33 +2876,32 @@ pub enum LogItem {
     DeallocSamplerInvalidState,
     DeallocShaderInvalidState,
     DeallocPipelineInvalidState,
-    DeallocAttachmentsInvalidState,
+    DeallocViewInvalidState,
     InitBufferInvalidState,
     InitImageInvalidState,
     InitSamplerInvalidState,
     InitShaderInvalidState,
     InitPipelineInvalidState,
-    InitAttachmentsInvalidState,
+    InitViewInvalidState,
     UninitBufferInvalidState,
     UninitImageInvalidState,
     UninitSamplerInvalidState,
     UninitShaderInvalidState,
     UninitPipelineInvalidState,
-    UninitAttachmentsInvalidState,
+    UninitViewInvalidState,
     FailBufferInvalidState,
     FailImageInvalidState,
     FailSamplerInvalidState,
     FailShaderInvalidState,
     FailPipelineInvalidState,
-    FailAttachmentsInvalidState,
+    FailViewInvalidState,
     BufferPoolExhausted,
     ImagePoolExhausted,
     SamplerPoolExhausted,
     ShaderPoolExhausted,
     PipelinePoolExhausted,
-    PassPoolExhausted,
-    BeginpassAttachmentInvalid,
-    ApplyBindingsStorageBufferTrackerExhausted,
+    ViewPoolExhausted,
+    BeginpassAttachmentsAlive,
     DrawWithoutBindings,
     ValidateBufferdescCanary,
     ValidateBufferdescImmutableDynamicStream,
@@ -2783,7 +2917,6 @@ pub enum LogItem {
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
     ValidateImagedescImmutableDynamicStream,
-    ValidateImagedescRenderVsStorageAttachment,
     ValidateImagedescWidth,
     ValidateImagedescHeight,
     ValidateImagedescNonrtPixelformat,
@@ -2791,14 +2924,15 @@ pub enum LogItem {
     ValidateImagedescDepth3dImage,
     ValidateImagedescAttachmentExpectImmutable,
     ValidateImagedescAttachmentExpectNoData,
-    ValidateImagedescRenderattachmentNoMsaaSupport,
-    ValidateImagedescRenderattachmentMsaaNumMipmaps,
-    ValidateImagedescRenderattachmentMsaa3dImage,
-    ValidateImagedescRenderattachmentMsaaCubeImage,
-    ValidateImagedescRenderattachmentMsaaArrayImage,
-    ValidateImagedescRenderattachmentPixelformat,
-    ValidateImagedescStorageattachmentPixelformat,
-    ValidateImagedescStorageattachmentExpectNoMsaa,
+    ValidateImagedescAttachmentPixelformat,
+    ValidateImagedescAttachmentResolveExpectNoMsaa,
+    ValidateImagedescAttachmentNoMsaaSupport,
+    ValidateImagedescAttachmentMsaaNumMipmaps,
+    ValidateImagedescAttachmentMsaa3dImage,
+    ValidateImagedescAttachmentMsaaCubeImage,
+    ValidateImagedescAttachmentMsaaArrayImage,
+    ValidateImagedescStorageimagePixelformat,
+    ValidateImagedescStorageimageExpectNoMsaa,
     ValidateImagedescInjectedNoData,
     ValidateImagedescDynamicNoData,
     ValidateImagedescCompressedImmutable,
@@ -2813,7 +2947,8 @@ pub enum LogItem {
     ValidateShaderdescComputeSourceOrBytecode,
     ValidateShaderdescInvalidShaderCombo,
     ValidateShaderdescNoBytecodeSize,
-    ValidateShaderdescMetalThreadsPerThreadgroup,
+    ValidateShaderdescMetalThreadsPerThreadgroupInitialized,
+    ValidateShaderdescMetalThreadsPerThreadgroupMultiple32,
     ValidateShaderdescUniformblockNoContMembers,
     ValidateShaderdescUniformblockSizeIsZero,
     ValidateShaderdescUniformblockMetalBufferSlotOutOfRange,
@@ -2827,46 +2962,47 @@ pub enum LogItem {
     ValidateShaderdescUniformblockSizeMismatch,
     ValidateShaderdescUniformblockArrayCount,
     ValidateShaderdescUniformblockStd140ArrayType,
-    ValidateShaderdescStoragebufferMetalBufferSlotOutOfRange,
-    ValidateShaderdescStoragebufferMetalBufferSlotCollision,
-    ValidateShaderdescStoragebufferHlslRegisterTOutOfRange,
-    ValidateShaderdescStoragebufferHlslRegisterTCollision,
-    ValidateShaderdescStoragebufferHlslRegisterUOutOfRange,
-    ValidateShaderdescStoragebufferHlslRegisterUCollision,
-    ValidateShaderdescStoragebufferGlslBindingOutOfRange,
-    ValidateShaderdescStoragebufferGlslBindingCollision,
-    ValidateShaderdescStoragebufferWgslGroup1BindingOutOfRange,
-    ValidateShaderdescStoragebufferWgslGroup1BindingCollision,
-    ValidateShaderdescStorageimageExpectComputeStage,
-    ValidateShaderdescStorageimageMetalTextureSlotOutOfRange,
-    ValidateShaderdescStorageimageMetalTextureSlotCollision,
-    ValidateShaderdescStorageimageHlslRegisterUOutOfRange,
-    ValidateShaderdescStorageimageHlslRegisterUCollision,
-    ValidateShaderdescStorageimageGlslBindingOutOfRange,
-    ValidateShaderdescStorageimageGlslBindingCollision,
-    ValidateShaderdescStorageimageWgslGroup2BindingOutOfRange,
-    ValidateShaderdescStorageimageWgslGroup2BindingCollision,
-    ValidateShaderdescImageMetalTextureSlotOutOfRange,
-    ValidateShaderdescImageMetalTextureSlotCollision,
-    ValidateShaderdescImageHlslRegisterTOutOfRange,
-    ValidateShaderdescImageHlslRegisterTCollision,
-    ValidateShaderdescImageWgslGroup1BindingOutOfRange,
-    ValidateShaderdescImageWgslGroup1BindingCollision,
+    ValidateShaderdescViewStoragebufferMetalBufferSlotOutOfRange,
+    ValidateShaderdescViewStoragebufferMetalBufferSlotCollision,
+    ValidateShaderdescViewStoragebufferHlslRegisterTOutOfRange,
+    ValidateShaderdescViewStoragebufferHlslRegisterTCollision,
+    ValidateShaderdescViewStoragebufferHlslRegisterUOutOfRange,
+    ValidateShaderdescViewStoragebufferHlslRegisterUCollision,
+    ValidateShaderdescViewStoragebufferGlslBindingOutOfRange,
+    ValidateShaderdescViewStoragebufferGlslBindingCollision,
+    ValidateShaderdescViewStoragebufferWgslGroup1BindingOutOfRange,
+    ValidateShaderdescViewStoragebufferWgslGroup1BindingCollision,
+    ValidateShaderdescViewStorageimageExpectComputeStage,
+    ValidateShaderdescViewStorageimageMetalTextureSlotOutOfRange,
+    ValidateShaderdescViewStorageimageMetalTextureSlotCollision,
+    ValidateShaderdescViewStorageimageHlslRegisterUOutOfRange,
+    ValidateShaderdescViewStorageimageHlslRegisterUCollision,
+    ValidateShaderdescViewStorageimageGlslBindingOutOfRange,
+    ValidateShaderdescViewStorageimageGlslBindingCollision,
+    ValidateShaderdescViewStorageimageWgslGroup1BindingOutOfRange,
+    ValidateShaderdescViewStorageimageWgslGroup1BindingCollision,
+    ValidateShaderdescViewTextureMetalTextureSlotOutOfRange,
+    ValidateShaderdescViewTextureMetalTextureSlotCollision,
+    ValidateShaderdescViewTextureHlslRegisterTOutOfRange,
+    ValidateShaderdescViewTextureHlslRegisterTCollision,
+    ValidateShaderdescViewTextureWgslGroup1BindingOutOfRange,
+    ValidateShaderdescViewTextureWgslGroup1BindingCollision,
     ValidateShaderdescSamplerMetalSamplerSlotOutOfRange,
     ValidateShaderdescSamplerMetalSamplerSlotCollision,
     ValidateShaderdescSamplerHlslRegisterSOutOfRange,
     ValidateShaderdescSamplerHlslRegisterSCollision,
     ValidateShaderdescSamplerWgslGroup1BindingOutOfRange,
     ValidateShaderdescSamplerWgslGroup1BindingCollision,
-    ValidateShaderdescImageSamplerPairImageSlotOutOfRange,
-    ValidateShaderdescImageSamplerPairSamplerSlotOutOfRange,
-    ValidateShaderdescImageSamplerPairImageStageMismatch,
-    ValidateShaderdescImageSamplerPairSamplerStageMismatch,
-    ValidateShaderdescImageSamplerPairGlslName,
+    ValidateShaderdescTextureSamplerPairViewSlotOutOfRange,
+    ValidateShaderdescTextureSamplerPairSamplerSlotOutOfRange,
+    ValidateShaderdescTextureSamplerPairTextureStageMismatch,
+    ValidateShaderdescTextureSamplerPairExpectTextureView,
+    ValidateShaderdescTextureSamplerPairSamplerStageMismatch,
+    ValidateShaderdescTextureSamplerPairGlslName,
     ValidateShaderdescNonfilteringSamplerRequired,
     ValidateShaderdescComparisonSamplerRequired,
-    ValidateShaderdescImageNotReferencedByImageSamplerPairs,
-    ValidateShaderdescSamplerNotReferencedByImageSamplerPairs,
+    ValidateShaderdescTexviewNotReferencedByTextureSamplerPairs,
+    ValidateShaderdescSamplerNotReferencedByTextureSamplerPairs,
     ValidateShaderdescAttrStringTooLong,
     ValidatePipelinedescCanary,
     ValidatePipelinedescShader,
@@ -2878,58 +3014,35 @@ pub enum LogItem {
     ValidatePipelinedescAttrSemantics,
     ValidatePipelinedescShaderReadonlyStoragebuffers,
     ValidatePipelinedescBlendopMinmaxRequiresBlendfactorOne,
-    ValidateAttachmentsdescCanary,
-    ValidateAttachmentsdescNoAttachments,
-    ValidateAttachmentsdescNoContColorAtts,
-    ValidateAttachmentsdescColorImage,
-    ValidateAttachmentsdescColorMiplevel,
-    ValidateAttachmentsdescColorFace,
-    ValidateAttachmentsdescColorLayer,
-    ValidateAttachmentsdescColorSlice,
-    ValidateAttachmentsdescColorImageNoRenderattachment,
-    ValidateAttachmentsdescColorInvPixelformat,
-    ValidateAttachmentsdescImageSizes,
-    ValidateAttachmentsdescImageSampleCounts,
-    ValidateAttachmentsdescResolveColorImageMsaa,
-    ValidateAttachmentsdescResolveImage,
-    ValidateAttachmentsdescResolveSampleCount,
-    ValidateAttachmentsdescResolveMiplevel,
-    ValidateAttachmentsdescResolveFace,
-    ValidateAttachmentsdescResolveLayer,
-    ValidateAttachmentsdescResolveSlice,
-    ValidateAttachmentsdescResolveImageNoRt,
-    ValidateAttachmentsdescResolveImageSizes,
-    ValidateAttachmentsdescResolveImageFormat,
-    ValidateAttachmentsdescDepthInvPixelformat,
-    ValidateAttachmentsdescDepthImage,
-    ValidateAttachmentsdescDepthMiplevel,
-    ValidateAttachmentsdescDepthFace,
-    ValidateAttachmentsdescDepthLayer,
-    ValidateAttachmentsdescDepthSlice,
-    ValidateAttachmentsdescDepthImageNoRenderattachment,
-    ValidateAttachmentsdescDepthImageSizes,
-    ValidateAttachmentsdescDepthImageSampleCount,
-    ValidateAttachmentsdescStorageImage,
-    ValidateAttachmentsdescStorageMiplevel,
-    ValidateAttachmentsdescStorageFace,
-    ValidateAttachmentsdescStorageLayer,
-    ValidateAttachmentsdescStorageSlice,
-    ValidateAttachmentsdescStorageImageNoStorageattachment,
-    ValidateAttachmentsdescStorageInvPixelformat,
-    ValidateAttachmentsdescRenderVsStorageAttachments,
+    ValidateViewdescCanary,
+    ValidateViewdescUniqueViewtype,
+    ValidateViewdescAnyViewtype,
+    ValidateViewdescResourceAlive,
+    ValidateViewdescResourceFailed,
+    ValidateViewdescStoragebufferOffsetVsBufferSize,
+    ValidateViewdescStoragebufferOffsetMultiple256,
+    ValidateViewdescStoragebufferUsage,
+    ValidateViewdescStorageimageUsage,
+    ValidateViewdescColorattachmentUsage,
+    ValidateViewdescResolveattachmentUsage,
+    ValidateViewdescDepthstencilattachmentUsage,
+    ValidateViewdescImageMiplevel,
+    ValidateViewdescImage2dSlice,
+    ValidateViewdescImageCubemapSlice,
+    ValidateViewdescImageArraySlice,
+    ValidateViewdescImage3dSlice,
+    ValidateViewdescTextureExpectNoMsaa,
+    ValidateViewdescTextureMiplevels,
+    ValidateViewdescTexture2dSlices,
+    ValidateViewdescTextureCubemapSlices,
+    ValidateViewdescTextureArraySlices,
+    ValidateViewdescTexture3dSlices,
+    ValidateViewdescStorageimagePixelformat,
+    ValidateViewdescColorattachmentPixelformat,
+    ValidateViewdescDepthstencilattachmentPixelformat,
+    ValidateViewdescResolveattachmentSamplecount,
     ValidateBeginpassCanary,
-    ValidateBeginpassAttachmentsExists,
-    ValidateBeginpassAttachmentsValid,
-    ValidateBeginpassComputepassStorageAttachmentsOnly,
-    ValidateBeginpassRenderpassRenderAttachmentsOnly,
-    ValidateBeginpassColorAttachmentImageAlive,
-    ValidateBeginpassColorAttachmentImageValid,
-    ValidateBeginpassResolveAttachmentImageAlive,
-    ValidateBeginpassResolveAttachmentImageValid,
-    ValidateBeginpassDepthstencilAttachmentImageAlive,
-    ValidateBeginpassDepthstencilAttachmentImageValid,
-    ValidateBeginpassStorageAttachmentImageAlive,
-    ValidateBeginpassStorageAttachmentImageValid,
+    ValidateBeginpassComputepassExpectNoAttachments,
     ValidateBeginpassSwapchainExpectWidth,
     ValidateBeginpassSwapchainExpectWidthNotset,
     ValidateBeginpassSwapchainExpectHeight,
@@ -2958,6 +3071,30 @@ pub enum LogItem {
     ValidateBeginpassSwapchainWgpuExpectDepthstencilview,
     ValidateBeginpassSwapchainWgpuExpectDepthstencilviewNotset,
     ValidateBeginpassSwapchainGlExpectFramebufferNotset,
+    ValidateBeginpassColorattachmentviewsContinuous,
+    ValidateBeginpassColorattachmentviewAlive,
+    ValidateBeginpassColorattachmentviewValid,
+    ValidateBeginpassColorattachmentviewType,
+    ValidateBeginpassColorattachmentviewImageAlive,
+    ValidateBeginpassColorattachmentviewImageValid,
+    ValidateBeginpassColorattachmentviewSizes,
+    ValidateBeginpassColorattachmentviewSamplecounts,
+    ValidateBeginpassResolveattachmentviewNoColorattachmentview,
+    ValidateBeginpassResolveattachmentviewAlive,
+    ValidateBeginpassResolveattachmentviewValid,
+    ValidateBeginpassResolveattachmentviewType,
+    ValidateBeginpassResolveattachmentviewImageAlive,
+    ValidateBeginpassResolveattachmentviewImageValid,
+    ValidateBeginpassResolveattachmentviewSizes,
+    ValidateBeginpassDepthstencilattachmentviewsContinuous,
+    ValidateBeginpassDepthstencilattachmentviewAlive,
+    ValidateBeginpassDepthstencilattachmentviewValid,
+    ValidateBeginpassDepthstencilattachmentviewType,
+    ValidateBeginpassDepthstencilattachmentviewImageAlive,
+    ValidateBeginpassDepthstencilattachmentviewImageValid,
+    ValidateBeginpassDepthstencilattachmentviewSizes,
+    ValidateBeginpassDepthstencilattachmentviewSamplecount,
+    ValidateBeginpassAttachmentsExpected,
     ValidateAvpRenderpassExpected,
     ValidateAsrRenderpassExpected,
     ValidateApipPipelineValidId,
@@ -2968,21 +3105,19 @@ pub enum LogItem {
     ValidateApipPipelineShaderValid,
     ValidateApipComputepassExpected,
     ValidateApipRenderpassExpected,
-    ValidateApipCurpassAttachmentsAlive,
-    ValidateApipCurpassAttachmentsValid,
-    ValidateApipAttCount,
-    ValidateApipColorAttachmentImageAlive,
-    ValidateApipColorAttachmentImageValid,
-    ValidateApipDepthstencilAttachmentImageAlive,
-    ValidateApipDepthstencilAttachmentImageValid,
-    ValidateApipColorFormat,
-    ValidateApipDepthFormat,
-    ValidateApipSampleCount,
-    ValidateApipExpectedStorageAttachmentImage,
-    ValidateApipStorageAttachmentImageAlive,
-    ValidateApipStorageAttachmentImageValid,
-    ValidateApipStorageAttachmentPixelformat,
-    ValidateApipStorageAttachmentImageType,
+    ValidateApipSwapchainColorCount,
+    ValidateApipSwapchainColorFormat,
+    ValidateApipSwapchainDepthFormat,
+    ValidateApipSwapchainSampleCount,
+    ValidateApipAttachmentsAlive,
+    ValidateApipColorattachmentsCount,
+    ValidateApipColorattachmentsViewValid,
+    ValidateApipColorattachmentsImageValid,
+    ValidateApipColorattachmentsFormat,
+    ValidateApipDepthstencilattachmentViewValid,
+    ValidateApipDepthstencilattachmentImageValid,
+    ValidateApipDepthstencilattachmentFormat,
+    ValidateApipAttachmentSampleCount,
     ValidateAbndPassExpected,
     ValidateAbndEmptyBindings,
     ValidateAbndNoPipeline,
@@ -2990,38 +3125,41 @@ pub enum LogItem {
     ValidateAbndPipelineValid,
     ValidateAbndPipelineShaderAlive,
     ValidateAbndPipelineShaderValid,
-    ValidateAbndComputeExpectedNoVbs,
-    ValidateAbndComputeExpectedNoIb,
-    ValidateAbndExpectedVb,
-    ValidateAbndVbAlive,
-    ValidateAbndVbType,
-    ValidateAbndVbOverflow,
-    ValidateAbndNoIb,
-    ValidateAbndIb,
-    ValidateAbndIbAlive,
-    ValidateAbndIbType,
-    ValidateAbndIbOverflow,
-    ValidateAbndExpectedImageBinding,
-    ValidateAbndImgAlive,
-    ValidateAbndImageTypeMismatch,
-    ValidateAbndExpectedMultisampledImage,
-    ValidateAbndImageMsaa,
-    ValidateAbndExpectedFilterableImage,
-    ValidateAbndExpectedDepthImage,
+    ValidateAbndComputeExpectedNoVbufs,
+    ValidateAbndComputeExpectedNoIbuf,
+    ValidateAbndExpectedVbuf,
+    ValidateAbndVbufAlive,
+    ValidateAbndVbufUsage,
+    ValidateAbndVbufOverflow,
+    ValidateAbndExpectedNoIbuf,
+    ValidateAbndExpectedIbuf,
+    ValidateAbndIbufAlive,
+    ValidateAbndIbufUsage,
+    ValidateAbndIbufOverflow,
+    ValidateAbndExpectedViewBinding,
+    ValidateAbndViewAlive,
+    ValidateAbndExpectTexview,
+    ValidateAbndExpectSbview,
+    ValidateAbndExpectSimgview,
+    ValidateAbndTexviewImagetypeMismatch,
+    ValidateAbndTexviewExpectedMultisampledImage,
+    ValidateAbndTexviewExpectedNonMultisampledImage,
+    ValidateAbndTexviewExpectedFilterableImage,
+    ValidateAbndTexviewExpectedDepthImage,
+    ValidateAbndSbviewReadwriteImmutable,
+    ValidateAbndSimgviewComputePassExpected,
+    ValidateAbndSimgviewImagetypeMismatch,
+    ValidateAbndSimgviewAccessformat,
     ValidateAbndExpectedSamplerBinding,
     ValidateAbndUnexpectedSamplerCompareNever,
     ValidateAbndExpectedSamplerCompareNever,
     ValidateAbndExpectedNonfilteringSampler,
-    ValidateAbndSmpAlive,
-    ValidateAbndSmpValid,
-    ValidateAbndExpectedStoragebufferBinding,
-    ValidateAbndStoragebufferAlive,
-    ValidateAbndStoragebufferBindingBuffertype,
-    ValidateAbndStoragebufferReadwriteImmutable,
-    ValidateAbndImageBindingVsDepthstencilAttachment,
-    ValidateAbndImageBindingVsColorAttachment,
-    ValidateAbndImageBindingVsResolveAttachment,
-    ValidateAbndImageBindingVsStorageAttachment,
+    ValidateAbndSamplerAlive,
+    ValidateAbndSamplerValid,
+    ValidateAbndTextureBindingVsDepthstencilAttachment,
+    ValidateAbndTextureBindingVsColorAttachment,
+    ValidateAbndTextureBindingVsResolveAttachment,
+    ValidateAbndTextureVsStorageimageBinding,
     ValidateAuPassExpected,
     ValidateAuNoPipeline,
     ValidateAuPipelineAlive,
@@ -3219,9 +3357,8 @@ pub struct Desc {
     pub sampler_pool_size: i32,
     pub shader_pool_size: i32,
     pub pipeline_pool_size: i32,
-    pub attachments_pool_size: i32,
+    pub view_pool_size: i32,
     pub uniform_buffer_size: i32,
-    pub max_dispatch_calls_per_pass: i32,
     pub max_commit_listeners: i32,
     pub disable_validation: bool,
     pub d3d11_shader_debugging: bool,
@@ -3243,9 +3380,8 @@ impl Desc {
             sampler_pool_size: 0,
             shader_pool_size: 0,
             pipeline_pool_size: 0,
-            attachments_pool_size: 0,
+            view_pool_size: 0,
             uniform_buffer_size: 0,
-            max_dispatch_calls_per_pass: 0,
             max_commit_listeners: 0,
             disable_validation: false,
             d3d11_shader_debugging: false,
@@ -3286,16 +3422,10 @@ pub struct D3d11ImageInfo {
     pub tex2d: *const core::ffi::c_void,
     pub tex3d: *const core::ffi::c_void,
     pub res: *const core::ffi::c_void,
-    pub srv: *const core::ffi::c_void,
 }
 impl D3d11ImageInfo {
     pub const fn new() -> Self {
-        Self {
-            tex2d: core::ptr::null(),
-            tex3d: core::ptr::null(),
-            res: core::ptr::null(),
-            srv: core::ptr::null(),
-        }
+        Self { tex2d: core::ptr::null(), tex3d: core::ptr::null(), res: core::ptr::null() }
     }
 }
 impl Default for D3d11ImageInfo {
@@ -3360,16 +3490,23 @@ impl Default for D3d11PipelineInfo {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct D3d11AttachmentsInfo {
-    pub color_rtv: [*const core::ffi::c_void; 4],
+pub struct D3d11ViewInfo {
+    pub srv: *const core::ffi::c_void,
+    pub uav: *const core::ffi::c_void,
+    pub rtv: *const core::ffi::c_void,
     pub dsv: *const core::ffi::c_void,
 }
-impl D3d11AttachmentsInfo {
+impl D3d11ViewInfo {
     pub const fn new() -> Self {
-        Self { color_rtv: [core::ptr::null(); 4], dsv: core::ptr::null() }
+        Self {
+            srv: core::ptr::null(),
+            uav: core::ptr::null(),
+            rtv: core::ptr::null(),
+            dsv: core::ptr::null(),
+        }
     }
 }
-impl Default for D3d11AttachmentsInfo {
+impl Default for D3d11ViewInfo {
     fn default() -> Self {
         Self::new()
     }
@@ -3479,11 +3616,10 @@ impl Default for WgpuBufferInfo {
 #[derive(Copy, Clone, Debug)]
 pub struct WgpuImageInfo {
     pub tex: *const core::ffi::c_void,
-    pub view: *const core::ffi::c_void,
 }
 impl WgpuImageInfo {
     pub const fn new() -> Self {
-        Self { tex: core::ptr::null(), view: core::ptr::null() }
+        Self { tex: core::ptr::null() }
     }
 }
 impl Default for WgpuImageInfo {
@@ -3541,21 +3677,15 @@ impl Default for WgpuPipelineInfo {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct WgpuAttachmentsInfo {
-    pub color_view: [*const core::ffi::c_void; 4],
-    pub resolve_view: [*const core::ffi::c_void; 4],
-    pub ds_view: *const core::ffi::c_void,
+pub struct WgpuViewInfo {
+    pub view: *const core::ffi::c_void,
 }
-impl WgpuAttachmentsInfo {
+impl WgpuViewInfo {
     pub const fn new() -> Self {
-        Self {
-            color_view: [core::ptr::null(); 4],
-            resolve_view: [core::ptr::null(); 4],
-            ds_view: core::ptr::null(),
-        }
+        Self { view: core::ptr::null() }
     }
 }
-impl Default for WgpuAttachmentsInfo {
+impl Default for WgpuViewInfo {
     fn default() -> Self {
         Self::new()
     }
@@ -3581,12 +3711,11 @@ impl Default for GlBufferInfo {
 pub struct GlImageInfo {
     pub tex: [u32; 2],
     pub tex_target: u32,
-    pub msaa_render_buffer: u32,
     pub active_slot: i32,
 }
 impl GlImageInfo {
     pub const fn new() -> Self {
-        Self { tex: [0; 2], tex_target: 0, msaa_render_buffer: 0, active_slot: 0 }
+        Self { tex: [0; 2], tex_target: 0, active_slot: 0 }
     }
 }
 impl Default for GlImageInfo {
@@ -3626,16 +3755,17 @@ impl Default for GlShaderInfo {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct GlAttachmentsInfo {
-    pub framebuffer: u32,
-    pub msaa_resolve_framebuffer: [u32; 4],
+pub struct GlViewInfo {
+    pub tex_view: [u32; 2],
+    pub msaa_render_buffer: u32,
+    pub msaa_resolve_frame_buffer: u32,
 }
-impl GlAttachmentsInfo {
+impl GlViewInfo {
     pub const fn new() -> Self {
-        Self { framebuffer: 0, msaa_resolve_framebuffer: [0; 4] }
+        Self { tex_view: [0; 2], msaa_render_buffer: 0, msaa_resolve_frame_buffer: 0 }
     }
 }
-impl Default for GlAttachmentsInfo {
+impl Default for GlViewInfo {
     fn default() -> Self {
         Self::new()
     }
@@ -3658,13 +3788,13 @@ pub mod ffi {
         pub fn sg_make_sampler(desc: *const SamplerDesc) -> Sampler;
         pub fn sg_make_shader(desc: *const ShaderDesc) -> Shader;
         pub fn sg_make_pipeline(desc: *const PipelineDesc) -> Pipeline;
-        pub fn sg_make_attachments(desc: *const AttachmentsDesc) -> Attachments;
+        pub fn sg_make_view(desc: *const ViewDesc) -> View;
         pub fn sg_destroy_buffer(buf: Buffer);
         pub fn sg_destroy_image(img: Image);
         pub fn sg_destroy_sampler(smp: Sampler);
         pub fn sg_destroy_shader(shd: Shader);
         pub fn sg_destroy_pipeline(pip: Pipeline);
-        pub fn sg_destroy_attachments(atts: Attachments);
+        pub fn sg_destroy_view(view: View);
         pub fn sg_update_buffer(buf: Buffer, data: *const Range);
         pub fn sg_update_image(img: Image, data: *const ImageData);
         pub fn sg_append_buffer(buf: Buffer, data: *const Range) -> i32;
@@ -3695,25 +3825,25 @@ pub mod ffi {
         pub fn sg_query_sampler_state(smp: Sampler) -> ResourceState;
         pub fn sg_query_shader_state(shd: Shader) -> ResourceState;
         pub fn sg_query_pipeline_state(pip: Pipeline) -> ResourceState;
-        pub fn sg_query_attachments_state(atts: Attachments) -> ResourceState;
+        pub fn sg_query_view_state(view: View) -> ResourceState;
         pub fn sg_query_buffer_info(buf: Buffer) -> BufferInfo;
         pub fn sg_query_image_info(img: Image) -> ImageInfo;
         pub fn sg_query_sampler_info(smp: Sampler) -> SamplerInfo;
         pub fn sg_query_shader_info(shd: Shader) -> ShaderInfo;
         pub fn sg_query_pipeline_info(pip: Pipeline) -> PipelineInfo;
-        pub fn sg_query_attachments_info(atts: Attachments) -> AttachmentsInfo;
+        pub fn sg_query_view_info(view: View) -> ViewInfo;
         pub fn sg_query_buffer_desc(buf: Buffer) -> BufferDesc;
         pub fn sg_query_image_desc(img: Image) -> ImageDesc;
         pub fn sg_query_sampler_desc(smp: Sampler) -> SamplerDesc;
         pub fn sg_query_shader_desc(shd: Shader) -> ShaderDesc;
         pub fn sg_query_pipeline_desc(pip: Pipeline) -> PipelineDesc;
-        pub fn sg_query_attachments_desc(atts: Attachments) -> AttachmentsDesc;
+        pub fn sg_query_view_desc(view: View) -> ViewDesc;
         pub fn sg_query_buffer_defaults(desc: *const BufferDesc) -> BufferDesc;
         pub fn sg_query_image_defaults(desc: *const ImageDesc) -> ImageDesc;
         pub fn sg_query_sampler_defaults(desc: *const SamplerDesc) -> SamplerDesc;
         pub fn sg_query_shader_defaults(desc: *const ShaderDesc) -> ShaderDesc;
         pub fn sg_query_pipeline_defaults(desc: *const PipelineDesc) -> PipelineDesc;
-        pub fn sg_query_attachments_defaults(desc: *const AttachmentsDesc) -> AttachmentsDesc;
+        pub fn sg_query_view_defaults(desc: *const ViewDesc) -> ViewDesc;
         pub fn sg_query_buffer_size(buf: Buffer) -> usize;
         pub fn sg_query_buffer_usage(buf: Buffer) -> BufferUsage;
         pub fn sg_query_image_type(img: Image) -> ImageType;
@@ -3724,36 +3854,39 @@ pub mod ffi {
         pub fn sg_query_image_pixelformat(img: Image) -> PixelFormat;
         pub fn sg_query_image_usage(img: Image) -> ImageUsage;
         pub fn sg_query_image_sample_count(img: Image) -> i32;
+        pub fn sg_query_view_type(view: View) -> ViewType;
+        pub fn sg_query_view_image(view: View) -> Image;
+        pub fn sg_query_view_buffer(view: View) -> Buffer;
         pub fn sg_alloc_buffer() -> Buffer;
         pub fn sg_alloc_image() -> Image;
         pub fn sg_alloc_sampler() -> Sampler;
         pub fn sg_alloc_shader() -> Shader;
         pub fn sg_alloc_pipeline() -> Pipeline;
-        pub fn sg_alloc_attachments() -> Attachments;
+        pub fn sg_alloc_view() -> View;
         pub fn sg_dealloc_buffer(buf: Buffer);
         pub fn sg_dealloc_image(img: Image);
         pub fn sg_dealloc_sampler(smp: Sampler);
         pub fn sg_dealloc_shader(shd: Shader);
         pub fn sg_dealloc_pipeline(pip: Pipeline);
-        pub fn sg_dealloc_attachments(attachments: Attachments);
+        pub fn sg_dealloc_view(view: View);
         pub fn sg_init_buffer(buf: Buffer, desc: *const BufferDesc);
         pub fn sg_init_image(img: Image, desc: *const ImageDesc);
         pub fn sg_init_sampler(smg: Sampler, desc: *const SamplerDesc);
         pub fn sg_init_shader(shd: Shader, desc: *const ShaderDesc);
         pub fn sg_init_pipeline(pip: Pipeline, desc: *const PipelineDesc);
-        pub fn sg_init_attachments(attachments: Attachments, desc: *const AttachmentsDesc);
+        pub fn sg_init_view(view: View, desc: *const ViewDesc);
         pub fn sg_uninit_buffer(buf: Buffer);
         pub fn sg_uninit_image(img: Image);
         pub fn sg_uninit_sampler(smp: Sampler);
         pub fn sg_uninit_shader(shd: Shader);
         pub fn sg_uninit_pipeline(pip: Pipeline);
-        pub fn sg_uninit_attachments(atts: Attachments);
+        pub fn sg_uninit_view(view: View);
         pub fn sg_fail_buffer(buf: Buffer);
         pub fn sg_fail_image(img: Image);
         pub fn sg_fail_sampler(smp: Sampler);
         pub fn sg_fail_shader(shd: Shader);
         pub fn sg_fail_pipeline(pip: Pipeline);
-        pub fn sg_fail_attachments(atts: Attachments);
+        pub fn sg_fail_view(view: View);
         pub fn sg_enable_frame_stats();
         pub fn sg_disable_frame_stats();
         pub fn sg_frame_stats_enabled() -> bool;
@@ -3765,7 +3898,7 @@ pub mod ffi {
         pub fn sg_d3d11_query_sampler_info(smp: Sampler) -> D3d11SamplerInfo;
         pub fn sg_d3d11_query_shader_info(shd: Shader) -> D3d11ShaderInfo;
         pub fn sg_d3d11_query_pipeline_info(pip: Pipeline) -> D3d11PipelineInfo;
-        pub fn sg_d3d11_query_attachments_info(atts: Attachments) -> D3d11AttachmentsInfo;
+        pub fn sg_d3d11_query_view_info(view: View) -> D3d11ViewInfo;
         pub fn sg_mtl_device() -> *const core::ffi::c_void;
         pub fn sg_mtl_render_command_encoder() -> *const core::ffi::c_void;
         pub fn sg_mtl_compute_command_encoder() -> *const core::ffi::c_void;
@@ -3784,12 +3917,12 @@ pub mod ffi {
         pub fn sg_wgpu_query_sampler_info(smp: Sampler) -> WgpuSamplerInfo;
         pub fn sg_wgpu_query_shader_info(shd: Shader) -> WgpuShaderInfo;
         pub fn sg_wgpu_query_pipeline_info(pip: Pipeline) -> WgpuPipelineInfo;
-        pub fn sg_wgpu_query_attachments_info(atts: Attachments) -> WgpuAttachmentsInfo;
+        pub fn sg_wgpu_query_view_info(view: View) -> WgpuViewInfo;
         pub fn sg_gl_query_buffer_info(buf: Buffer) -> GlBufferInfo;
         pub fn sg_gl_query_image_info(img: Image) -> GlImageInfo;
         pub fn sg_gl_query_sampler_info(smp: Sampler) -> GlSamplerInfo;
         pub fn sg_gl_query_shader_info(shd: Shader) -> GlShaderInfo;
-        pub fn sg_gl_query_attachments_info(atts: Attachments) -> GlAttachmentsInfo;
+        pub fn sg_gl_query_view_info(view: View) -> GlViewInfo;
     }
 }
 #[inline]
@@ -3850,8 +3983,8 @@ pub fn make_pipeline(desc: &PipelineDesc) -> Pipeline {
     unsafe { ffi::sg_make_pipeline(desc) }
 }
 #[inline]
-pub fn make_attachments(desc: &AttachmentsDesc) -> Attachments {
-    unsafe { ffi::sg_make_attachments(desc) }
+pub fn make_view(desc: &ViewDesc) -> View {
+    unsafe { ffi::sg_make_view(desc) }
 }
 #[inline]
 pub fn destroy_buffer(buf: Buffer) {
@@ -3874,8 +4007,8 @@ pub fn destroy_pipeline(pip: Pipeline) {
     unsafe { ffi::sg_destroy_pipeline(pip) }
 }
 #[inline]
-pub fn destroy_attachments(atts: Attachments) {
-    unsafe { ffi::sg_destroy_attachments(atts) }
+pub fn destroy_view(view: View) {
+    unsafe { ffi::sg_destroy_view(view) }
 }
 #[inline]
 pub fn update_buffer(buf: Buffer, data: &Range) {
@@ -3994,8 +4127,8 @@ pub fn query_pipeline_state(pip: Pipeline) -> ResourceState {
     unsafe { ffi::sg_query_pipeline_state(pip) }
 }
 #[inline]
-pub fn query_attachments_state(atts: Attachments) -> ResourceState {
-    unsafe { ffi::sg_query_attachments_state(atts) }
+pub fn query_view_state(view: View) -> ResourceState {
+    unsafe { ffi::sg_query_view_state(view) }
 }
 #[inline]
 pub fn query_buffer_info(buf: Buffer) -> BufferInfo {
@@ -4018,8 +4151,8 @@ pub fn query_pipeline_info(pip: Pipeline) -> PipelineInfo {
     unsafe { ffi::sg_query_pipeline_info(pip) }
 }
 #[inline]
-pub fn query_attachments_info(atts: Attachments) -> AttachmentsInfo {
-    unsafe { ffi::sg_query_attachments_info(atts) }
+pub fn query_view_info(view: View) -> ViewInfo {
+    unsafe { ffi::sg_query_view_info(view) }
 }
 #[inline]
 pub fn query_buffer_desc(buf: Buffer) -> BufferDesc {
@@ -4042,8 +4175,8 @@ pub fn query_pipeline_desc(pip: Pipeline) -> PipelineDesc {
     unsafe { ffi::sg_query_pipeline_desc(pip) }
 }
 #[inline]
-pub fn query_attachments_desc(atts: Attachments) -> AttachmentsDesc {
-    unsafe { ffi::sg_query_attachments_desc(atts) }
+pub fn query_view_desc(view: View) -> ViewDesc {
+    unsafe { ffi::sg_query_view_desc(view) }
 }
 #[inline]
 pub fn query_buffer_defaults(desc: &BufferDesc) -> BufferDesc {
@@ -4066,8 +4199,8 @@ pub fn query_pipeline_defaults(desc: &PipelineDesc) -> PipelineDesc {
     unsafe { ffi::sg_query_pipeline_defaults(desc) }
 }
 #[inline]
-pub fn query_attachments_defaults(desc: &AttachmentsDesc) -> AttachmentsDesc {
-    unsafe { ffi::sg_query_attachments_defaults(desc) }
+pub fn query_view_defaults(desc: &ViewDesc) -> ViewDesc {
+    unsafe { ffi::sg_query_view_defaults(desc) }
 }
 #[inline]
 pub fn query_buffer_size(buf: Buffer) -> usize {
@@ -4110,6 +4243,18 @@ pub fn query_image_sample_count(img: Image) -> i32 {
     unsafe { ffi::sg_query_image_sample_count(img) }
 }
 #[inline]
+pub fn query_view_type(view: View) -> ViewType {
+    unsafe { ffi::sg_query_view_type(view) }
+}
+#[inline]
+pub fn query_view_image(view: View) -> Image {
+    unsafe { ffi::sg_query_view_image(view) }
+}
+#[inline]
+pub fn query_view_buffer(view: View) -> Buffer {
+    unsafe { ffi::sg_query_view_buffer(view) }
+}
+#[inline]
 pub fn alloc_buffer() -> Buffer {
     unsafe { ffi::sg_alloc_buffer() }
 }
@@ -4130,8 +4275,8 @@ pub fn alloc_pipeline() -> Pipeline {
     unsafe { ffi::sg_alloc_pipeline() }
 }
 #[inline]
-pub fn alloc_attachments() -> Attachments {
-    unsafe { ffi::sg_alloc_attachments() }
+pub fn alloc_view() -> View {
+    unsafe { ffi::sg_alloc_view() }
 }
 #[inline]
 pub fn dealloc_buffer(buf: Buffer) {
@@ -4154,8 +4299,8 @@ pub fn dealloc_pipeline(pip: Pipeline) {
     unsafe { ffi::sg_dealloc_pipeline(pip) }
 }
 #[inline]
-pub fn dealloc_attachments(attachments: Attachments) {
-    unsafe { ffi::sg_dealloc_attachments(attachments) }
+pub fn dealloc_view(view: View) {
+    unsafe { ffi::sg_dealloc_view(view) }
 }
 #[inline]
 pub fn init_buffer(buf: Buffer, desc: &BufferDesc) {
@@ -4178,8 +4323,8 @@ pub fn init_pipeline(pip: Pipeline, desc: &PipelineDesc) {
     unsafe { ffi::sg_init_pipeline(pip, desc) }
 }
 #[inline]
-pub fn init_attachments(attachments: Attachments, desc: &AttachmentsDesc) {
-    unsafe { ffi::sg_init_attachments(attachments, desc) }
+pub fn init_view(view: View, desc: &ViewDesc) {
+    unsafe { ffi::sg_init_view(view, desc) }
 }
 #[inline]
 pub fn uninit_buffer(buf: Buffer) {
@@ -4202,8 +4347,8 @@ pub fn uninit_pipeline(pip: Pipeline) {
     unsafe { ffi::sg_uninit_pipeline(pip) }
 }
 #[inline]
-pub fn uninit_attachments(atts: Attachments) {
-    unsafe { ffi::sg_uninit_attachments(atts) }
+pub fn uninit_view(view: View) {
+    unsafe { ffi::sg_uninit_view(view) }
 }
 #[inline]
 pub fn fail_buffer(buf: Buffer) {
@@ -4226,8 +4371,8 @@ pub fn fail_pipeline(pip: Pipeline) {
     unsafe { ffi::sg_fail_pipeline(pip) }
 }
 #[inline]
-pub fn fail_attachments(atts: Attachments) {
-    unsafe { ffi::sg_fail_attachments(atts) }
+pub fn fail_view(view: View) {
+    unsafe { ffi::sg_fail_view(view) }
 }
 #[inline]
 pub fn enable_frame_stats() {
@@ -4274,8 +4419,8 @@ pub fn d3d11_query_pipeline_info(pip: Pipeline) -> D3d11PipelineInfo {
     unsafe { ffi::sg_d3d11_query_pipeline_info(pip) }
 }
 #[inline]
-pub fn d3d11_query_attachments_info(atts: Attachments) -> D3d11AttachmentsInfo {
-    unsafe { ffi::sg_d3d11_query_attachments_info(atts) }
+pub fn d3d11_query_view_info(view: View) -> D3d11ViewInfo {
+    unsafe { ffi::sg_d3d11_query_view_info(view) }
 }
 #[inline]
 pub fn mtl_device() -> *const core::ffi::c_void {
@@ -4350,8 +4495,8 @@ pub fn wgpu_query_pipeline_info(pip: Pipeline) -> WgpuPipelineInfo {
     unsafe { ffi::sg_wgpu_query_pipeline_info(pip) }
 }
 #[inline]
-pub fn wgpu_query_attachments_info(atts: Attachments) -> WgpuAttachmentsInfo {
-    unsafe { ffi::sg_wgpu_query_attachments_info(atts) }
+pub fn wgpu_query_view_info(view: View) -> WgpuViewInfo {
+    unsafe { ffi::sg_wgpu_query_view_info(view) }
 }
 #[inline]
 pub fn gl_query_buffer_info(buf: Buffer) -> GlBufferInfo {
@@ -4370,6 +4515,6 @@ pub fn gl_query_shader_info(shd: Shader) -> GlShaderInfo {
     unsafe { ffi::sg_gl_query_shader_info(shd) }
 }
 #[inline]
-pub fn gl_query_attachments_info(atts: Attachments) -> GlAttachmentsInfo {
-    unsafe { ffi::sg_gl_query_attachments_info(atts) }
+pub fn gl_query_view_info(view: View) -> GlViewInfo {
+    unsafe { ffi::sg_gl_query_view_info(view) }
 }

@@ -1,7 +1,6 @@
 #![allow(dead_code)]
-use sokol::gfx as sg;
-
 use crate::math as m;
+use sokol::gfx as sg;
 /*
     #version:1# (machine generated, don't edit!)
 

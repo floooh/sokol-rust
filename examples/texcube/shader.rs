@@ -1,7 +1,6 @@
 #![allow(dead_code)]
-use sokol::gfx as sg;
-
 use crate::math as m;
+use sokol::gfx as sg;
 /*
     #version:1# (machine generated, don't edit!)
 
@@ -24,11 +23,11 @@ use crate::math as m;
         Uniform block 'vs_params':
             Rust struct: VsParams
             Bind slot: UB_VS_PARAMS => 0
-        Image 'tex':
+        Texture 'tex':
             Image type: sg::ImageType::Dim2
             Sample type: sg::ImageSampleType::Float
             Multisampled: false
-            Bind slot: IMG_TEX => 0
+            Bind slot: VIEW_TEX => 0
         Sampler 'smp':
             Type: sg::SamplerType::Filtering
             Bind slot: SMP_SMP => 0
@@ -37,7 +36,7 @@ pub const ATTR_TEXCUBE_POS: usize = 0;
 pub const ATTR_TEXCUBE_COLOR0: usize = 1;
 pub const ATTR_TEXCUBE_TEXCOORD0: usize = 2;
 pub const UB_VS_PARAMS: usize = 0;
-pub const IMG_TEX: usize = 0;
+pub const VIEW_TEX: usize = 0;
 pub const SMP_SMP: usize = 0;
 #[repr(C, align(16))]
 pub struct VsParams {
@@ -88,7 +87,7 @@ pub const VS_SOURCE_GLSL430: [u8; 374] = [
 /*
     #version 430
 
-    layout(binding = 16) uniform sampler2D tex_smp;
+    layout(binding = 0) uniform sampler2D tex_smp;
 
     layout(location = 0) out vec4 frag_color;
     layout(location = 1) in vec2 uv;
@@ -100,22 +99,22 @@ pub const VS_SOURCE_GLSL430: [u8; 374] = [
     }
 
 */
-pub const FS_SOURCE_GLSL430: [u8; 240] = [
+pub const FS_SOURCE_GLSL430: [u8; 239] = [
     0x23, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x20, 0x34, 0x33, 0x30, 0x0a, 0x0a, 0x6c, 0x61, 0x79,
-    0x6f, 0x75, 0x74, 0x28, 0x62, 0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x20, 0x3d, 0x20, 0x31, 0x36, 0x29,
-    0x20, 0x75, 0x6e, 0x69, 0x66, 0x6f, 0x72, 0x6d, 0x20, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x72, 0x32,
-    0x44, 0x20, 0x74, 0x65, 0x78, 0x5f, 0x73, 0x6d, 0x70, 0x3b, 0x0a, 0x0a, 0x6c, 0x61, 0x79, 0x6f, 0x75,
-    0x74, 0x28, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x20, 0x3d, 0x20, 0x30, 0x29, 0x20, 0x6f,
-    0x75, 0x74, 0x20, 0x76, 0x65, 0x63, 0x34, 0x20, 0x66, 0x72, 0x61, 0x67, 0x5f, 0x63, 0x6f, 0x6c, 0x6f,
-    0x72, 0x3b, 0x0a, 0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x28, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f,
-    0x6e, 0x20, 0x3d, 0x20, 0x31, 0x29, 0x20, 0x69, 0x6e, 0x20, 0x76, 0x65, 0x63, 0x32, 0x20, 0x75, 0x76,
+    0x6f, 0x75, 0x74, 0x28, 0x62, 0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x20, 0x3d, 0x20, 0x30, 0x29, 0x20,
+    0x75, 0x6e, 0x69, 0x66, 0x6f, 0x72, 0x6d, 0x20, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x72, 0x32, 0x44,
+    0x20, 0x74, 0x65, 0x78, 0x5f, 0x73, 0x6d, 0x70, 0x3b, 0x0a, 0x0a, 0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74,
+    0x28, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x20, 0x3d, 0x20, 0x30, 0x29, 0x20, 0x6f, 0x75,
+    0x74, 0x20, 0x76, 0x65, 0x63, 0x34, 0x20, 0x66, 0x72, 0x61, 0x67, 0x5f, 0x63, 0x6f, 0x6c, 0x6f, 0x72,
     0x3b, 0x0a, 0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x28, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-    0x20, 0x3d, 0x20, 0x30, 0x29, 0x20, 0x69, 0x6e, 0x20, 0x76, 0x65, 0x63, 0x34, 0x20, 0x63, 0x6f, 0x6c,
-    0x6f, 0x72, 0x3b, 0x0a, 0x0a, 0x76, 0x6f, 0x69, 0x64, 0x20, 0x6d, 0x61, 0x69, 0x6e, 0x28, 0x29, 0x0a,
-    0x7b, 0x0a, 0x20, 0x20, 0x20, 0x20, 0x66, 0x72, 0x61, 0x67, 0x5f, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x20,
-    0x3d, 0x20, 0x74, 0x65, 0x78, 0x74, 0x75, 0x72, 0x65, 0x28, 0x74, 0x65, 0x78, 0x5f, 0x73, 0x6d, 0x70,
-    0x2c, 0x20, 0x75, 0x76, 0x29, 0x20, 0x2a, 0x20, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x3b, 0x0a, 0x7d, 0x0a,
-    0x0a, 0x00,
+    0x20, 0x3d, 0x20, 0x31, 0x29, 0x20, 0x69, 0x6e, 0x20, 0x76, 0x65, 0x63, 0x32, 0x20, 0x75, 0x76, 0x3b,
+    0x0a, 0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x28, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x20,
+    0x3d, 0x20, 0x30, 0x29, 0x20, 0x69, 0x6e, 0x20, 0x76, 0x65, 0x63, 0x34, 0x20, 0x63, 0x6f, 0x6c, 0x6f,
+    0x72, 0x3b, 0x0a, 0x0a, 0x76, 0x6f, 0x69, 0x64, 0x20, 0x6d, 0x61, 0x69, 0x6e, 0x28, 0x29, 0x0a, 0x7b,
+    0x0a, 0x20, 0x20, 0x20, 0x20, 0x66, 0x72, 0x61, 0x67, 0x5f, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x20, 0x3d,
+    0x20, 0x74, 0x65, 0x78, 0x74, 0x75, 0x72, 0x65, 0x28, 0x74, 0x65, 0x78, 0x5f, 0x73, 0x6d, 0x70, 0x2c,
+    0x20, 0x75, 0x76, 0x29, 0x20, 0x2a, 0x20, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x3b, 0x0a, 0x7d, 0x0a, 0x0a,
+    0x00,
 ];
 /*
     cbuffer vs_params : register(b0)
@@ -441,16 +440,16 @@ pub fn texcube_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.uniform_blocks[0].glsl_uniforms[0]._type = sg::UniformType::Float4;
             desc.uniform_blocks[0].glsl_uniforms[0].array_count = 4;
             desc.uniform_blocks[0].glsl_uniforms[0].glsl_name = c"vs_params".as_ptr();
-            desc.images[0].stage = sg::ShaderStage::Fragment;
-            desc.images[0].multisampled = false;
-            desc.images[0].image_type = sg::ImageType::Dim2;
-            desc.images[0].sample_type = sg::ImageSampleType::Float;
+            desc.views[0].texture.stage = sg::ShaderStage::Fragment;
+            desc.views[0].texture.multisampled = false;
+            desc.views[0].texture.image_type = sg::ImageType::Dim2;
+            desc.views[0].texture.sample_type = sg::ImageSampleType::Float;
             desc.samplers[0].stage = sg::ShaderStage::Fragment;
             desc.samplers[0].sampler_type = sg::SamplerType::Filtering;
-            desc.image_sampler_pairs[0].stage = sg::ShaderStage::Fragment;
-            desc.image_sampler_pairs[0].image_slot = 0;
-            desc.image_sampler_pairs[0].sampler_slot = 0;
-            desc.image_sampler_pairs[0].glsl_name = c"tex_smp".as_ptr();
+            desc.texture_sampler_pairs[0].stage = sg::ShaderStage::Fragment;
+            desc.texture_sampler_pairs[0].view_slot = 0;
+            desc.texture_sampler_pairs[0].sampler_slot = 0;
+            desc.texture_sampler_pairs[0].glsl_name = c"tex_smp".as_ptr();
         },
         sg::Backend::D3d11 => {
             desc.vertex_func.source = &VS_SOURCE_HLSL5 as *const _ as *const _;
@@ -472,17 +471,17 @@ pub fn texcube_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
             desc.uniform_blocks[0].size = 64;
             desc.uniform_blocks[0].hlsl_register_b_n = 0;
-            desc.images[0].stage = sg::ShaderStage::Fragment;
-            desc.images[0].multisampled = false;
-            desc.images[0].image_type = sg::ImageType::Dim2;
-            desc.images[0].sample_type = sg::ImageSampleType::Float;
-            desc.images[0].hlsl_register_t_n = 0;
+            desc.views[0].texture.stage = sg::ShaderStage::Fragment;
+            desc.views[0].texture.multisampled = false;
+            desc.views[0].texture.image_type = sg::ImageType::Dim2;
+            desc.views[0].texture.sample_type = sg::ImageSampleType::Float;
+            desc.views[0].texture.hlsl_register_t_n = 0;
             desc.samplers[0].stage = sg::ShaderStage::Fragment;
             desc.samplers[0].sampler_type = sg::SamplerType::Filtering;
             desc.samplers[0].hlsl_register_s_n = 0;
-            desc.image_sampler_pairs[0].stage = sg::ShaderStage::Fragment;
-            desc.image_sampler_pairs[0].image_slot = 0;
-            desc.image_sampler_pairs[0].sampler_slot = 0;
+            desc.texture_sampler_pairs[0].stage = sg::ShaderStage::Fragment;
+            desc.texture_sampler_pairs[0].view_slot = 0;
+            desc.texture_sampler_pairs[0].sampler_slot = 0;
         },
         sg::Backend::MetalMacos => {
             desc.vertex_func.source = &VS_SOURCE_METAL_MACOS as *const _ as *const _;
@@ -496,17 +495,17 @@ pub fn texcube_shader_desc(backend: sg::Backend) -> sg::ShaderDesc {
             desc.uniform_blocks[0].layout = sg::UniformLayout::Std140;
             desc.uniform_blocks[0].size = 64;
             desc.uniform_blocks[0].msl_buffer_n = 0;
-            desc.images[0].stage = sg::ShaderStage::Fragment;
-            desc.images[0].multisampled = false;
-            desc.images[0].image_type = sg::ImageType::Dim2;
-            desc.images[0].sample_type = sg::ImageSampleType::Float;
-            desc.images[0].msl_texture_n = 0;
+            desc.views[0].texture.stage = sg::ShaderStage::Fragment;
+            desc.views[0].texture.multisampled = false;
+            desc.views[0].texture.image_type = sg::ImageType::Dim2;
+            desc.views[0].texture.sample_type = sg::ImageSampleType::Float;
+            desc.views[0].texture.msl_texture_n = 0;
             desc.samplers[0].stage = sg::ShaderStage::Fragment;
             desc.samplers[0].sampler_type = sg::SamplerType::Filtering;
             desc.samplers[0].msl_sampler_n = 0;
-            desc.image_sampler_pairs[0].stage = sg::ShaderStage::Fragment;
-            desc.image_sampler_pairs[0].image_slot = 0;
-            desc.image_sampler_pairs[0].sampler_slot = 0;
+            desc.texture_sampler_pairs[0].stage = sg::ShaderStage::Fragment;
+            desc.texture_sampler_pairs[0].view_slot = 0;
+            desc.texture_sampler_pairs[0].sampler_slot = 0;
         },
         _ => {},
     }
