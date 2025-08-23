@@ -3159,7 +3159,7 @@ pub enum LogItem {
     ValidateAbndTextureBindingVsDepthstencilAttachment,
     ValidateAbndTextureBindingVsColorAttachment,
     ValidateAbndTextureBindingVsResolveAttachment,
-    ValidateAbndTextureBindingVsStorageAttachment,
+    ValidateAbndTextureVsStorageimageBinding,
     ValidateAuPassExpected,
     ValidateAuNoPipeline,
     ValidateAuPipelineAlive,
