@@ -352,11 +352,19 @@ impl Default for Range {
 pub struct ImageDesc {
     pub width: i32,
     pub height: i32,
+    pub cursor_hotspot_x: i32,
+    pub cursor_hotspot_y: i32,
     pub pixels: Range,
 }
 impl ImageDesc {
     pub const fn new() -> Self {
-        Self { width: 0, height: 0, pixels: Range::new() }
+        Self {
+            width: 0,
+            height: 0,
+            cursor_hotspot_x: 0,
+            cursor_hotspot_y: 0,
+            pixels: Range::new(),
+        }
     }
 }
 impl Default for ImageDesc {
@@ -426,6 +434,7 @@ pub enum LogItem {
     Win32RegisterRawInputDevicesFailedMouseLock,
     Win32RegisterRawInputDevicesFailedMouseUnlock,
     Win32GetRawInputDataFailed,
+    Win32DestroyiconForCursorFailed,
     LinuxGlxLoadLibglFailed,
     LinuxGlxLoadEntryPointsFailed,
     LinuxGlxExtensionNotFound,
@@ -721,6 +730,22 @@ pub enum MouseCursor {
     ResizeNesw,
     ResizeAll,
     NotAllowed,
+    Custom0,
+    Custom1,
+    Custom2,
+    Custom3,
+    Custom4,
+    Custom5,
+    Custom6,
+    Custom7,
+    Custom8,
+    Custom9,
+    Custom10,
+    Custom11,
+    Custom12,
+    Custom13,
+    Custom14,
+    Custom15,
     Num,
 }
 impl MouseCursor {
@@ -757,6 +782,8 @@ pub mod ffi {
         pub fn sapp_mouse_locked() -> bool;
         pub fn sapp_set_mouse_cursor(cursor: MouseCursor);
         pub fn sapp_get_mouse_cursor() -> MouseCursor;
+        pub fn sapp_bind_mouse_cursor_image(cursor: MouseCursor, desc: *const ImageDesc) -> MouseCursor;
+        pub fn sapp_unbind_mouse_cursor_image(cursor: MouseCursor);
         pub fn sapp_userdata() -> *mut core::ffi::c_void;
         pub fn sapp_query_desc() -> Desc;
         pub fn sapp_request_quit();
@@ -882,6 +909,14 @@ pub fn set_mouse_cursor(cursor: MouseCursor) {
 #[inline]
 pub fn get_mouse_cursor() -> MouseCursor {
     unsafe { ffi::sapp_get_mouse_cursor() }
+}
+#[inline]
+pub fn bind_mouse_cursor_image(cursor: MouseCursor, desc: &ImageDesc) -> MouseCursor {
+    unsafe { ffi::sapp_bind_mouse_cursor_image(cursor, desc) }
+}
+#[inline]
+pub fn unbind_mouse_cursor_image(cursor: MouseCursor) {
+    unsafe { ffi::sapp_unbind_mouse_cursor_image(cursor) }
 }
 #[inline]
 pub fn userdata() -> *mut core::ffi::c_void {
