@@ -144,7 +144,6 @@ pub const MAX_COLOR_ATTACHMENTS: usize = 4;
 pub const MAX_UNIFORMBLOCK_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
 pub const MAX_MIPMAPS: usize = 16;
-pub const MAX_TEXTUREARRAY_LAYERS: usize = 128;
 pub const MAX_VERTEXBUFFER_BINDSLOTS: usize = 8;
 pub const MAX_UNIFORMBLOCK_BINDSLOTS: usize = 8;
 pub const MAX_VIEW_BINDSLOTS: usize = 28;
@@ -466,27 +465,6 @@ impl SamplerType {
 impl Default for SamplerType {
     fn default() -> Self {
         Self::Default
-    }
-}
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u32)]
-pub enum CubeFace {
-    PosX,
-    NegX,
-    PosY,
-    NegY,
-    PosZ,
-    NegZ,
-    Num,
-}
-impl CubeFace {
-    pub const fn new() -> Self {
-        Self::PosX
-    }
-}
-impl Default for CubeFace {
-    fn default() -> Self {
-        Self::PosX
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1257,11 +1235,11 @@ impl Default for ViewType {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ImageData {
-    pub subimage: [[Range; 16]; 6],
+    pub mip_levels: [Range; 16],
 }
 impl ImageData {
     pub const fn new() -> Self {
-        Self { subimage: [[Range::new(); 16]; 6] }
+        Self { mip_levels: [Range::new(); 16] }
     }
 }
 impl Default for ImageData {
@@ -2917,6 +2895,11 @@ pub enum LogItem {
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
     ValidateImagedescImmutableDynamicStream,
+    ValidateImagedescImagetype2dNumslices,
+    ValidateImagedescImagetypeCubeNumslices,
+    ValidateImagedescImagetypeArrayNumslices,
+    ValidateImagedescImagetype3dNumslices,
+    ValidateImagedescNumslices,
     ValidateImagedescWidth,
     ValidateImagedescHeight,
     ValidateImagedescNonrtPixelformat,

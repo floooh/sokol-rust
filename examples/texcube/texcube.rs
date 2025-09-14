@@ -108,7 +108,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     ];
     // NOTE: SLOT_tex is provided by shader code generation
     let mut image_desc = sg::ImageDesc { width: 4, height: 4, ..Default::default() };
-    image_desc.data.subimage[0][0] = sg::slice_as_range(&pixels);
+    image_desc.data.mip_levels[0] = sg::slice_as_range(&pixels);
     state.bind.views[shader::VIEW_TEX] = sg::make_view(&sg::ViewDesc {
         texture: sg::TextureViewDesc { image: sg::make_image(&image_desc), ..Default::default() },
         ..Default::default()
