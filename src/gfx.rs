@@ -2703,6 +2703,33 @@ impl Default for FrameStatsWgpu {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct ResourceStats {
+    pub total_alive: u32,
+    pub total_free: u32,
+    pub allocated: u32,
+    pub deallocated: u32,
+    pub inited: u32,
+    pub uninited: u32,
+}
+impl ResourceStats {
+    pub const fn new() -> Self {
+        Self {
+            total_alive: 0,
+            total_free: 0,
+            allocated: 0,
+            deallocated: 0,
+            inited: 0,
+            uninited: 0,
+        }
+    }
+}
+impl Default for ResourceStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct FrameStats {
     pub frame_index: u32,
     pub num_passes: u32,
@@ -2720,6 +2747,12 @@ pub struct FrameStats {
     pub size_update_buffer: u32,
     pub size_append_buffer: u32,
     pub size_update_image: u32,
+    pub buffers: ResourceStats,
+    pub images: ResourceStats,
+    pub samplers: ResourceStats,
+    pub views: ResourceStats,
+    pub shaders: ResourceStats,
+    pub pipelines: ResourceStats,
     pub gl: FrameStatsGl,
     pub d3d11: FrameStatsD3d11,
     pub metal: FrameStatsMetal,
@@ -2744,6 +2777,12 @@ impl FrameStats {
             size_update_buffer: 0,
             size_append_buffer: 0,
             size_update_image: 0,
+            buffers: ResourceStats::new(),
+            images: ResourceStats::new(),
+            samplers: ResourceStats::new(),
+            views: ResourceStats::new(),
+            shaders: ResourceStats::new(),
+            pipelines: ResourceStats::new(),
             gl: FrameStatsGl::new(),
             d3d11: FrameStatsD3d11::new(),
             metal: FrameStatsMetal::new(),
