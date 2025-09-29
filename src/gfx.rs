@@ -140,15 +140,19 @@ impl Default for Range {
 }
 pub const INVALID_ID: u32 = 0;
 pub const NUM_INFLIGHT_FRAMES: usize = 2;
-pub const MAX_COLOR_ATTACHMENTS: usize = 4;
+pub const MAX_COLOR_ATTACHMENTS: usize = 8;
 pub const MAX_UNIFORMBLOCK_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
 pub const MAX_MIPMAPS: usize = 16;
 pub const MAX_VERTEXBUFFER_BINDSLOTS: usize = 8;
 pub const MAX_UNIFORMBLOCK_BINDSLOTS: usize = 8;
-pub const MAX_VIEW_BINDSLOTS: usize = 28;
-pub const MAX_SAMPLER_BINDSLOTS: usize = 16;
-pub const MAX_TEXTURE_SAMPLER_PAIRS: usize = 16;
+pub const MAX_VIEW_BINDSLOTS: usize = 32;
+pub const MAX_SAMPLER_BINDSLOTS: usize = 12;
+pub const MAX_TEXTURE_SAMPLER_PAIRS: usize = 32;
+pub const MAX_PORTABLE_COLOR_ATTACHMENTS: usize = 4;
+pub const MAX_PORTABLE_TEXTURE_BINDINGS_PER_STAGE: usize = 16;
+pub const MAX_PORTABLE_STORAGEBUFFER_BINDINGS_PER_STAGE: usize = 8;
+pub const MAX_PORTABLE_STORAGEIMAGE_BINDINGS_PER_STAGE: usize = 4;
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Color {
@@ -347,8 +351,13 @@ pub struct Limits {
     pub max_image_size_array: i32,
     pub max_image_array_layers: i32,
     pub max_vertex_attrs: i32,
+    pub max_color_attachments: i32,
+    pub max_texture_bindings_per_stage: i32,
+    pub max_storage_buffer_bindings_per_stage: i32,
+    pub max_storage_image_bindings_per_stage: i32,
     pub gl_max_vertex_uniform_components: i32,
     pub gl_max_combined_texture_image_units: i32,
+    pub d3d11_max_unordered_access_views: i32,
 }
 impl Limits {
     pub const fn new() -> Self {
@@ -359,8 +368,13 @@ impl Limits {
             max_image_size_array: 0,
             max_image_array_layers: 0,
             max_vertex_attrs: 0,
+            max_color_attachments: 0,
+            max_texture_bindings_per_stage: 0,
+            max_storage_buffer_bindings_per_stage: 0,
+            max_storage_image_bindings_per_stage: 0,
             gl_max_vertex_uniform_components: 0,
             gl_max_combined_texture_image_units: 0,
+            d3d11_max_unordered_access_views: 0,
         }
     }
 }
@@ -914,14 +928,14 @@ impl Default for StencilAttachmentAction {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct PassAction {
-    pub colors: [ColorAttachmentAction; 4],
+    pub colors: [ColorAttachmentAction; 8],
     pub depth: DepthAttachmentAction,
     pub stencil: StencilAttachmentAction,
 }
 impl PassAction {
     pub const fn new() -> Self {
         Self {
-            colors: [ColorAttachmentAction::new(); 4],
+            colors: [ColorAttachmentAction::new(); 8],
             depth: DepthAttachmentAction::new(),
             stencil: StencilAttachmentAction::new(),
         }
@@ -1046,13 +1060,13 @@ impl Default for Swapchain {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Attachments {
-    pub colors: [View; 4],
-    pub resolves: [View; 4],
+    pub colors: [View; 8],
+    pub resolves: [View; 8],
     pub depth_stencil: View,
 }
 impl Attachments {
     pub const fn new() -> Self {
-        Self { colors: [View::new(); 4], resolves: [View::new(); 4], depth_stencil: View::new() }
+        Self { colors: [View::new(); 8], resolves: [View::new(); 8], depth_stencil: View::new() }
     }
 }
 impl Default for Attachments {
@@ -1097,8 +1111,8 @@ pub struct Bindings {
     pub vertex_buffer_offsets: [i32; 8],
     pub index_buffer: Buffer,
     pub index_buffer_offset: i32,
-    pub views: [View; 28],
-    pub samplers: [Sampler; 16],
+    pub views: [View; 32],
+    pub samplers: [Sampler; 12],
     pub _end_canary: u32,
 }
 impl Bindings {
@@ -1109,8 +1123,8 @@ impl Bindings {
             vertex_buffer_offsets: [0; 8],
             index_buffer: Buffer::new(),
             index_buffer_offset: 0,
-            views: [View::new(); 28],
-            samplers: [Sampler::new(); 16],
+            views: [View::new(); 32],
+            samplers: [Sampler::new(); 12],
             _end_canary: 0,
         }
     }
@@ -1661,9 +1675,9 @@ pub struct ShaderDesc {
     pub compute_func: ShaderFunction,
     pub attrs: [ShaderVertexAttr; 16],
     pub uniform_blocks: [ShaderUniformBlock; 8],
-    pub views: [ShaderView; 28],
-    pub samplers: [ShaderSampler; 16],
-    pub texture_sampler_pairs: [ShaderTextureSamplerPair; 16],
+    pub views: [ShaderView; 32],
+    pub samplers: [ShaderSampler; 12],
+    pub texture_sampler_pairs: [ShaderTextureSamplerPair; 32],
     pub mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup,
     pub label: *const core::ffi::c_char,
     pub _end_canary: u32,
@@ -1677,9 +1691,9 @@ impl ShaderDesc {
             compute_func: ShaderFunction::new(),
             attrs: [ShaderVertexAttr::new(); 16],
             uniform_blocks: [ShaderUniformBlock::new(); 8],
-            views: [ShaderView::new(); 28],
-            samplers: [ShaderSampler::new(); 16],
-            texture_sampler_pairs: [ShaderTextureSamplerPair::new(); 16],
+            views: [ShaderView::new(); 32],
+            samplers: [ShaderSampler::new(); 12],
+            texture_sampler_pairs: [ShaderTextureSamplerPair::new(); 32],
             mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup::new(),
             label: core::ptr::null(),
             _end_canary: 0,
@@ -1881,7 +1895,7 @@ pub struct PipelineDesc {
     pub depth: DepthState,
     pub stencil: StencilState,
     pub color_count: i32,
-    pub colors: [ColorTargetState; 4],
+    pub colors: [ColorTargetState; 8],
     pub primitive_type: PrimitiveType,
     pub index_type: IndexType,
     pub cull_mode: CullMode,
@@ -1902,7 +1916,7 @@ impl PipelineDesc {
             depth: DepthState::new(),
             stencil: StencilState::new(),
             color_count: 0,
-            colors: [ColorTargetState::new(); 4],
+            colors: [ColorTargetState::new(); 8],
             primitive_type: PrimitiveType::new(),
             index_type: IndexType::new(),
             cull_mode: CullMode::new(),
@@ -2816,6 +2830,7 @@ pub enum LogItem {
     GlFramebufferStatusUnsupported,
     GlFramebufferStatusIncompleteMultisample,
     GlFramebufferStatusUnknown,
+    D3d11FeatureLevel0Detected,
     D3d11CreateBufferFailed,
     D3d11CreateBufferSrvFailed,
     D3d11CreateBufferUavFailed,
@@ -2918,8 +2933,22 @@ pub enum LogItem {
     ShaderPoolExhausted,
     PipelinePoolExhausted,
     ViewPoolExhausted,
+    BeginpassTooManyColorAttachments,
+    BeginpassTooManyResolveAttachments,
     BeginpassAttachmentsAlive,
     DrawWithoutBindings,
+    ShaderdescTooManyVertexstageTextures,
+    ShaderdescTooManyFragmentstageTextures,
+    ShaderdescTooManyComputestageTextures,
+    ShaderdescTooManyVertexstageStoragebuffers,
+    ShaderdescTooManyFragmentstageStoragebuffers,
+    ShaderdescTooManyComputestageStoragebuffers,
+    ShaderdescTooManyVertexstageStorageimages,
+    ShaderdescTooManyFragmentstageStorageimages,
+    ShaderdescTooManyComputestageStorageimages,
+    ShaderdescTooManyVertexstageTexturesamplerpairs,
+    ShaderdescTooManyFragmentstageTexturesamplerpairs,
+    ShaderdescTooManyComputestageTexturesamplerpairs,
     ValidateBufferdescCanary,
     ValidateBufferdescImmutableDynamicStream,
     ValidateBufferdescSeparateBufferTypes,
@@ -2973,47 +3002,29 @@ pub enum LogItem {
     ValidateShaderdescMetalThreadsPerThreadgroupMultiple32,
     ValidateShaderdescUniformblockNoContMembers,
     ValidateShaderdescUniformblockSizeIsZero,
-    ValidateShaderdescUniformblockMetalBufferSlotOutOfRange,
     ValidateShaderdescUniformblockMetalBufferSlotCollision,
-    ValidateShaderdescUniformblockHlslRegisterBOutOfRange,
     ValidateShaderdescUniformblockHlslRegisterBCollision,
-    ValidateShaderdescUniformblockWgslGroup0BindingOutOfRange,
     ValidateShaderdescUniformblockWgslGroup0BindingCollision,
     ValidateShaderdescUniformblockNoMembers,
     ValidateShaderdescUniformblockUniformGlslName,
     ValidateShaderdescUniformblockSizeMismatch,
     ValidateShaderdescUniformblockArrayCount,
     ValidateShaderdescUniformblockStd140ArrayType,
-    ValidateShaderdescViewStoragebufferMetalBufferSlotOutOfRange,
     ValidateShaderdescViewStoragebufferMetalBufferSlotCollision,
-    ValidateShaderdescViewStoragebufferHlslRegisterTOutOfRange,
     ValidateShaderdescViewStoragebufferHlslRegisterTCollision,
-    ValidateShaderdescViewStoragebufferHlslRegisterUOutOfRange,
     ValidateShaderdescViewStoragebufferHlslRegisterUCollision,
-    ValidateShaderdescViewStoragebufferGlslBindingOutOfRange,
     ValidateShaderdescViewStoragebufferGlslBindingCollision,
-    ValidateShaderdescViewStoragebufferWgslGroup1BindingOutOfRange,
     ValidateShaderdescViewStoragebufferWgslGroup1BindingCollision,
     ValidateShaderdescViewStorageimageExpectComputeStage,
-    ValidateShaderdescViewStorageimageMetalTextureSlotOutOfRange,
     ValidateShaderdescViewStorageimageMetalTextureSlotCollision,
-    ValidateShaderdescViewStorageimageHlslRegisterUOutOfRange,
     ValidateShaderdescViewStorageimageHlslRegisterUCollision,
-    ValidateShaderdescViewStorageimageGlslBindingOutOfRange,
     ValidateShaderdescViewStorageimageGlslBindingCollision,
-    ValidateShaderdescViewStorageimageWgslGroup1BindingOutOfRange,
     ValidateShaderdescViewStorageimageWgslGroup1BindingCollision,
-    ValidateShaderdescViewTextureMetalTextureSlotOutOfRange,
     ValidateShaderdescViewTextureMetalTextureSlotCollision,
-    ValidateShaderdescViewTextureHlslRegisterTOutOfRange,
     ValidateShaderdescViewTextureHlslRegisterTCollision,
-    ValidateShaderdescViewTextureWgslGroup1BindingOutOfRange,
     ValidateShaderdescViewTextureWgslGroup1BindingCollision,
-    ValidateShaderdescSamplerMetalSamplerSlotOutOfRange,
     ValidateShaderdescSamplerMetalSamplerSlotCollision,
-    ValidateShaderdescSamplerHlslRegisterSOutOfRange,
     ValidateShaderdescSamplerHlslRegisterSCollision,
-    ValidateShaderdescSamplerWgslGroup1BindingOutOfRange,
     ValidateShaderdescSamplerWgslGroup1BindingCollision,
     ValidateShaderdescTextureSamplerPairViewSlotOutOfRange,
     ValidateShaderdescTextureSamplerPairSamplerSlotOutOfRange,
@@ -3383,6 +3394,7 @@ pub struct Desc {
     pub uniform_buffer_size: i32,
     pub max_commit_listeners: i32,
     pub disable_validation: bool,
+    pub enforce_portable_limits: bool,
     pub d3d11_shader_debugging: bool,
     pub mtl_force_managed_storage_mode: bool,
     pub mtl_use_command_buffer_with_retained_references: bool,
@@ -3406,6 +3418,7 @@ impl Desc {
             uniform_buffer_size: 0,
             max_commit_listeners: 0,
             disable_validation: false,
+            enforce_portable_limits: false,
             d3d11_shader_debugging: false,
             mtl_force_managed_storage_mode: false,
             mtl_use_command_buffer_with_retained_references: false,
