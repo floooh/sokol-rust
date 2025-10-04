@@ -321,6 +321,8 @@ pub struct Features {
     pub compute: bool,
     pub msaa_texture_bindings: bool,
     pub separate_buffer_types: bool,
+    pub draw_base_vertex: bool,
+    pub draw_base_instance: bool,
     pub gl_texture_views: bool,
 }
 impl Features {
@@ -333,6 +335,8 @@ impl Features {
             compute: false,
             msaa_texture_bindings: false,
             separate_buffer_types: false,
+            draw_base_vertex: false,
+            draw_base_instance: false,
             gl_texture_views: false,
         }
     }
@@ -2064,6 +2068,7 @@ pub struct TraceHooks {
     pub apply_bindings: Option<extern "C" fn(*const Bindings, *mut core::ffi::c_void)>,
     pub apply_uniforms: Option<extern "C" fn(i32, *const Range, *mut core::ffi::c_void)>,
     pub draw: Option<extern "C" fn(i32, i32, i32, *mut core::ffi::c_void)>,
+    pub draw_ex: Option<extern "C" fn(i32, i32, i32, i32, i32, *mut core::ffi::c_void)>,
     pub dispatch: Option<extern "C" fn(i32, i32, i32, *mut core::ffi::c_void)>,
     pub end_pass: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub commit: Option<extern "C" fn(*mut core::ffi::c_void)>,
@@ -2127,6 +2132,7 @@ impl TraceHooks {
             apply_bindings: None,
             apply_uniforms: None,
             draw: None,
+            draw_ex: None,
             dispatch: None,
             end_pass: None,
             commit: None,
@@ -2753,6 +2759,7 @@ pub struct FrameStats {
     pub num_apply_bindings: u32,
     pub num_apply_uniforms: u32,
     pub num_draw: u32,
+    pub num_draw_ex: u32,
     pub num_dispatch: u32,
     pub num_update_buffer: u32,
     pub num_append_buffer: u32,
@@ -2783,6 +2790,7 @@ impl FrameStats {
             num_apply_bindings: 0,
             num_apply_uniforms: 0,
             num_draw: 0,
+            num_draw_ex: 0,
             num_dispatch: 0,
             num_update_buffer: 0,
             num_append_buffer: 0,
@@ -3202,9 +3210,18 @@ pub enum LogItem {
     ValidateAuNoUniformblockAtSlot,
     ValidateAuSize,
     ValidateDrawRenderpassExpected,
-    ValidateDrawBaseelement,
-    ValidateDrawNumelements,
-    ValidateDrawNuminstances,
+    ValidateDrawBaseelementGeZero,
+    ValidateDrawNumelementsGeZero,
+    ValidateDrawNuminstancesGeZero,
+    ValidateDrawExRenderpassExpected,
+    ValidateDrawExBaseelementGeZero,
+    ValidateDrawExNumelementsGeZero,
+    ValidateDrawExNuminstancesGeZero,
+    ValidateDrawExBaseinstanceGeZero,
+    ValidateDrawExBasevertexVsIndexed,
+    ValidateDrawExBaseinstanceVsInstanced,
+    ValidateDrawExBasevertexNotSupported,
+    ValidateDrawExBaseinstanceNotSupported,
     ValidateDrawRequiredBindingsOrUniformsMissing,
     ValidateDispatchComputepassExpected,
     ValidateDispatchNumgroupsx,
@@ -3844,6 +3861,13 @@ pub mod ffi {
         pub fn sg_apply_bindings(bindings: *const Bindings);
         pub fn sg_apply_uniforms(ub_slot: usize, data: *const Range);
         pub fn sg_draw(base_element: usize, num_elements: usize, num_instances: usize);
+        pub fn sg_draw_ex(
+            base_element: i32,
+            num_elements: i32,
+            num_instances: i32,
+            base_vertex: i32,
+            base_instance: i32,
+        );
         pub fn sg_dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize);
         pub fn sg_end_pass();
         pub fn sg_commit();
@@ -4100,6 +4124,16 @@ pub fn apply_uniforms(ub_slot: usize, data: &Range) {
 #[inline]
 pub fn draw(base_element: usize, num_elements: usize, num_instances: usize) {
     unsafe { ffi::sg_draw(base_element, num_elements, num_instances) }
+}
+#[inline]
+pub fn draw_ex(
+    base_element: i32,
+    num_elements: i32,
+    num_instances: i32,
+    base_vertex: i32,
+    base_instance: i32,
+) {
+    unsafe { ffi::sg_draw_ex(base_element, num_elements, num_instances, base_vertex, base_instance) }
 }
 #[inline]
 pub fn dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize) {
