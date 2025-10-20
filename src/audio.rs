@@ -40,6 +40,8 @@ pub enum LogItem {
     CoreaudioAllocateBufferFailed,
     CoreaudioStartFailed,
     BackendBufferSizeIsntMultipleOfPacketSize,
+    VitaSceaudioOpenFailed,
+    VitaPthreadCreateFailed,
 }
 impl LogItem {
     pub const fn new() -> Self {
