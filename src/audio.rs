@@ -42,6 +42,7 @@ pub enum LogItem {
     BackendBufferSizeIsntMultipleOfPacketSize,
     VitaSceaudioOpenFailed,
     VitaPthreadCreateFailed,
+    N3dsNdspOpenFailed,
 }
 impl LogItem {
     pub const fn new() -> Self {
@@ -96,6 +97,40 @@ impl Default for Allocator {
         Self::new()
     }
 }
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(i32)]
+pub enum N3dsNdspinterptype {
+    DspInterpPolyphase = 0,
+    DspInterpLinear = 1,
+    DspInterpNone = 2,
+}
+impl N3dsNdspinterptype {
+    pub const fn new() -> Self {
+        Self::DspInterpPolyphase
+    }
+}
+impl Default for N3dsNdspinterptype {
+    fn default() -> Self {
+        Self::DspInterpPolyphase
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct N3dsDesc {
+    pub queue_count: i32,
+    pub interpolation_type: N3dsNdspinterptype,
+    pub channel_id: i32,
+}
+impl N3dsDesc {
+    pub const fn new() -> Self {
+        Self { queue_count: 0, interpolation_type: N3dsNdspinterptype::new(), channel_id: 0 }
+    }
+}
+impl Default for N3dsDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Desc {
@@ -107,6 +142,7 @@ pub struct Desc {
     pub stream_cb: Option<extern "C" fn(*mut f32, i32, i32)>,
     pub stream_userdata_cb: Option<extern "C" fn(*mut f32, i32, i32, *mut core::ffi::c_void)>,
     pub user_data: *mut core::ffi::c_void,
+    pub n3ds: N3dsDesc,
     pub allocator: Allocator,
     pub logger: Logger,
 }
@@ -121,6 +157,7 @@ impl Desc {
             stream_cb: None,
             stream_userdata_cb: None,
             user_data: core::ptr::null_mut(),
+            n3ds: N3dsDesc::new(),
             allocator: Allocator::new(),
             logger: Logger::new(),
         }
