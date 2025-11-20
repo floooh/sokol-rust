@@ -17,7 +17,7 @@ use std::ffi;
 use math as m;
 use sokol::{app as sapp, gfx as sg, glue as sglue, log as slog};
 
-const OFFSCREEN_SAMPLE_COUNT: usize = 1;
+const OFFSCREEN_SAMPLE_COUNT: usize = 4;
 const NUM_MRTS: usize = 3;
 
 struct Images {

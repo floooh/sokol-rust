@@ -22,9 +22,13 @@ pub mod ffi {
 }
 #[inline]
 pub fn environment() -> sg::Environment {
-    unsafe { ffi::sglue_environment() }
+    unsafe {
+        ffi::sglue_environment()
+    }
 }
 #[inline]
 pub fn swapchain() -> sg::Swapchain {
-    unsafe { ffi::sglue_swapchain() }
+    unsafe {
+        ffi::sglue_swapchain()
+    }
 }

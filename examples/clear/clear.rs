@@ -41,6 +41,10 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
             println!("Using Wgpu Backend!");
         },
 
+        sg::Backend::Vulkan => {
+            println!("Using Vulkan Backend!");
+        },
+
         sg::Backend::Dummy => {
             println!("Using Dummy Backend!");
         },
