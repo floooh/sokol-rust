@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+
 /// Helper function to convert a C string to a Rust string slice
 #[inline]
 fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str {
@@ -339,7 +340,10 @@ pub struct Range {
 }
 impl Range {
     pub const fn new() -> Self {
-        Self { ptr: core::ptr::null(), size: 0 }
+        Self {
+            ptr: core::ptr::null(),
+            size: 0,
+        }
     }
 }
 impl Default for Range {
@@ -380,7 +384,10 @@ pub struct IconDesc {
 }
 impl IconDesc {
     pub const fn new() -> Self {
-        Self { sokol_default: false, images: [ImageDesc::new(); 8] }
+        Self {
+            sokol_default: false,
+            images: [ImageDesc::new(); 8],
+        }
     }
 }
 impl Default for IconDesc {
@@ -397,7 +404,11 @@ pub struct Allocator {
 }
 impl Allocator {
     pub const fn new() -> Self {
-        Self { alloc_fn: None, free_fn: None, user_data: core::ptr::null_mut() }
+        Self {
+            alloc_fn: None,
+            free_fn: None,
+            user_data: core::ptr::null_mut(),
+        }
     }
 }
 impl Default for Allocator {
@@ -509,6 +520,24 @@ pub enum LogItem {
     WgpuRequestAdapterStatusError,
     WgpuRequestAdapterStatusUnknown,
     WgpuCreateInstanceFailed,
+    VulkanAllocDeviceMemoryNoSuitableMemoryType,
+    VulkanAllocateMemoryFailed,
+    VulkanCreateInstanceFailed,
+    VulkanEnumeratePhysicalDevicesFailed,
+    VulkanNoPhysicalDevicesFound,
+    VulkanNoSuitablePhysicalDeviceFound,
+    VulkanCreateDeviceFailedExtensionNotPresent,
+    VulkanCreateDeviceFailedFeatureNotPresent,
+    VulkanCreateDeviceFailedInitializationFailed,
+    VulkanCreateDeviceFailedOther,
+    VulkanCreateSurfaceFailed,
+    VulkanCreateSwapchainFailed,
+    VulkanSwapchainCreateImageViewFailed,
+    VulkanSwapchainCreateImageFailed,
+    VulkanSwapchainAllocImageDeviceMemoryFailed,
+    VulkanSwapchainBindImageMemoryFailed,
+    VulkanAcquireNextImageFailed,
+    VulkanQueuePresentFailed,
     ImageDataSizeMismatch,
     DroppedFilePathTooLong,
     ClipboardStringTooBig,
@@ -523,28 +552,409 @@ impl Default for LogItem {
         Self::Ok
     }
 }
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u32)]
+pub enum PixelFormat {
+    Default,
+    None,
+    Rgba8,
+    Srgb8a8,
+    Bgra8,
+    Sbgra8,
+    Depth,
+    DepthStencil,
+}
+impl PixelFormat {
+    pub const fn new() -> Self {
+        Self::Default
+    }
+}
+impl Default for PixelFormat {
+    fn default() -> Self {
+        Self::Default
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct EnvironmentDefaults {
+    pub color_format: PixelFormat,
+    pub depth_format: PixelFormat,
+    pub sample_count: i32,
+}
+impl EnvironmentDefaults {
+    pub const fn new() -> Self {
+        Self {
+            color_format: PixelFormat::new(),
+            depth_format: PixelFormat::new(),
+            sample_count: 0,
+        }
+    }
+}
+impl Default for EnvironmentDefaults {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct MetalEnvironment {
+    pub device: *const core::ffi::c_void,
+}
+impl MetalEnvironment {
+    pub const fn new() -> Self {
+        Self {
+            device: core::ptr::null(),
+        }
+    }
+}
+impl Default for MetalEnvironment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11Environment {
+    pub device: *const core::ffi::c_void,
+    pub device_context: *const core::ffi::c_void,
+}
+impl D3d11Environment {
+    pub const fn new() -> Self {
+        Self {
+            device: core::ptr::null(),
+            device_context: core::ptr::null(),
+        }
+    }
+}
+impl Default for D3d11Environment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuEnvironment {
+    pub device: *const core::ffi::c_void,
+}
+impl WgpuEnvironment {
+    pub const fn new() -> Self {
+        Self {
+            device: core::ptr::null(),
+        }
+    }
+}
+impl Default for WgpuEnvironment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct VulkanEnvironment {
+    pub physical_device: *const core::ffi::c_void,
+    pub device: *const core::ffi::c_void,
+    pub queue: *const core::ffi::c_void,
+    pub queue_family_index: u32,
+}
+impl VulkanEnvironment {
+    pub const fn new() -> Self {
+        Self {
+            physical_device: core::ptr::null(),
+            device: core::ptr::null(),
+            queue: core::ptr::null(),
+            queue_family_index: 0,
+        }
+    }
+}
+impl Default for VulkanEnvironment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct Environment {
+    pub defaults: EnvironmentDefaults,
+    pub metal: MetalEnvironment,
+    pub d3d11: D3d11Environment,
+    pub wgpu: WgpuEnvironment,
+    pub vulkan: VulkanEnvironment,
+}
+impl Environment {
+    pub const fn new() -> Self {
+        Self {
+            defaults: EnvironmentDefaults::new(),
+            metal: MetalEnvironment::new(),
+            d3d11: D3d11Environment::new(),
+            wgpu: WgpuEnvironment::new(),
+            vulkan: VulkanEnvironment::new(),
+        }
+    }
+}
+impl Default for Environment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct MetalSwapchain {
+    pub current_drawable: *const core::ffi::c_void,
+    pub depth_stencil_texture: *const core::ffi::c_void,
+    pub msaa_color_texture: *const core::ffi::c_void,
+}
+impl MetalSwapchain {
+    pub const fn new() -> Self {
+        Self {
+            current_drawable: core::ptr::null(),
+            depth_stencil_texture: core::ptr::null(),
+            msaa_color_texture: core::ptr::null(),
+        }
+    }
+}
+impl Default for MetalSwapchain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct D3d11Swapchain {
+    pub render_view: *const core::ffi::c_void,
+    pub resolve_view: *const core::ffi::c_void,
+    pub depth_stencil_view: *const core::ffi::c_void,
+}
+impl D3d11Swapchain {
+    pub const fn new() -> Self {
+        Self {
+            render_view: core::ptr::null(),
+            resolve_view: core::ptr::null(),
+            depth_stencil_view: core::ptr::null(),
+        }
+    }
+}
+impl Default for D3d11Swapchain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WgpuSwapchain {
+    pub render_view: *const core::ffi::c_void,
+    pub resolve_view: *const core::ffi::c_void,
+    pub depth_stencil_view: *const core::ffi::c_void,
+}
+impl WgpuSwapchain {
+    pub const fn new() -> Self {
+        Self {
+            render_view: core::ptr::null(),
+            resolve_view: core::ptr::null(),
+            depth_stencil_view: core::ptr::null(),
+        }
+    }
+}
+impl Default for WgpuSwapchain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct VulkanSwapchain {
+    pub render_image: *const core::ffi::c_void,
+    pub render_view: *const core::ffi::c_void,
+    pub resolve_image: *const core::ffi::c_void,
+    pub resolve_view: *const core::ffi::c_void,
+    pub depth_stencil_image: *const core::ffi::c_void,
+    pub depth_stencil_view: *const core::ffi::c_void,
+    pub render_finished_semaphore: *const core::ffi::c_void,
+    pub present_complete_semaphore: *const core::ffi::c_void,
+}
+impl VulkanSwapchain {
+    pub const fn new() -> Self {
+        Self {
+            render_image: core::ptr::null(),
+            render_view: core::ptr::null(),
+            resolve_image: core::ptr::null(),
+            resolve_view: core::ptr::null(),
+            depth_stencil_image: core::ptr::null(),
+            depth_stencil_view: core::ptr::null(),
+            render_finished_semaphore: core::ptr::null(),
+            present_complete_semaphore: core::ptr::null(),
+        }
+    }
+}
+impl Default for VulkanSwapchain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlSwapchain {
+    pub framebuffer: u32,
+}
+impl GlSwapchain {
+    pub const fn new() -> Self {
+        Self {
+            framebuffer: 0,
+        }
+    }
+}
+impl Default for GlSwapchain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct Swapchain {
+    pub width: i32,
+    pub height: i32,
+    pub sample_count: i32,
+    pub color_format: PixelFormat,
+    pub depth_format: PixelFormat,
+    pub metal: MetalSwapchain,
+    pub d3d11: D3d11Swapchain,
+    pub wgpu: WgpuSwapchain,
+    pub vulkan: VulkanSwapchain,
+    pub gl: GlSwapchain,
+}
+impl Swapchain {
+    pub const fn new() -> Self {
+        Self {
+            width: 0,
+            height: 0,
+            sample_count: 0,
+            color_format: PixelFormat::new(),
+            depth_format: PixelFormat::new(),
+            metal: MetalSwapchain::new(),
+            d3d11: D3d11Swapchain::new(),
+            wgpu: WgpuSwapchain::new(),
+            vulkan: VulkanSwapchain::new(),
+            gl: GlSwapchain::new(),
+        }
+    }
+}
+impl Default for Swapchain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Logger {
-    pub func: Option<
-        extern "C" fn(
-            *const core::ffi::c_char,
-            u32,
-            u32,
-            *const core::ffi::c_char,
-            u32,
-            *const core::ffi::c_char,
-            *mut core::ffi::c_void,
-        ),
-    >,
+    pub func: Option<extern "C" fn(*const core::ffi::c_char, u32, u32, *const core::ffi::c_char, u32, *const core::ffi::c_char, *mut core::ffi::c_void)>,
     pub user_data: *mut core::ffi::c_void,
 }
 impl Logger {
     pub const fn new() -> Self {
-        Self { func: None, user_data: core::ptr::null_mut() }
+        Self {
+            func: None,
+            user_data: core::ptr::null_mut(),
+        }
     }
 }
 impl Default for Logger {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct GlDesc {
+    pub major_version: i32,
+    pub minor_version: i32,
+}
+impl GlDesc {
+    pub const fn new() -> Self {
+        Self {
+            major_version: 0,
+            minor_version: 0,
+        }
+    }
+}
+impl Default for GlDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct Win32Desc {
+    pub console_utf8: bool,
+    pub console_create: bool,
+    pub console_attach: bool,
+}
+impl Win32Desc {
+    pub const fn new() -> Self {
+        Self {
+            console_utf8: false,
+            console_create: false,
+            console_attach: false,
+        }
+    }
+}
+impl Default for Win32Desc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct Html5Desc {
+    pub canvas_selector: *const core::ffi::c_char,
+    pub canvas_resize: bool,
+    pub preserve_drawing_buffer: bool,
+    pub premultiplied_alpha: bool,
+    pub ask_leave_site: bool,
+    pub update_document_title: bool,
+    pub bubble_mouse_events: bool,
+    pub bubble_touch_events: bool,
+    pub bubble_wheel_events: bool,
+    pub bubble_key_events: bool,
+    pub bubble_char_events: bool,
+    pub use_emsc_set_main_loop: bool,
+    pub emsc_set_main_loop_simulate_infinite_loop: bool,
+}
+impl Html5Desc {
+    pub const fn new() -> Self {
+        Self {
+            canvas_selector: core::ptr::null(),
+            canvas_resize: false,
+            preserve_drawing_buffer: false,
+            premultiplied_alpha: false,
+            ask_leave_site: false,
+            update_document_title: false,
+            bubble_mouse_events: false,
+            bubble_touch_events: false,
+            bubble_wheel_events: false,
+            bubble_key_events: false,
+            bubble_char_events: false,
+            use_emsc_set_main_loop: false,
+            emsc_set_main_loop_simulate_infinite_loop: false,
+        }
+    }
+}
+impl Default for Html5Desc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct IosDesc {
+    pub keyboard_resizes_canvas: bool,
+}
+impl IosDesc {
+    pub const fn new() -> Self {
+        Self {
+            keyboard_resizes_canvas: false,
+        }
+    }
+}
+impl Default for IosDesc {
     fn default() -> Self {
         Self::new()
     }
@@ -577,25 +987,10 @@ pub struct Desc {
     pub icon: IconDesc,
     pub allocator: Allocator,
     pub logger: Logger,
-    pub gl_major_version: i32,
-    pub gl_minor_version: i32,
-    pub win32_console_utf8: bool,
-    pub win32_console_create: bool,
-    pub win32_console_attach: bool,
-    pub html5_canvas_selector: *const core::ffi::c_char,
-    pub html5_canvas_resize: bool,
-    pub html5_preserve_drawing_buffer: bool,
-    pub html5_premultiplied_alpha: bool,
-    pub html5_ask_leave_site: bool,
-    pub html5_update_document_title: bool,
-    pub html5_bubble_mouse_events: bool,
-    pub html5_bubble_touch_events: bool,
-    pub html5_bubble_wheel_events: bool,
-    pub html5_bubble_key_events: bool,
-    pub html5_bubble_char_events: bool,
-    pub html5_use_emsc_set_main_loop: bool,
-    pub html5_emsc_set_main_loop_simulate_infinite_loop: bool,
-    pub ios_keyboard_resizes_canvas: bool,
+    pub gl: GlDesc,
+    pub win32: Win32Desc,
+    pub html5: Html5Desc,
+    pub ios: IosDesc,
 }
 impl Desc {
     pub const fn new() -> Self {
@@ -625,25 +1020,10 @@ impl Desc {
             icon: IconDesc::new(),
             allocator: Allocator::new(),
             logger: Logger::new(),
-            gl_major_version: 0,
-            gl_minor_version: 0,
-            win32_console_utf8: false,
-            win32_console_create: false,
-            win32_console_attach: false,
-            html5_canvas_selector: core::ptr::null(),
-            html5_canvas_resize: false,
-            html5_preserve_drawing_buffer: false,
-            html5_premultiplied_alpha: false,
-            html5_ask_leave_site: false,
-            html5_update_document_title: false,
-            html5_bubble_mouse_events: false,
-            html5_bubble_touch_events: false,
-            html5_bubble_wheel_events: false,
-            html5_bubble_key_events: false,
-            html5_bubble_char_events: false,
-            html5_use_emsc_set_main_loop: false,
-            html5_emsc_set_main_loop_simulate_infinite_loop: false,
-            ios_keyboard_resizes_canvas: false,
+            gl: GlDesc::new(),
+            win32: Win32Desc::new(),
+            html5: Html5Desc::new(),
+            ios: IosDesc::new(),
         }
     }
 }
@@ -770,8 +1150,8 @@ pub mod ffi {
         pub fn sapp_widthf() -> f32;
         pub fn sapp_height() -> i32;
         pub fn sapp_heightf() -> f32;
-        pub fn sapp_color_format() -> i32;
-        pub fn sapp_depth_format() -> i32;
+        pub fn sapp_color_format() -> PixelFormat;
+        pub fn sapp_depth_format() -> PixelFormat;
         pub fn sapp_sample_count() -> i32;
         pub fn sapp_high_dpi() -> bool;
         pub fn sapp_dpi_scale() -> f32;
@@ -802,29 +1182,17 @@ pub mod ffi {
         pub fn sapp_get_num_dropped_files() -> i32;
         pub fn sapp_get_dropped_file_path(index: i32) -> *const core::ffi::c_char;
         pub fn sapp_run(desc: *const Desc);
+        pub fn sapp_get_environment() -> Environment;
+        pub fn sapp_get_swapchain() -> Swapchain;
         pub fn sapp_egl_get_display() -> *const core::ffi::c_void;
         pub fn sapp_egl_get_context() -> *const core::ffi::c_void;
         pub fn sapp_html5_ask_leave_site(ask: bool);
         pub fn sapp_html5_get_dropped_file_size(index: i32) -> u32;
         pub fn sapp_html5_fetch_dropped_file(request: *const Html5FetchRequest);
-        pub fn sapp_metal_get_device() -> *const core::ffi::c_void;
-        pub fn sapp_metal_get_current_drawable() -> *const core::ffi::c_void;
-        pub fn sapp_metal_get_depth_stencil_texture() -> *const core::ffi::c_void;
-        pub fn sapp_metal_get_msaa_color_texture() -> *const core::ffi::c_void;
         pub fn sapp_macos_get_window() -> *const core::ffi::c_void;
         pub fn sapp_ios_get_window() -> *const core::ffi::c_void;
-        pub fn sapp_d3d11_get_device() -> *const core::ffi::c_void;
-        pub fn sapp_d3d11_get_device_context() -> *const core::ffi::c_void;
         pub fn sapp_d3d11_get_swap_chain() -> *const core::ffi::c_void;
-        pub fn sapp_d3d11_get_render_view() -> *const core::ffi::c_void;
-        pub fn sapp_d3d11_get_resolve_view() -> *const core::ffi::c_void;
-        pub fn sapp_d3d11_get_depth_stencil_view() -> *const core::ffi::c_void;
         pub fn sapp_win32_get_hwnd() -> *const core::ffi::c_void;
-        pub fn sapp_wgpu_get_device() -> *const core::ffi::c_void;
-        pub fn sapp_wgpu_get_render_view() -> *const core::ffi::c_void;
-        pub fn sapp_wgpu_get_resolve_view() -> *const core::ffi::c_void;
-        pub fn sapp_wgpu_get_depth_stencil_view() -> *const core::ffi::c_void;
-        pub fn sapp_gl_get_framebuffer() -> u32;
         pub fn sapp_gl_get_major_version() -> i32;
         pub fn sapp_gl_get_minor_version() -> i32;
         pub fn sapp_gl_is_gles() -> bool;
@@ -835,267 +1203,327 @@ pub mod ffi {
 }
 #[inline]
 pub fn isvalid() -> bool {
-    unsafe { ffi::sapp_isvalid() }
+    unsafe {
+        ffi::sapp_isvalid()
+    }
 }
 #[inline]
 pub fn width() -> i32 {
-    unsafe { ffi::sapp_width() }
+    unsafe {
+        ffi::sapp_width()
+    }
 }
 #[inline]
 pub fn widthf() -> f32 {
-    unsafe { ffi::sapp_widthf() }
+    unsafe {
+        ffi::sapp_widthf()
+    }
 }
 #[inline]
 pub fn height() -> i32 {
-    unsafe { ffi::sapp_height() }
+    unsafe {
+        ffi::sapp_height()
+    }
 }
 #[inline]
 pub fn heightf() -> f32 {
-    unsafe { ffi::sapp_heightf() }
+    unsafe {
+        ffi::sapp_heightf()
+    }
 }
 #[inline]
-pub fn color_format() -> i32 {
-    unsafe { ffi::sapp_color_format() }
+pub fn color_format() -> PixelFormat {
+    unsafe {
+        ffi::sapp_color_format()
+    }
 }
 #[inline]
-pub fn depth_format() -> i32 {
-    unsafe { ffi::sapp_depth_format() }
+pub fn depth_format() -> PixelFormat {
+    unsafe {
+        ffi::sapp_depth_format()
+    }
 }
 #[inline]
 pub fn sample_count() -> i32 {
-    unsafe { ffi::sapp_sample_count() }
+    unsafe {
+        ffi::sapp_sample_count()
+    }
 }
 #[inline]
 pub fn high_dpi() -> bool {
-    unsafe { ffi::sapp_high_dpi() }
+    unsafe {
+        ffi::sapp_high_dpi()
+    }
 }
 #[inline]
 pub fn dpi_scale() -> f32 {
-    unsafe { ffi::sapp_dpi_scale() }
+    unsafe {
+        ffi::sapp_dpi_scale()
+    }
 }
 #[inline]
 pub fn show_keyboard(show: bool) {
-    unsafe { ffi::sapp_show_keyboard(show) }
+    unsafe {
+        ffi::sapp_show_keyboard(show)
+    }
 }
 #[inline]
 pub fn keyboard_shown() -> bool {
-    unsafe { ffi::sapp_keyboard_shown() }
+    unsafe {
+        ffi::sapp_keyboard_shown()
+    }
 }
 #[inline]
 pub fn is_fullscreen() -> bool {
-    unsafe { ffi::sapp_is_fullscreen() }
+    unsafe {
+        ffi::sapp_is_fullscreen()
+    }
 }
 #[inline]
 pub fn toggle_fullscreen() {
-    unsafe { ffi::sapp_toggle_fullscreen() }
+    unsafe {
+        ffi::sapp_toggle_fullscreen()
+    }
 }
 #[inline]
 pub fn show_mouse(show: bool) {
-    unsafe { ffi::sapp_show_mouse(show) }
+    unsafe {
+        ffi::sapp_show_mouse(show)
+    }
 }
 #[inline]
 pub fn mouse_shown() -> bool {
-    unsafe { ffi::sapp_mouse_shown() }
+    unsafe {
+        ffi::sapp_mouse_shown()
+    }
 }
 #[inline]
 pub fn lock_mouse(lock: bool) {
-    unsafe { ffi::sapp_lock_mouse(lock) }
+    unsafe {
+        ffi::sapp_lock_mouse(lock)
+    }
 }
 #[inline]
 pub fn mouse_locked() -> bool {
-    unsafe { ffi::sapp_mouse_locked() }
+    unsafe {
+        ffi::sapp_mouse_locked()
+    }
 }
 #[inline]
 pub fn set_mouse_cursor(cursor: MouseCursor) {
-    unsafe { ffi::sapp_set_mouse_cursor(cursor) }
+    unsafe {
+        ffi::sapp_set_mouse_cursor(cursor)
+    }
 }
 #[inline]
 pub fn get_mouse_cursor() -> MouseCursor {
-    unsafe { ffi::sapp_get_mouse_cursor() }
+    unsafe {
+        ffi::sapp_get_mouse_cursor()
+    }
 }
 #[inline]
 pub fn bind_mouse_cursor_image(cursor: MouseCursor, desc: &ImageDesc) -> MouseCursor {
-    unsafe { ffi::sapp_bind_mouse_cursor_image(cursor, desc) }
+    unsafe {
+        ffi::sapp_bind_mouse_cursor_image(cursor, desc)
+    }
 }
 #[inline]
 pub fn unbind_mouse_cursor_image(cursor: MouseCursor) {
-    unsafe { ffi::sapp_unbind_mouse_cursor_image(cursor) }
+    unsafe {
+        ffi::sapp_unbind_mouse_cursor_image(cursor)
+    }
 }
 #[inline]
 pub fn userdata() -> *mut core::ffi::c_void {
-    unsafe { ffi::sapp_userdata() }
+    unsafe {
+        ffi::sapp_userdata()
+    }
 }
 #[inline]
 pub fn query_desc() -> Desc {
-    unsafe { ffi::sapp_query_desc() }
+    unsafe {
+        ffi::sapp_query_desc()
+    }
 }
 #[inline]
 pub fn request_quit() {
-    unsafe { ffi::sapp_request_quit() }
+    unsafe {
+        ffi::sapp_request_quit()
+    }
 }
 #[inline]
 pub fn cancel_quit() {
-    unsafe { ffi::sapp_cancel_quit() }
+    unsafe {
+        ffi::sapp_cancel_quit()
+    }
 }
 #[inline]
 pub fn quit() {
-    unsafe { ffi::sapp_quit() }
+    unsafe {
+        ffi::sapp_quit()
+    }
 }
 #[inline]
 pub fn consume_event() {
-    unsafe { ffi::sapp_consume_event() }
+    unsafe {
+        ffi::sapp_consume_event()
+    }
 }
 #[inline]
 pub fn frame_count() -> u64 {
-    unsafe { ffi::sapp_frame_count() }
+    unsafe {
+        ffi::sapp_frame_count()
+    }
 }
 #[inline]
 pub fn frame_duration() -> f64 {
-    unsafe { ffi::sapp_frame_duration() }
+    unsafe {
+        ffi::sapp_frame_duration()
+    }
 }
 #[inline]
 pub fn set_clipboard_string(str: &str) {
-    let tmp_0 = std::ffi::CString::new(str).unwrap();
-    unsafe { ffi::sapp_set_clipboard_string(tmp_0.as_ptr()) }
+        let tmp_0 = std::ffi::CString::new(str).unwrap();
+    unsafe {
+        ffi::sapp_set_clipboard_string(tmp_0.as_ptr())
+    }
 }
 #[inline]
 pub fn get_clipboard_string() -> &'static str {
-    unsafe { c_char_ptr_to_rust_str(ffi::sapp_get_clipboard_string()) }
+    unsafe {
+        c_char_ptr_to_rust_str(ffi::sapp_get_clipboard_string())
+    }
 }
 #[inline]
 pub fn set_window_title(str: &str) {
-    let tmp_0 = std::ffi::CString::new(str).unwrap();
-    unsafe { ffi::sapp_set_window_title(tmp_0.as_ptr()) }
+        let tmp_0 = std::ffi::CString::new(str).unwrap();
+    unsafe {
+        ffi::sapp_set_window_title(tmp_0.as_ptr())
+    }
 }
 #[inline]
 pub fn set_icon(icon_desc: &IconDesc) {
-    unsafe { ffi::sapp_set_icon(icon_desc) }
+    unsafe {
+        ffi::sapp_set_icon(icon_desc)
+    }
 }
 #[inline]
 pub fn get_num_dropped_files() -> i32 {
-    unsafe { ffi::sapp_get_num_dropped_files() }
+    unsafe {
+        ffi::sapp_get_num_dropped_files()
+    }
 }
 #[inline]
 pub fn get_dropped_file_path(index: i32) -> &'static str {
-    unsafe { c_char_ptr_to_rust_str(ffi::sapp_get_dropped_file_path(index)) }
+    unsafe {
+        c_char_ptr_to_rust_str(ffi::sapp_get_dropped_file_path(index))
+    }
 }
 #[inline]
 pub fn run(desc: &Desc) {
-    unsafe { ffi::sapp_run(desc) }
+    unsafe {
+        ffi::sapp_run(desc)
+    }
+}
+#[inline]
+pub fn get_environment() -> Environment {
+    unsafe {
+        ffi::sapp_get_environment()
+    }
+}
+#[inline]
+pub fn get_swapchain() -> Swapchain {
+    unsafe {
+        ffi::sapp_get_swapchain()
+    }
 }
 #[inline]
 pub fn egl_get_display() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_egl_get_display() }
+    unsafe {
+        ffi::sapp_egl_get_display()
+    }
 }
 #[inline]
 pub fn egl_get_context() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_egl_get_context() }
+    unsafe {
+        ffi::sapp_egl_get_context()
+    }
 }
 #[inline]
 pub fn html5_ask_leave_site(ask: bool) {
-    unsafe { ffi::sapp_html5_ask_leave_site(ask) }
+    unsafe {
+        ffi::sapp_html5_ask_leave_site(ask)
+    }
 }
 #[inline]
 pub fn html5_get_dropped_file_size(index: i32) -> u32 {
-    unsafe { ffi::sapp_html5_get_dropped_file_size(index) }
+    unsafe {
+        ffi::sapp_html5_get_dropped_file_size(index)
+    }
 }
 #[inline]
 pub fn html5_fetch_dropped_file(request: &Html5FetchRequest) {
-    unsafe { ffi::sapp_html5_fetch_dropped_file(request) }
-}
-#[inline]
-pub fn metal_get_device() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_metal_get_device() }
-}
-#[inline]
-pub fn metal_get_current_drawable() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_metal_get_current_drawable() }
-}
-#[inline]
-pub fn metal_get_depth_stencil_texture() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_metal_get_depth_stencil_texture() }
-}
-#[inline]
-pub fn metal_get_msaa_color_texture() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_metal_get_msaa_color_texture() }
+    unsafe {
+        ffi::sapp_html5_fetch_dropped_file(request)
+    }
 }
 #[inline]
 pub fn macos_get_window() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_macos_get_window() }
+    unsafe {
+        ffi::sapp_macos_get_window()
+    }
 }
 #[inline]
 pub fn ios_get_window() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_ios_get_window() }
-}
-#[inline]
-pub fn d3d11_get_device() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_d3d11_get_device() }
-}
-#[inline]
-pub fn d3d11_get_device_context() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_d3d11_get_device_context() }
+    unsafe {
+        ffi::sapp_ios_get_window()
+    }
 }
 #[inline]
 pub fn d3d11_get_swap_chain() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_d3d11_get_swap_chain() }
-}
-#[inline]
-pub fn d3d11_get_render_view() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_d3d11_get_render_view() }
-}
-#[inline]
-pub fn d3d11_get_resolve_view() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_d3d11_get_resolve_view() }
-}
-#[inline]
-pub fn d3d11_get_depth_stencil_view() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_d3d11_get_depth_stencil_view() }
+    unsafe {
+        ffi::sapp_d3d11_get_swap_chain()
+    }
 }
 #[inline]
 pub fn win32_get_hwnd() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_win32_get_hwnd() }
-}
-#[inline]
-pub fn wgpu_get_device() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_wgpu_get_device() }
-}
-#[inline]
-pub fn wgpu_get_render_view() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_wgpu_get_render_view() }
-}
-#[inline]
-pub fn wgpu_get_resolve_view() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_wgpu_get_resolve_view() }
-}
-#[inline]
-pub fn wgpu_get_depth_stencil_view() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_wgpu_get_depth_stencil_view() }
-}
-#[inline]
-pub fn gl_get_framebuffer() -> u32 {
-    unsafe { ffi::sapp_gl_get_framebuffer() }
+    unsafe {
+        ffi::sapp_win32_get_hwnd()
+    }
 }
 #[inline]
 pub fn gl_get_major_version() -> i32 {
-    unsafe { ffi::sapp_gl_get_major_version() }
+    unsafe {
+        ffi::sapp_gl_get_major_version()
+    }
 }
 #[inline]
 pub fn gl_get_minor_version() -> i32 {
-    unsafe { ffi::sapp_gl_get_minor_version() }
+    unsafe {
+        ffi::sapp_gl_get_minor_version()
+    }
 }
 #[inline]
 pub fn gl_is_gles() -> bool {
-    unsafe { ffi::sapp_gl_is_gles() }
+    unsafe {
+        ffi::sapp_gl_is_gles()
+    }
 }
 #[inline]
 pub fn x11_get_window() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_x11_get_window() }
+    unsafe {
+        ffi::sapp_x11_get_window()
+    }
 }
 #[inline]
 pub fn x11_get_display() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_x11_get_display() }
+    unsafe {
+        ffi::sapp_x11_get_display()
+    }
 }
 #[inline]
 pub fn android_get_native_activity() -> *const core::ffi::c_void {
-    unsafe { ffi::sapp_android_get_native_activity() }
+    unsafe {
+        ffi::sapp_android_get_native_activity()
+    }
 }
