@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+
 /// Helper function to convert a C string to a Rust string slice
 #[inline]
 fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str {
@@ -28,41 +29,61 @@ pub mod ffi {
 }
 #[inline]
 pub fn setup() {
-    unsafe { ffi::stm_setup() }
+    unsafe {
+        ffi::stm_setup()
+    }
 }
 #[inline]
 pub fn now() -> u64 {
-    unsafe { ffi::stm_now() }
+    unsafe {
+        ffi::stm_now()
+    }
 }
 #[inline]
 pub fn diff(new_ticks: u64, old_ticks: u64) -> u64 {
-    unsafe { ffi::stm_diff(new_ticks, old_ticks) }
+    unsafe {
+        ffi::stm_diff(new_ticks, old_ticks)
+    }
 }
 #[inline]
 pub fn since(start_ticks: u64) -> u64 {
-    unsafe { ffi::stm_since(start_ticks) }
+    unsafe {
+        ffi::stm_since(start_ticks)
+    }
 }
 #[inline]
 pub fn laptime(last_time: &mut u64) -> u64 {
-    unsafe { ffi::stm_laptime(last_time) }
+    unsafe {
+        ffi::stm_laptime(last_time)
+    }
 }
 #[inline]
 pub fn round_to_common_refresh_rate(frame_ticks: u64) -> u64 {
-    unsafe { ffi::stm_round_to_common_refresh_rate(frame_ticks) }
+    unsafe {
+        ffi::stm_round_to_common_refresh_rate(frame_ticks)
+    }
 }
 #[inline]
 pub fn sec(ticks: u64) -> f64 {
-    unsafe { ffi::stm_sec(ticks) }
+    unsafe {
+        ffi::stm_sec(ticks)
+    }
 }
 #[inline]
 pub fn ms(ticks: u64) -> f64 {
-    unsafe { ffi::stm_ms(ticks) }
+    unsafe {
+        ffi::stm_ms(ticks)
+    }
 }
 #[inline]
 pub fn us(ticks: u64) -> f64 {
-    unsafe { ffi::stm_us(ticks) }
+    unsafe {
+        ffi::stm_us(ticks)
+    }
 }
 #[inline]
 pub fn ns(ticks: u64) -> f64 {
-    unsafe { ffi::stm_ns(ticks) }
+    unsafe {
+        ffi::stm_ns(ticks)
+    }
 }
