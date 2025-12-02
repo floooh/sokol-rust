@@ -36,15 +36,22 @@ impl Default for LogItem {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Logger {
-    pub func: Option<extern "C" fn(*const core::ffi::c_char, u32, u32, *const core::ffi::c_char, u32, *const core::ffi::c_char, *mut core::ffi::c_void)>,
+    pub func: Option<
+        extern "C" fn(
+            *const core::ffi::c_char,
+            u32,
+            u32,
+            *const core::ffi::c_char,
+            u32,
+            *const core::ffi::c_char,
+            *mut core::ffi::c_void,
+        ),
+    >,
     pub user_data: *mut core::ffi::c_void,
 }
 impl Logger {
     pub const fn new() -> Self {
-        Self {
-            func: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { func: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Logger {
@@ -59,9 +66,7 @@ pub struct Pipeline {
 }
 impl Pipeline {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Pipeline {
@@ -76,9 +81,7 @@ pub struct Context {
 }
 impl Context {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Context {
@@ -149,11 +152,7 @@ pub struct Allocator {
 }
 impl Allocator {
     pub const fn new() -> Self {
-        Self {
-            alloc_fn: None,
-            free_fn: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { alloc_fn: None, free_fn: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Allocator {
@@ -247,7 +246,17 @@ pub mod ffi {
         pub fn sgl_frustum(l: f32, r: f32, b: f32, t: f32, n: f32, f: f32);
         pub fn sgl_ortho(l: f32, r: f32, b: f32, t: f32, n: f32, f: f32);
         pub fn sgl_perspective(fov_y: f32, aspect: f32, z_near: f32, z_far: f32);
-        pub fn sgl_lookat(eye_x: f32, eye_y: f32, eye_z: f32, center_x: f32, center_y: f32, center_z: f32, up_x: f32, up_y: f32, up_z: f32);
+        pub fn sgl_lookat(
+            eye_x: f32,
+            eye_y: f32,
+            eye_z: f32,
+            center_x: f32,
+            center_y: f32,
+            center_z: f32,
+            up_x: f32,
+            up_y: f32,
+            up_z: f32,
+        );
         pub fn sgl_push_matrix();
         pub fn sgl_pop_matrix();
         pub fn sgl_t2f(u: f32, v: f32);
@@ -292,529 +301,363 @@ pub mod ffi {
 }
 #[inline]
 pub fn setup(desc: &Desc) {
-    unsafe {
-        ffi::sgl_setup(desc)
-    }
+    unsafe { ffi::sgl_setup(desc) }
 }
 #[inline]
 pub fn shutdown() {
-    unsafe {
-        ffi::sgl_shutdown()
-    }
+    unsafe { ffi::sgl_shutdown() }
 }
 #[inline]
 pub fn rad(deg: f32) -> f32 {
-    unsafe {
-        ffi::sgl_rad(deg)
-    }
+    unsafe { ffi::sgl_rad(deg) }
 }
 #[inline]
 pub fn deg(rad: f32) -> f32 {
-    unsafe {
-        ffi::sgl_deg(rad)
-    }
+    unsafe { ffi::sgl_deg(rad) }
 }
 #[inline]
 pub fn error() -> Error {
-    unsafe {
-        ffi::sgl_error()
-    }
+    unsafe { ffi::sgl_error() }
 }
 #[inline]
 pub fn context_error(ctx: Context) -> Error {
-    unsafe {
-        ffi::sgl_context_error(ctx)
-    }
+    unsafe { ffi::sgl_context_error(ctx) }
 }
 #[inline]
 pub fn make_context(desc: &ContextDesc) -> Context {
-    unsafe {
-        ffi::sgl_make_context(desc)
-    }
+    unsafe { ffi::sgl_make_context(desc) }
 }
 #[inline]
 pub fn destroy_context(ctx: Context) {
-    unsafe {
-        ffi::sgl_destroy_context(ctx)
-    }
+    unsafe { ffi::sgl_destroy_context(ctx) }
 }
 #[inline]
 pub fn set_context(ctx: Context) {
-    unsafe {
-        ffi::sgl_set_context(ctx)
-    }
+    unsafe { ffi::sgl_set_context(ctx) }
 }
 #[inline]
 pub fn get_context() -> Context {
-    unsafe {
-        ffi::sgl_get_context()
-    }
+    unsafe { ffi::sgl_get_context() }
 }
 #[inline]
 pub fn default_context() -> Context {
-    unsafe {
-        ffi::sgl_default_context()
-    }
+    unsafe { ffi::sgl_default_context() }
 }
 #[inline]
 pub fn num_vertices() -> i32 {
-    unsafe {
-        ffi::sgl_num_vertices()
-    }
+    unsafe { ffi::sgl_num_vertices() }
 }
 #[inline]
 pub fn num_commands() -> i32 {
-    unsafe {
-        ffi::sgl_num_commands()
-    }
+    unsafe { ffi::sgl_num_commands() }
 }
 #[inline]
 pub fn draw() {
-    unsafe {
-        ffi::sgl_draw()
-    }
+    unsafe { ffi::sgl_draw() }
 }
 #[inline]
 pub fn context_draw(ctx: Context) {
-    unsafe {
-        ffi::sgl_context_draw(ctx)
-    }
+    unsafe { ffi::sgl_context_draw(ctx) }
 }
 #[inline]
 pub fn draw_layer(layer_id: i32) {
-    unsafe {
-        ffi::sgl_draw_layer(layer_id)
-    }
+    unsafe { ffi::sgl_draw_layer(layer_id) }
 }
 #[inline]
 pub fn context_draw_layer(ctx: Context, layer_id: i32) {
-    unsafe {
-        ffi::sgl_context_draw_layer(ctx, layer_id)
-    }
+    unsafe { ffi::sgl_context_draw_layer(ctx, layer_id) }
 }
 #[inline]
 pub fn make_pipeline(desc: &sg::PipelineDesc) -> Pipeline {
-    unsafe {
-        ffi::sgl_make_pipeline(desc)
-    }
+    unsafe { ffi::sgl_make_pipeline(desc) }
 }
 #[inline]
 pub fn context_make_pipeline(ctx: Context, desc: &sg::PipelineDesc) -> Pipeline {
-    unsafe {
-        ffi::sgl_context_make_pipeline(ctx, desc)
-    }
+    unsafe { ffi::sgl_context_make_pipeline(ctx, desc) }
 }
 #[inline]
 pub fn destroy_pipeline(pip: Pipeline) {
-    unsafe {
-        ffi::sgl_destroy_pipeline(pip)
-    }
+    unsafe { ffi::sgl_destroy_pipeline(pip) }
 }
 #[inline]
 pub fn defaults() {
-    unsafe {
-        ffi::sgl_defaults()
-    }
+    unsafe { ffi::sgl_defaults() }
 }
 #[inline]
 pub fn viewport(x: i32, y: i32, w: i32, h: i32, origin_top_left: bool) {
-    unsafe {
-        ffi::sgl_viewport(x, y, w, h, origin_top_left)
-    }
+    unsafe { ffi::sgl_viewport(x, y, w, h, origin_top_left) }
 }
 #[inline]
 pub fn viewportf(x: f32, y: f32, w: f32, h: f32, origin_top_left: bool) {
-    unsafe {
-        ffi::sgl_viewportf(x, y, w, h, origin_top_left)
-    }
+    unsafe { ffi::sgl_viewportf(x, y, w, h, origin_top_left) }
 }
 #[inline]
 pub fn scissor_rect(x: i32, y: i32, w: i32, h: i32, origin_top_left: bool) {
-    unsafe {
-        ffi::sgl_scissor_rect(x, y, w, h, origin_top_left)
-    }
+    unsafe { ffi::sgl_scissor_rect(x, y, w, h, origin_top_left) }
 }
 #[inline]
 pub fn scissor_rectf(x: f32, y: f32, w: f32, h: f32, origin_top_left: bool) {
-    unsafe {
-        ffi::sgl_scissor_rectf(x, y, w, h, origin_top_left)
-    }
+    unsafe { ffi::sgl_scissor_rectf(x, y, w, h, origin_top_left) }
 }
 #[inline]
 pub fn enable_texture() {
-    unsafe {
-        ffi::sgl_enable_texture()
-    }
+    unsafe { ffi::sgl_enable_texture() }
 }
 #[inline]
 pub fn disable_texture() {
-    unsafe {
-        ffi::sgl_disable_texture()
-    }
+    unsafe { ffi::sgl_disable_texture() }
 }
 #[inline]
 pub fn texture(tex_view: sg::View, smp: sg::Sampler) {
-    unsafe {
-        ffi::sgl_texture(tex_view, smp)
-    }
+    unsafe { ffi::sgl_texture(tex_view, smp) }
 }
 #[inline]
 pub fn layer(layer_id: i32) {
-    unsafe {
-        ffi::sgl_layer(layer_id)
-    }
+    unsafe { ffi::sgl_layer(layer_id) }
 }
 #[inline]
 pub fn load_default_pipeline() {
-    unsafe {
-        ffi::sgl_load_default_pipeline()
-    }
+    unsafe { ffi::sgl_load_default_pipeline() }
 }
 #[inline]
 pub fn load_pipeline(pip: Pipeline) {
-    unsafe {
-        ffi::sgl_load_pipeline(pip)
-    }
+    unsafe { ffi::sgl_load_pipeline(pip) }
 }
 #[inline]
 pub fn push_pipeline() {
-    unsafe {
-        ffi::sgl_push_pipeline()
-    }
+    unsafe { ffi::sgl_push_pipeline() }
 }
 #[inline]
 pub fn pop_pipeline() {
-    unsafe {
-        ffi::sgl_pop_pipeline()
-    }
+    unsafe { ffi::sgl_pop_pipeline() }
 }
 #[inline]
 pub fn matrix_mode_modelview() {
-    unsafe {
-        ffi::sgl_matrix_mode_modelview()
-    }
+    unsafe { ffi::sgl_matrix_mode_modelview() }
 }
 #[inline]
 pub fn matrix_mode_projection() {
-    unsafe {
-        ffi::sgl_matrix_mode_projection()
-    }
+    unsafe { ffi::sgl_matrix_mode_projection() }
 }
 #[inline]
 pub fn matrix_mode_texture() {
-    unsafe {
-        ffi::sgl_matrix_mode_texture()
-    }
+    unsafe { ffi::sgl_matrix_mode_texture() }
 }
 #[inline]
 pub fn load_identity() {
-    unsafe {
-        ffi::sgl_load_identity()
-    }
+    unsafe { ffi::sgl_load_identity() }
 }
 #[inline]
 pub fn load_matrix(m: &f32) {
-    unsafe {
-        ffi::sgl_load_matrix(m)
-    }
+    unsafe { ffi::sgl_load_matrix(m) }
 }
 #[inline]
 pub fn load_transpose_matrix(m: &f32) {
-    unsafe {
-        ffi::sgl_load_transpose_matrix(m)
-    }
+    unsafe { ffi::sgl_load_transpose_matrix(m) }
 }
 #[inline]
 pub fn mult_matrix(m: &f32) {
-    unsafe {
-        ffi::sgl_mult_matrix(m)
-    }
+    unsafe { ffi::sgl_mult_matrix(m) }
 }
 #[inline]
 pub fn mult_transpose_matrix(m: &f32) {
-    unsafe {
-        ffi::sgl_mult_transpose_matrix(m)
-    }
+    unsafe { ffi::sgl_mult_transpose_matrix(m) }
 }
 #[inline]
 pub fn rotate(angle_rad: f32, x: f32, y: f32, z: f32) {
-    unsafe {
-        ffi::sgl_rotate(angle_rad, x, y, z)
-    }
+    unsafe { ffi::sgl_rotate(angle_rad, x, y, z) }
 }
 #[inline]
 pub fn scale(x: f32, y: f32, z: f32) {
-    unsafe {
-        ffi::sgl_scale(x, y, z)
-    }
+    unsafe { ffi::sgl_scale(x, y, z) }
 }
 #[inline]
 pub fn translate(x: f32, y: f32, z: f32) {
-    unsafe {
-        ffi::sgl_translate(x, y, z)
-    }
+    unsafe { ffi::sgl_translate(x, y, z) }
 }
 #[inline]
 pub fn frustum(l: f32, r: f32, b: f32, t: f32, n: f32, f: f32) {
-    unsafe {
-        ffi::sgl_frustum(l, r, b, t, n, f)
-    }
+    unsafe { ffi::sgl_frustum(l, r, b, t, n, f) }
 }
 #[inline]
 pub fn ortho(l: f32, r: f32, b: f32, t: f32, n: f32, f: f32) {
-    unsafe {
-        ffi::sgl_ortho(l, r, b, t, n, f)
-    }
+    unsafe { ffi::sgl_ortho(l, r, b, t, n, f) }
 }
 #[inline]
 pub fn perspective(fov_y: f32, aspect: f32, z_near: f32, z_far: f32) {
-    unsafe {
-        ffi::sgl_perspective(fov_y, aspect, z_near, z_far)
-    }
+    unsafe { ffi::sgl_perspective(fov_y, aspect, z_near, z_far) }
 }
 #[inline]
-pub fn lookat(eye_x: f32, eye_y: f32, eye_z: f32, center_x: f32, center_y: f32, center_z: f32, up_x: f32, up_y: f32, up_z: f32) {
-    unsafe {
-        ffi::sgl_lookat(eye_x, eye_y, eye_z, center_x, center_y, center_z, up_x, up_y, up_z)
-    }
+pub fn lookat(
+    eye_x: f32,
+    eye_y: f32,
+    eye_z: f32,
+    center_x: f32,
+    center_y: f32,
+    center_z: f32,
+    up_x: f32,
+    up_y: f32,
+    up_z: f32,
+) {
+    unsafe { ffi::sgl_lookat(eye_x, eye_y, eye_z, center_x, center_y, center_z, up_x, up_y, up_z) }
 }
 #[inline]
 pub fn push_matrix() {
-    unsafe {
-        ffi::sgl_push_matrix()
-    }
+    unsafe { ffi::sgl_push_matrix() }
 }
 #[inline]
 pub fn pop_matrix() {
-    unsafe {
-        ffi::sgl_pop_matrix()
-    }
+    unsafe { ffi::sgl_pop_matrix() }
 }
 #[inline]
 pub fn t2f(u: f32, v: f32) {
-    unsafe {
-        ffi::sgl_t2f(u, v)
-    }
+    unsafe { ffi::sgl_t2f(u, v) }
 }
 #[inline]
 pub fn c3f(r: f32, g: f32, b: f32) {
-    unsafe {
-        ffi::sgl_c3f(r, g, b)
-    }
+    unsafe { ffi::sgl_c3f(r, g, b) }
 }
 #[inline]
 pub fn c4f(r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        ffi::sgl_c4f(r, g, b, a)
-    }
+    unsafe { ffi::sgl_c4f(r, g, b, a) }
 }
 #[inline]
 pub fn c3b(r: u8, g: u8, b: u8) {
-    unsafe {
-        ffi::sgl_c3b(r, g, b)
-    }
+    unsafe { ffi::sgl_c3b(r, g, b) }
 }
 #[inline]
 pub fn c4b(r: u8, g: u8, b: u8, a: u8) {
-    unsafe {
-        ffi::sgl_c4b(r, g, b, a)
-    }
+    unsafe { ffi::sgl_c4b(r, g, b, a) }
 }
 #[inline]
 pub fn c1i(rgba: u32) {
-    unsafe {
-        ffi::sgl_c1i(rgba)
-    }
+    unsafe { ffi::sgl_c1i(rgba) }
 }
 #[inline]
 pub fn point_size(s: f32) {
-    unsafe {
-        ffi::sgl_point_size(s)
-    }
+    unsafe { ffi::sgl_point_size(s) }
 }
 #[inline]
 pub fn begin_points() {
-    unsafe {
-        ffi::sgl_begin_points()
-    }
+    unsafe { ffi::sgl_begin_points() }
 }
 #[inline]
 pub fn begin_lines() {
-    unsafe {
-        ffi::sgl_begin_lines()
-    }
+    unsafe { ffi::sgl_begin_lines() }
 }
 #[inline]
 pub fn begin_line_strip() {
-    unsafe {
-        ffi::sgl_begin_line_strip()
-    }
+    unsafe { ffi::sgl_begin_line_strip() }
 }
 #[inline]
 pub fn begin_triangles() {
-    unsafe {
-        ffi::sgl_begin_triangles()
-    }
+    unsafe { ffi::sgl_begin_triangles() }
 }
 #[inline]
 pub fn begin_triangle_strip() {
-    unsafe {
-        ffi::sgl_begin_triangle_strip()
-    }
+    unsafe { ffi::sgl_begin_triangle_strip() }
 }
 #[inline]
 pub fn begin_quads() {
-    unsafe {
-        ffi::sgl_begin_quads()
-    }
+    unsafe { ffi::sgl_begin_quads() }
 }
 #[inline]
 pub fn v2f(x: f32, y: f32) {
-    unsafe {
-        ffi::sgl_v2f(x, y)
-    }
+    unsafe { ffi::sgl_v2f(x, y) }
 }
 #[inline]
 pub fn v3f(x: f32, y: f32, z: f32) {
-    unsafe {
-        ffi::sgl_v3f(x, y, z)
-    }
+    unsafe { ffi::sgl_v3f(x, y, z) }
 }
 #[inline]
 pub fn v2f_t2f(x: f32, y: f32, u: f32, v: f32) {
-    unsafe {
-        ffi::sgl_v2f_t2f(x, y, u, v)
-    }
+    unsafe { ffi::sgl_v2f_t2f(x, y, u, v) }
 }
 #[inline]
 pub fn v3f_t2f(x: f32, y: f32, z: f32, u: f32, v: f32) {
-    unsafe {
-        ffi::sgl_v3f_t2f(x, y, z, u, v)
-    }
+    unsafe { ffi::sgl_v3f_t2f(x, y, z, u, v) }
 }
 #[inline]
 pub fn v2f_c3f(x: f32, y: f32, r: f32, g: f32, b: f32) {
-    unsafe {
-        ffi::sgl_v2f_c3f(x, y, r, g, b)
-    }
+    unsafe { ffi::sgl_v2f_c3f(x, y, r, g, b) }
 }
 #[inline]
 pub fn v2f_c3b(x: f32, y: f32, r: u8, g: u8, b: u8) {
-    unsafe {
-        ffi::sgl_v2f_c3b(x, y, r, g, b)
-    }
+    unsafe { ffi::sgl_v2f_c3b(x, y, r, g, b) }
 }
 #[inline]
 pub fn v2f_c4f(x: f32, y: f32, r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        ffi::sgl_v2f_c4f(x, y, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v2f_c4f(x, y, r, g, b, a) }
 }
 #[inline]
 pub fn v2f_c4b(x: f32, y: f32, r: u8, g: u8, b: u8, a: u8) {
-    unsafe {
-        ffi::sgl_v2f_c4b(x, y, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v2f_c4b(x, y, r, g, b, a) }
 }
 #[inline]
 pub fn v2f_c1i(x: f32, y: f32, rgba: u32) {
-    unsafe {
-        ffi::sgl_v2f_c1i(x, y, rgba)
-    }
+    unsafe { ffi::sgl_v2f_c1i(x, y, rgba) }
 }
 #[inline]
 pub fn v3f_c3f(x: f32, y: f32, z: f32, r: f32, g: f32, b: f32) {
-    unsafe {
-        ffi::sgl_v3f_c3f(x, y, z, r, g, b)
-    }
+    unsafe { ffi::sgl_v3f_c3f(x, y, z, r, g, b) }
 }
 #[inline]
 pub fn v3f_c3b(x: f32, y: f32, z: f32, r: u8, g: u8, b: u8) {
-    unsafe {
-        ffi::sgl_v3f_c3b(x, y, z, r, g, b)
-    }
+    unsafe { ffi::sgl_v3f_c3b(x, y, z, r, g, b) }
 }
 #[inline]
 pub fn v3f_c4f(x: f32, y: f32, z: f32, r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        ffi::sgl_v3f_c4f(x, y, z, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v3f_c4f(x, y, z, r, g, b, a) }
 }
 #[inline]
 pub fn v3f_c4b(x: f32, y: f32, z: f32, r: u8, g: u8, b: u8, a: u8) {
-    unsafe {
-        ffi::sgl_v3f_c4b(x, y, z, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v3f_c4b(x, y, z, r, g, b, a) }
 }
 #[inline]
 pub fn v3f_c1i(x: f32, y: f32, z: f32, rgba: u32) {
-    unsafe {
-        ffi::sgl_v3f_c1i(x, y, z, rgba)
-    }
+    unsafe { ffi::sgl_v3f_c1i(x, y, z, rgba) }
 }
 #[inline]
 pub fn v2f_t2f_c3f(x: f32, y: f32, u: f32, v: f32, r: f32, g: f32, b: f32) {
-    unsafe {
-        ffi::sgl_v2f_t2f_c3f(x, y, u, v, r, g, b)
-    }
+    unsafe { ffi::sgl_v2f_t2f_c3f(x, y, u, v, r, g, b) }
 }
 #[inline]
 pub fn v2f_t2f_c3b(x: f32, y: f32, u: f32, v: f32, r: u8, g: u8, b: u8) {
-    unsafe {
-        ffi::sgl_v2f_t2f_c3b(x, y, u, v, r, g, b)
-    }
+    unsafe { ffi::sgl_v2f_t2f_c3b(x, y, u, v, r, g, b) }
 }
 #[inline]
 pub fn v2f_t2f_c4f(x: f32, y: f32, u: f32, v: f32, r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        ffi::sgl_v2f_t2f_c4f(x, y, u, v, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v2f_t2f_c4f(x, y, u, v, r, g, b, a) }
 }
 #[inline]
 pub fn v2f_t2f_c4b(x: f32, y: f32, u: f32, v: f32, r: u8, g: u8, b: u8, a: u8) {
-    unsafe {
-        ffi::sgl_v2f_t2f_c4b(x, y, u, v, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v2f_t2f_c4b(x, y, u, v, r, g, b, a) }
 }
 #[inline]
 pub fn v2f_t2f_c1i(x: f32, y: f32, u: f32, v: f32, rgba: u32) {
-    unsafe {
-        ffi::sgl_v2f_t2f_c1i(x, y, u, v, rgba)
-    }
+    unsafe { ffi::sgl_v2f_t2f_c1i(x, y, u, v, rgba) }
 }
 #[inline]
 pub fn v3f_t2f_c3f(x: f32, y: f32, z: f32, u: f32, v: f32, r: f32, g: f32, b: f32) {
-    unsafe {
-        ffi::sgl_v3f_t2f_c3f(x, y, z, u, v, r, g, b)
-    }
+    unsafe { ffi::sgl_v3f_t2f_c3f(x, y, z, u, v, r, g, b) }
 }
 #[inline]
 pub fn v3f_t2f_c3b(x: f32, y: f32, z: f32, u: f32, v: f32, r: u8, g: u8, b: u8) {
-    unsafe {
-        ffi::sgl_v3f_t2f_c3b(x, y, z, u, v, r, g, b)
-    }
+    unsafe { ffi::sgl_v3f_t2f_c3b(x, y, z, u, v, r, g, b) }
 }
 #[inline]
 pub fn v3f_t2f_c4f(x: f32, y: f32, z: f32, u: f32, v: f32, r: f32, g: f32, b: f32, a: f32) {
-    unsafe {
-        ffi::sgl_v3f_t2f_c4f(x, y, z, u, v, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v3f_t2f_c4f(x, y, z, u, v, r, g, b, a) }
 }
 #[inline]
 pub fn v3f_t2f_c4b(x: f32, y: f32, z: f32, u: f32, v: f32, r: u8, g: u8, b: u8, a: u8) {
-    unsafe {
-        ffi::sgl_v3f_t2f_c4b(x, y, z, u, v, r, g, b, a)
-    }
+    unsafe { ffi::sgl_v3f_t2f_c4b(x, y, z, u, v, r, g, b, a) }
 }
 #[inline]
 pub fn v3f_t2f_c1i(x: f32, y: f32, z: f32, u: f32, v: f32, rgba: u32) {
-    unsafe {
-        ffi::sgl_v3f_t2f_c1i(x, y, z, u, v, rgba)
-    }
+    unsafe { ffi::sgl_v3f_t2f_c1i(x, y, z, u, v, rgba) }
 }
 #[inline]
 pub fn end() {
-    unsafe {
-        ffi::sgl_end()
-    }
+    unsafe { ffi::sgl_end() }
 }

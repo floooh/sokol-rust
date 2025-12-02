@@ -3,7 +3,6 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-
 /// Helper function to convert a C string to a Rust string slice
 #[inline]
 fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str {
@@ -40,9 +39,7 @@ pub struct Buffer {
 }
 impl Buffer {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Buffer {
@@ -57,9 +54,7 @@ pub struct Image {
 }
 impl Image {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Image {
@@ -74,9 +69,7 @@ pub struct Sampler {
 }
 impl Sampler {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Sampler {
@@ -91,9 +84,7 @@ pub struct Shader {
 }
 impl Shader {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Shader {
@@ -108,9 +99,7 @@ pub struct Pipeline {
 }
 impl Pipeline {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for Pipeline {
@@ -125,9 +114,7 @@ pub struct View {
 }
 impl View {
     pub const fn new() -> Self {
-        Self {
-            id: 0,
-        }
+        Self { id: 0 }
     }
 }
 impl Default for View {
@@ -143,10 +130,7 @@ pub struct Range {
 }
 impl Range {
     pub const fn new() -> Self {
-        Self {
-            ptr: core::ptr::null(),
-            size: 0,
-        }
+        Self { ptr: core::ptr::null(), size: 0 }
     }
 }
 impl Default for Range {
@@ -179,12 +163,7 @@ pub struct Color {
 }
 impl Color {
     pub const fn new() -> Self {
-        Self {
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-            a: 0.0,
-        }
+        Self { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }
     }
 }
 impl Default for Color {
@@ -945,11 +924,7 @@ pub struct StencilAttachmentAction {
 }
 impl StencilAttachmentAction {
     pub const fn new() -> Self {
-        Self {
-            load_action: LoadAction::new(),
-            store_action: StoreAction::new(),
-            clear_value: 0,
-        }
+        Self { load_action: LoadAction::new(), store_action: StoreAction::new(), clear_value: 0 }
     }
 }
 impl Default for StencilAttachmentAction {
@@ -1079,9 +1054,7 @@ pub struct GlSwapchain {
 }
 impl GlSwapchain {
     pub const fn new() -> Self {
-        Self {
-            framebuffer: 0,
-        }
+        Self { framebuffer: 0 }
     }
 }
 impl Default for GlSwapchain {
@@ -1133,11 +1106,7 @@ pub struct Attachments {
 }
 impl Attachments {
     pub const fn new() -> Self {
-        Self {
-            colors: [View::new(); 8],
-            resolves: [View::new(); 8],
-            depth_stencil: View::new(),
-        }
+        Self { colors: [View::new(); 8], resolves: [View::new(); 8], depth_stencil: View::new() }
     }
 }
 impl Default for Attachments {
@@ -1324,9 +1293,7 @@ pub struct ImageData {
 }
 impl ImageData {
     pub const fn new() -> Self {
-        Self {
-            mip_levels: [Range::new(); 16],
-        }
+        Self { mip_levels: [Range::new(); 16] }
     }
 }
 impl Default for ImageData {
@@ -1527,11 +1494,7 @@ pub struct GlslShaderUniform {
 }
 impl GlslShaderUniform {
     pub const fn new() -> Self {
-        Self {
-            _type: UniformType::new(),
-            array_count: 0,
-            glsl_name: core::ptr::null(),
-        }
+        Self { _type: UniformType::new(), array_count: 0, glsl_name: core::ptr::null() }
     }
 }
 impl Default for GlslShaderUniform {
@@ -1745,11 +1708,7 @@ pub struct MtlShaderThreadsPerThreadgroup {
 }
 impl MtlShaderThreadsPerThreadgroup {
     pub const fn new() -> Self {
-        Self {
-            x: 0,
-            y: 0,
-            z: 0,
-        }
+        Self { x: 0, y: 0, z: 0 }
     }
 }
 impl Default for MtlShaderThreadsPerThreadgroup {
@@ -1805,11 +1764,7 @@ pub struct VertexBufferLayoutState {
 }
 impl VertexBufferLayoutState {
     pub const fn new() -> Self {
-        Self {
-            stride: 0,
-            step_func: VertexStep::new(),
-            step_rate: 0,
-        }
+        Self { stride: 0, step_func: VertexStep::new(), step_rate: 0 }
     }
 }
 impl Default for VertexBufferLayoutState {
@@ -1826,11 +1781,7 @@ pub struct VertexAttrState {
 }
 impl VertexAttrState {
     pub const fn new() -> Self {
-        Self {
-            buffer_index: 0,
-            offset: 0,
-            format: VertexFormat::new(),
-        }
+        Self { buffer_index: 0, offset: 0, format: VertexFormat::new() }
     }
 }
 impl Default for VertexAttrState {
@@ -2041,10 +1992,7 @@ pub struct BufferViewDesc {
 }
 impl BufferViewDesc {
     pub const fn new() -> Self {
-        Self {
-            buffer: Buffer::new(),
-            offset: 0,
-        }
+        Self { buffer: Buffer::new(), offset: 0 }
     }
 }
 impl Default for BufferViewDesc {
@@ -2061,11 +2009,7 @@ pub struct ImageViewDesc {
 }
 impl ImageViewDesc {
     pub const fn new() -> Self {
-        Self {
-            image: Image::new(),
-            mip_level: 0,
-            slice: 0,
-        }
+        Self { image: Image::new(), mip_level: 0, slice: 0 }
     }
 }
 impl Default for ImageViewDesc {
@@ -2081,10 +2025,7 @@ pub struct TextureViewRange {
 }
 impl TextureViewRange {
     pub const fn new() -> Self {
-        Self {
-            base: 0,
-            count: 0,
-        }
+        Self { base: 0, count: 0 }
     }
 }
 impl Default for TextureViewRange {
@@ -2290,11 +2231,7 @@ pub struct SlotInfo {
 }
 impl SlotInfo {
     pub const fn new() -> Self {
-        Self {
-            state: ResourceState::new(),
-            res_id: 0,
-            uninit_count: 0,
-        }
+        Self { state: ResourceState::new(), res_id: 0, uninit_count: 0 }
     }
 }
 impl Default for SlotInfo {
@@ -2341,12 +2278,7 @@ pub struct ImageInfo {
 }
 impl ImageInfo {
     pub const fn new() -> Self {
-        Self {
-            slot: SlotInfo::new(),
-            upd_frame_index: 0,
-            num_slots: 0,
-            active_slot: 0,
-        }
+        Self { slot: SlotInfo::new(), upd_frame_index: 0, num_slots: 0, active_slot: 0 }
     }
 }
 impl Default for ImageInfo {
@@ -2361,9 +2293,7 @@ pub struct SamplerInfo {
 }
 impl SamplerInfo {
     pub const fn new() -> Self {
-        Self {
-            slot: SlotInfo::new(),
-        }
+        Self { slot: SlotInfo::new() }
     }
 }
 impl Default for SamplerInfo {
@@ -2378,9 +2308,7 @@ pub struct ShaderInfo {
 }
 impl ShaderInfo {
     pub const fn new() -> Self {
-        Self {
-            slot: SlotInfo::new(),
-        }
+        Self { slot: SlotInfo::new() }
     }
 }
 impl Default for ShaderInfo {
@@ -2395,9 +2323,7 @@ pub struct PipelineInfo {
 }
 impl PipelineInfo {
     pub const fn new() -> Self {
-        Self {
-            slot: SlotInfo::new(),
-        }
+        Self { slot: SlotInfo::new() }
     }
 }
 impl Default for PipelineInfo {
@@ -2412,9 +2338,7 @@ pub struct ViewInfo {
 }
 impl ViewInfo {
     pub const fn new() -> Self {
-        Self {
-            slot: SlotInfo::new(),
-        }
+        Self { slot: SlotInfo::new() }
     }
 }
 impl Default for ViewInfo {
@@ -2563,9 +2487,7 @@ pub struct FrameStatsD3d11Uniforms {
 }
 impl FrameStatsD3d11Uniforms {
     pub const fn new() -> Self {
-        Self {
-            num_update_subresource: 0,
-        }
+        Self { num_update_subresource: 0 }
     }
 }
 impl Default for FrameStatsD3d11Uniforms {
@@ -2634,11 +2556,7 @@ pub struct FrameStatsMetalIdpool {
 }
 impl FrameStatsMetalIdpool {
     pub const fn new() -> Self {
-        Self {
-            num_added: 0,
-            num_released: 0,
-            num_garbage_collected: 0,
-        }
+        Self { num_added: 0, num_released: 0, num_garbage_collected: 0 }
     }
 }
 impl Default for FrameStatsMetalIdpool {
@@ -2784,10 +2702,7 @@ pub struct FrameStatsWgpuUniforms {
 }
 impl FrameStatsWgpuUniforms {
     pub const fn new() -> Self {
-        Self {
-            num_set_bindgroup: 0,
-            size_write_buffer: 0,
-        }
+        Self { num_set_bindgroup: 0, size_write_buffer: 0 }
     }
 }
 impl Default for FrameStatsWgpuUniforms {
@@ -2844,10 +2759,7 @@ pub struct FrameStatsWgpu {
 }
 impl FrameStatsWgpu {
     pub const fn new() -> Self {
-        Self {
-            uniforms: FrameStatsWgpuUniforms::new(),
-            bindings: FrameStatsWgpuBindings::new(),
-        }
+        Self { uniforms: FrameStatsWgpuUniforms::new(), bindings: FrameStatsWgpuBindings::new() }
     }
 }
 impl Default for FrameStatsWgpu {
@@ -3489,9 +3401,7 @@ pub struct MetalEnvironment {
 }
 impl MetalEnvironment {
     pub const fn new() -> Self {
-        Self {
-            device: core::ptr::null(),
-        }
+        Self { device: core::ptr::null() }
     }
 }
 impl Default for MetalEnvironment {
@@ -3507,10 +3417,7 @@ pub struct D3d11Environment {
 }
 impl D3d11Environment {
     pub const fn new() -> Self {
-        Self {
-            device: core::ptr::null(),
-            device_context: core::ptr::null(),
-        }
+        Self { device: core::ptr::null(), device_context: core::ptr::null() }
     }
 }
 impl Default for D3d11Environment {
@@ -3525,9 +3432,7 @@ pub struct WgpuEnvironment {
 }
 impl WgpuEnvironment {
     pub const fn new() -> Self {
-        Self {
-            device: core::ptr::null(),
-        }
+        Self { device: core::ptr::null() }
     }
 }
 impl Default for WgpuEnvironment {
@@ -3591,10 +3496,7 @@ pub struct CommitListener {
 }
 impl CommitListener {
     pub const fn new() -> Self {
-        Self {
-            func: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { func: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for CommitListener {
@@ -3611,11 +3513,7 @@ pub struct Allocator {
 }
 impl Allocator {
     pub const fn new() -> Self {
-        Self {
-            alloc_fn: None,
-            free_fn: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { alloc_fn: None, free_fn: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Allocator {
@@ -3626,15 +3524,22 @@ impl Default for Allocator {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Logger {
-    pub func: Option<extern "C" fn(*const core::ffi::c_char, u32, u32, *const core::ffi::c_char, u32, *const core::ffi::c_char, *mut core::ffi::c_void)>,
+    pub func: Option<
+        extern "C" fn(
+            *const core::ffi::c_char,
+            u32,
+            u32,
+            *const core::ffi::c_char,
+            u32,
+            *const core::ffi::c_char,
+            *mut core::ffi::c_void,
+        ),
+    >,
     pub user_data: *mut core::ffi::c_void,
 }
 impl Logger {
     pub const fn new() -> Self {
-        Self {
-            func: None,
-            user_data: core::ptr::null_mut(),
-        }
+        Self { func: None, user_data: core::ptr::null_mut() }
     }
 }
 impl Default for Logger {
@@ -3649,9 +3554,7 @@ pub struct D3d11Desc {
 }
 impl D3d11Desc {
     pub const fn new() -> Self {
-        Self {
-            shader_debugging: false,
-        }
+        Self { shader_debugging: false }
     }
 }
 impl Default for D3d11Desc {
@@ -3686,10 +3589,7 @@ pub struct WgpuDesc {
 }
 impl WgpuDesc {
     pub const fn new() -> Self {
-        Self {
-            disable_bindgroups_cache: false,
-            bindgroups_cache_size: 0,
-        }
+        Self { disable_bindgroups_cache: false, bindgroups_cache_size: 0 }
     }
 }
 impl Default for WgpuDesc {
@@ -3778,9 +3678,7 @@ pub struct D3d11BufferInfo {
 }
 impl D3d11BufferInfo {
     pub const fn new() -> Self {
-        Self {
-            buf: core::ptr::null(),
-        }
+        Self { buf: core::ptr::null() }
     }
 }
 impl Default for D3d11BufferInfo {
@@ -3797,11 +3695,7 @@ pub struct D3d11ImageInfo {
 }
 impl D3d11ImageInfo {
     pub const fn new() -> Self {
-        Self {
-            tex2d: core::ptr::null(),
-            tex3d: core::ptr::null(),
-            res: core::ptr::null(),
-        }
+        Self { tex2d: core::ptr::null(), tex3d: core::ptr::null(), res: core::ptr::null() }
     }
 }
 impl Default for D3d11ImageInfo {
@@ -3816,9 +3710,7 @@ pub struct D3d11SamplerInfo {
 }
 impl D3d11SamplerInfo {
     pub const fn new() -> Self {
-        Self {
-            smp: core::ptr::null(),
-        }
+        Self { smp: core::ptr::null() }
     }
 }
 impl Default for D3d11SamplerInfo {
@@ -3835,11 +3727,7 @@ pub struct D3d11ShaderInfo {
 }
 impl D3d11ShaderInfo {
     pub const fn new() -> Self {
-        Self {
-            cbufs: [core::ptr::null(); 8],
-            vs: core::ptr::null(),
-            fs: core::ptr::null(),
-        }
+        Self { cbufs: [core::ptr::null(); 8], vs: core::ptr::null(), fs: core::ptr::null() }
     }
 }
 impl Default for D3d11ShaderInfo {
@@ -3901,10 +3789,7 @@ pub struct MtlBufferInfo {
 }
 impl MtlBufferInfo {
     pub const fn new() -> Self {
-        Self {
-            buf: [core::ptr::null(); 2],
-            active_slot: 0,
-        }
+        Self { buf: [core::ptr::null(); 2], active_slot: 0 }
     }
 }
 impl Default for MtlBufferInfo {
@@ -3920,10 +3805,7 @@ pub struct MtlImageInfo {
 }
 impl MtlImageInfo {
     pub const fn new() -> Self {
-        Self {
-            tex: [core::ptr::null(); 2],
-            active_slot: 0,
-        }
+        Self { tex: [core::ptr::null(); 2], active_slot: 0 }
     }
 }
 impl Default for MtlImageInfo {
@@ -3938,9 +3820,7 @@ pub struct MtlSamplerInfo {
 }
 impl MtlSamplerInfo {
     pub const fn new() -> Self {
-        Self {
-            smp: core::ptr::null(),
-        }
+        Self { smp: core::ptr::null() }
     }
 }
 impl Default for MtlSamplerInfo {
@@ -3979,10 +3859,7 @@ pub struct MtlPipelineInfo {
 }
 impl MtlPipelineInfo {
     pub const fn new() -> Self {
-        Self {
-            rps: core::ptr::null(),
-            dss: core::ptr::null(),
-        }
+        Self { rps: core::ptr::null(), dss: core::ptr::null() }
     }
 }
 impl Default for MtlPipelineInfo {
@@ -3997,9 +3874,7 @@ pub struct WgpuBufferInfo {
 }
 impl WgpuBufferInfo {
     pub const fn new() -> Self {
-        Self {
-            buf: core::ptr::null(),
-        }
+        Self { buf: core::ptr::null() }
     }
 }
 impl Default for WgpuBufferInfo {
@@ -4014,9 +3889,7 @@ pub struct WgpuImageInfo {
 }
 impl WgpuImageInfo {
     pub const fn new() -> Self {
-        Self {
-            tex: core::ptr::null(),
-        }
+        Self { tex: core::ptr::null() }
     }
 }
 impl Default for WgpuImageInfo {
@@ -4031,9 +3904,7 @@ pub struct WgpuSamplerInfo {
 }
 impl WgpuSamplerInfo {
     pub const fn new() -> Self {
-        Self {
-            smp: core::ptr::null(),
-        }
+        Self { smp: core::ptr::null() }
     }
 }
 impl Default for WgpuSamplerInfo {
@@ -4050,11 +3921,7 @@ pub struct WgpuShaderInfo {
 }
 impl WgpuShaderInfo {
     pub const fn new() -> Self {
-        Self {
-            vs_mod: core::ptr::null(),
-            fs_mod: core::ptr::null(),
-            bgl: core::ptr::null(),
-        }
+        Self { vs_mod: core::ptr::null(), fs_mod: core::ptr::null(), bgl: core::ptr::null() }
     }
 }
 impl Default for WgpuShaderInfo {
@@ -4070,10 +3937,7 @@ pub struct WgpuPipelineInfo {
 }
 impl WgpuPipelineInfo {
     pub const fn new() -> Self {
-        Self {
-            render_pipeline: core::ptr::null(),
-            compute_pipeline: core::ptr::null(),
-        }
+        Self { render_pipeline: core::ptr::null(), compute_pipeline: core::ptr::null() }
     }
 }
 impl Default for WgpuPipelineInfo {
@@ -4088,9 +3952,7 @@ pub struct WgpuViewInfo {
 }
 impl WgpuViewInfo {
     pub const fn new() -> Self {
-        Self {
-            view: core::ptr::null(),
-        }
+        Self { view: core::ptr::null() }
     }
 }
 impl Default for WgpuViewInfo {
@@ -4106,10 +3968,7 @@ pub struct GlBufferInfo {
 }
 impl GlBufferInfo {
     pub const fn new() -> Self {
-        Self {
-            buf: [0; 2],
-            active_slot: 0,
-        }
+        Self { buf: [0; 2], active_slot: 0 }
     }
 }
 impl Default for GlBufferInfo {
@@ -4126,11 +3985,7 @@ pub struct GlImageInfo {
 }
 impl GlImageInfo {
     pub const fn new() -> Self {
-        Self {
-            tex: [0; 2],
-            tex_target: 0,
-            active_slot: 0,
-        }
+        Self { tex: [0; 2], tex_target: 0, active_slot: 0 }
     }
 }
 impl Default for GlImageInfo {
@@ -4145,9 +4000,7 @@ pub struct GlSamplerInfo {
 }
 impl GlSamplerInfo {
     pub const fn new() -> Self {
-        Self {
-            smp: 0,
-        }
+        Self { smp: 0 }
     }
 }
 impl Default for GlSamplerInfo {
@@ -4162,9 +4015,7 @@ pub struct GlShaderInfo {
 }
 impl GlShaderInfo {
     pub const fn new() -> Self {
-        Self {
-            prog: 0,
-        }
+        Self { prog: 0 }
     }
 }
 impl Default for GlShaderInfo {
@@ -4181,11 +4032,7 @@ pub struct GlViewInfo {
 }
 impl GlViewInfo {
     pub const fn new() -> Self {
-        Self {
-            tex_view: [0; 2],
-            msaa_render_buffer: 0,
-            msaa_resolve_frame_buffer: 0,
-        }
+        Self { tex_view: [0; 2], msaa_render_buffer: 0, msaa_resolve_frame_buffer: 0 }
     }
 }
 impl Default for GlViewInfo {
@@ -4232,7 +4079,13 @@ pub mod ffi {
         pub fn sg_apply_bindings(bindings: *const Bindings);
         pub fn sg_apply_uniforms(ub_slot: usize, data: *const Range);
         pub fn sg_draw(base_element: usize, num_elements: usize, num_instances: usize);
-        pub fn sg_draw_ex(base_element: i32, num_elements: i32, num_instances: i32, base_vertex: i32, base_instance: i32);
+        pub fn sg_draw_ex(
+            base_element: i32,
+            num_elements: i32,
+            num_instances: i32,
+            base_vertex: i32,
+            base_instance: i32,
+        );
         pub fn sg_dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize);
         pub fn sg_end_pass();
         pub fn sg_commit();
@@ -4242,7 +4095,8 @@ pub mod ffi {
         pub fn sg_query_limits() -> Limits;
         pub fn sg_query_pixelformat(fmt: PixelFormat) -> PixelformatInfo;
         pub fn sg_query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i32;
-        pub fn sg_query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32) -> i32;
+        pub fn sg_query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32)
+        -> i32;
         pub fn sg_query_buffer_state(buf: Buffer) -> ResourceState;
         pub fn sg_query_image_state(img: Image) -> ResourceState;
         pub fn sg_query_sampler_state(smp: Sampler) -> ResourceState;
@@ -4350,896 +4204,604 @@ pub mod ffi {
 }
 #[inline]
 pub fn setup(desc: &Desc) {
-    unsafe {
-        ffi::sg_setup(desc)
-    }
+    unsafe { ffi::sg_setup(desc) }
 }
 #[inline]
 pub fn shutdown() {
-    unsafe {
-        ffi::sg_shutdown()
-    }
+    unsafe { ffi::sg_shutdown() }
 }
 #[inline]
 pub fn isvalid() -> bool {
-    unsafe {
-        ffi::sg_isvalid()
-    }
+    unsafe { ffi::sg_isvalid() }
 }
 #[inline]
 pub fn reset_state_cache() {
-    unsafe {
-        ffi::sg_reset_state_cache()
-    }
+    unsafe { ffi::sg_reset_state_cache() }
 }
 #[inline]
 pub fn install_trace_hooks(trace_hooks: &TraceHooks) -> TraceHooks {
-    unsafe {
-        ffi::sg_install_trace_hooks(trace_hooks)
-    }
+    unsafe { ffi::sg_install_trace_hooks(trace_hooks) }
 }
 #[inline]
 pub fn push_debug_group(name: &str) {
-        let tmp_0 = std::ffi::CString::new(name).unwrap();
-    unsafe {
-        ffi::sg_push_debug_group(tmp_0.as_ptr())
-    }
+    let tmp_0 = std::ffi::CString::new(name).unwrap();
+    unsafe { ffi::sg_push_debug_group(tmp_0.as_ptr()) }
 }
 #[inline]
 pub fn pop_debug_group() {
-    unsafe {
-        ffi::sg_pop_debug_group()
-    }
+    unsafe { ffi::sg_pop_debug_group() }
 }
 #[inline]
 pub fn add_commit_listener(listener: CommitListener) -> bool {
-    unsafe {
-        ffi::sg_add_commit_listener(listener)
-    }
+    unsafe { ffi::sg_add_commit_listener(listener) }
 }
 #[inline]
 pub fn remove_commit_listener(listener: CommitListener) -> bool {
-    unsafe {
-        ffi::sg_remove_commit_listener(listener)
-    }
+    unsafe { ffi::sg_remove_commit_listener(listener) }
 }
 #[inline]
 pub fn make_buffer(desc: &BufferDesc) -> Buffer {
-    unsafe {
-        ffi::sg_make_buffer(desc)
-    }
+    unsafe { ffi::sg_make_buffer(desc) }
 }
 #[inline]
 pub fn make_image(desc: &ImageDesc) -> Image {
-    unsafe {
-        ffi::sg_make_image(desc)
-    }
+    unsafe { ffi::sg_make_image(desc) }
 }
 #[inline]
 pub fn make_sampler(desc: &SamplerDesc) -> Sampler {
-    unsafe {
-        ffi::sg_make_sampler(desc)
-    }
+    unsafe { ffi::sg_make_sampler(desc) }
 }
 #[inline]
 pub fn make_shader(desc: &ShaderDesc) -> Shader {
-    unsafe {
-        ffi::sg_make_shader(desc)
-    }
+    unsafe { ffi::sg_make_shader(desc) }
 }
 #[inline]
 pub fn make_pipeline(desc: &PipelineDesc) -> Pipeline {
-    unsafe {
-        ffi::sg_make_pipeline(desc)
-    }
+    unsafe { ffi::sg_make_pipeline(desc) }
 }
 #[inline]
 pub fn make_view(desc: &ViewDesc) -> View {
-    unsafe {
-        ffi::sg_make_view(desc)
-    }
+    unsafe { ffi::sg_make_view(desc) }
 }
 #[inline]
 pub fn destroy_buffer(buf: Buffer) {
-    unsafe {
-        ffi::sg_destroy_buffer(buf)
-    }
+    unsafe { ffi::sg_destroy_buffer(buf) }
 }
 #[inline]
 pub fn destroy_image(img: Image) {
-    unsafe {
-        ffi::sg_destroy_image(img)
-    }
+    unsafe { ffi::sg_destroy_image(img) }
 }
 #[inline]
 pub fn destroy_sampler(smp: Sampler) {
-    unsafe {
-        ffi::sg_destroy_sampler(smp)
-    }
+    unsafe { ffi::sg_destroy_sampler(smp) }
 }
 #[inline]
 pub fn destroy_shader(shd: Shader) {
-    unsafe {
-        ffi::sg_destroy_shader(shd)
-    }
+    unsafe { ffi::sg_destroy_shader(shd) }
 }
 #[inline]
 pub fn destroy_pipeline(pip: Pipeline) {
-    unsafe {
-        ffi::sg_destroy_pipeline(pip)
-    }
+    unsafe { ffi::sg_destroy_pipeline(pip) }
 }
 #[inline]
 pub fn destroy_view(view: View) {
-    unsafe {
-        ffi::sg_destroy_view(view)
-    }
+    unsafe { ffi::sg_destroy_view(view) }
 }
 #[inline]
 pub fn update_buffer(buf: Buffer, data: &Range) {
-    unsafe {
-        ffi::sg_update_buffer(buf, data)
-    }
+    unsafe { ffi::sg_update_buffer(buf, data) }
 }
 #[inline]
 pub fn update_image(img: Image, data: &ImageData) {
-    unsafe {
-        ffi::sg_update_image(img, data)
-    }
+    unsafe { ffi::sg_update_image(img, data) }
 }
 #[inline]
 pub fn append_buffer(buf: Buffer, data: &Range) -> i32 {
-    unsafe {
-        ffi::sg_append_buffer(buf, data)
-    }
+    unsafe { ffi::sg_append_buffer(buf, data) }
 }
 #[inline]
 pub fn query_buffer_overflow(buf: Buffer) -> bool {
-    unsafe {
-        ffi::sg_query_buffer_overflow(buf)
-    }
+    unsafe { ffi::sg_query_buffer_overflow(buf) }
 }
 #[inline]
 pub fn query_buffer_will_overflow(buf: Buffer, size: usize) -> bool {
-    unsafe {
-        ffi::sg_query_buffer_will_overflow(buf, size)
-    }
+    unsafe { ffi::sg_query_buffer_will_overflow(buf, size) }
 }
 #[inline]
 pub fn begin_pass(pass: &Pass) {
-    unsafe {
-        ffi::sg_begin_pass(pass)
-    }
+    unsafe { ffi::sg_begin_pass(pass) }
 }
 #[inline]
 pub fn apply_viewport(x: i32, y: i32, width: i32, height: i32, origin_top_left: bool) {
-    unsafe {
-        ffi::sg_apply_viewport(x, y, width, height, origin_top_left)
-    }
+    unsafe { ffi::sg_apply_viewport(x, y, width, height, origin_top_left) }
 }
 #[inline]
 pub fn apply_viewportf(x: f32, y: f32, width: f32, height: f32, origin_top_left: bool) {
-    unsafe {
-        ffi::sg_apply_viewportf(x, y, width, height, origin_top_left)
-    }
+    unsafe { ffi::sg_apply_viewportf(x, y, width, height, origin_top_left) }
 }
 #[inline]
 pub fn apply_scissor_rect(x: i32, y: i32, width: i32, height: i32, origin_top_left: bool) {
-    unsafe {
-        ffi::sg_apply_scissor_rect(x, y, width, height, origin_top_left)
-    }
+    unsafe { ffi::sg_apply_scissor_rect(x, y, width, height, origin_top_left) }
 }
 #[inline]
 pub fn apply_scissor_rectf(x: f32, y: f32, width: f32, height: f32, origin_top_left: bool) {
-    unsafe {
-        ffi::sg_apply_scissor_rectf(x, y, width, height, origin_top_left)
-    }
+    unsafe { ffi::sg_apply_scissor_rectf(x, y, width, height, origin_top_left) }
 }
 #[inline]
 pub fn apply_pipeline(pip: Pipeline) {
-    unsafe {
-        ffi::sg_apply_pipeline(pip)
-    }
+    unsafe { ffi::sg_apply_pipeline(pip) }
 }
 #[inline]
 pub fn apply_bindings(bindings: &Bindings) {
-    unsafe {
-        ffi::sg_apply_bindings(bindings)
-    }
+    unsafe { ffi::sg_apply_bindings(bindings) }
 }
 #[inline]
 pub fn apply_uniforms(ub_slot: usize, data: &Range) {
-    unsafe {
-        ffi::sg_apply_uniforms(ub_slot, data)
-    }
+    unsafe { ffi::sg_apply_uniforms(ub_slot, data) }
 }
 #[inline]
 pub fn draw(base_element: usize, num_elements: usize, num_instances: usize) {
-    unsafe {
-        ffi::sg_draw(base_element, num_elements, num_instances)
-    }
+    unsafe { ffi::sg_draw(base_element, num_elements, num_instances) }
 }
 #[inline]
-pub fn draw_ex(base_element: i32, num_elements: i32, num_instances: i32, base_vertex: i32, base_instance: i32) {
-    unsafe {
-        ffi::sg_draw_ex(base_element, num_elements, num_instances, base_vertex, base_instance)
-    }
+pub fn draw_ex(
+    base_element: i32,
+    num_elements: i32,
+    num_instances: i32,
+    base_vertex: i32,
+    base_instance: i32,
+) {
+    unsafe { ffi::sg_draw_ex(base_element, num_elements, num_instances, base_vertex, base_instance) }
 }
 #[inline]
 pub fn dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize) {
-    unsafe {
-        ffi::sg_dispatch(num_groups_x, num_groups_y, num_groups_z)
-    }
+    unsafe { ffi::sg_dispatch(num_groups_x, num_groups_y, num_groups_z) }
 }
 #[inline]
 pub fn end_pass() {
-    unsafe {
-        ffi::sg_end_pass()
-    }
+    unsafe { ffi::sg_end_pass() }
 }
 #[inline]
 pub fn commit() {
-    unsafe {
-        ffi::sg_commit()
-    }
+    unsafe { ffi::sg_commit() }
 }
 #[inline]
 pub fn query_desc() -> Desc {
-    unsafe {
-        ffi::sg_query_desc()
-    }
+    unsafe { ffi::sg_query_desc() }
 }
 #[inline]
 pub fn query_backend() -> Backend {
-    unsafe {
-        ffi::sg_query_backend()
-    }
+    unsafe { ffi::sg_query_backend() }
 }
 #[inline]
 pub fn query_features() -> Features {
-    unsafe {
-        ffi::sg_query_features()
-    }
+    unsafe { ffi::sg_query_features() }
 }
 #[inline]
 pub fn query_limits() -> Limits {
-    unsafe {
-        ffi::sg_query_limits()
-    }
+    unsafe { ffi::sg_query_limits() }
 }
 #[inline]
 pub fn query_pixelformat(fmt: PixelFormat) -> PixelformatInfo {
-    unsafe {
-        ffi::sg_query_pixelformat(fmt)
-    }
+    unsafe { ffi::sg_query_pixelformat(fmt) }
 }
 #[inline]
 pub fn query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i32 {
-    unsafe {
-        ffi::sg_query_row_pitch(fmt, width, row_align_bytes)
-    }
+    unsafe { ffi::sg_query_row_pitch(fmt, width, row_align_bytes) }
 }
 #[inline]
 pub fn query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32) -> i32 {
-    unsafe {
-        ffi::sg_query_surface_pitch(fmt, width, height, row_align_bytes)
-    }
+    unsafe { ffi::sg_query_surface_pitch(fmt, width, height, row_align_bytes) }
 }
 #[inline]
 pub fn query_buffer_state(buf: Buffer) -> ResourceState {
-    unsafe {
-        ffi::sg_query_buffer_state(buf)
-    }
+    unsafe { ffi::sg_query_buffer_state(buf) }
 }
 #[inline]
 pub fn query_image_state(img: Image) -> ResourceState {
-    unsafe {
-        ffi::sg_query_image_state(img)
-    }
+    unsafe { ffi::sg_query_image_state(img) }
 }
 #[inline]
 pub fn query_sampler_state(smp: Sampler) -> ResourceState {
-    unsafe {
-        ffi::sg_query_sampler_state(smp)
-    }
+    unsafe { ffi::sg_query_sampler_state(smp) }
 }
 #[inline]
 pub fn query_shader_state(shd: Shader) -> ResourceState {
-    unsafe {
-        ffi::sg_query_shader_state(shd)
-    }
+    unsafe { ffi::sg_query_shader_state(shd) }
 }
 #[inline]
 pub fn query_pipeline_state(pip: Pipeline) -> ResourceState {
-    unsafe {
-        ffi::sg_query_pipeline_state(pip)
-    }
+    unsafe { ffi::sg_query_pipeline_state(pip) }
 }
 #[inline]
 pub fn query_view_state(view: View) -> ResourceState {
-    unsafe {
-        ffi::sg_query_view_state(view)
-    }
+    unsafe { ffi::sg_query_view_state(view) }
 }
 #[inline]
 pub fn query_buffer_info(buf: Buffer) -> BufferInfo {
-    unsafe {
-        ffi::sg_query_buffer_info(buf)
-    }
+    unsafe { ffi::sg_query_buffer_info(buf) }
 }
 #[inline]
 pub fn query_image_info(img: Image) -> ImageInfo {
-    unsafe {
-        ffi::sg_query_image_info(img)
-    }
+    unsafe { ffi::sg_query_image_info(img) }
 }
 #[inline]
 pub fn query_sampler_info(smp: Sampler) -> SamplerInfo {
-    unsafe {
-        ffi::sg_query_sampler_info(smp)
-    }
+    unsafe { ffi::sg_query_sampler_info(smp) }
 }
 #[inline]
 pub fn query_shader_info(shd: Shader) -> ShaderInfo {
-    unsafe {
-        ffi::sg_query_shader_info(shd)
-    }
+    unsafe { ffi::sg_query_shader_info(shd) }
 }
 #[inline]
 pub fn query_pipeline_info(pip: Pipeline) -> PipelineInfo {
-    unsafe {
-        ffi::sg_query_pipeline_info(pip)
-    }
+    unsafe { ffi::sg_query_pipeline_info(pip) }
 }
 #[inline]
 pub fn query_view_info(view: View) -> ViewInfo {
-    unsafe {
-        ffi::sg_query_view_info(view)
-    }
+    unsafe { ffi::sg_query_view_info(view) }
 }
 #[inline]
 pub fn query_buffer_desc(buf: Buffer) -> BufferDesc {
-    unsafe {
-        ffi::sg_query_buffer_desc(buf)
-    }
+    unsafe { ffi::sg_query_buffer_desc(buf) }
 }
 #[inline]
 pub fn query_image_desc(img: Image) -> ImageDesc {
-    unsafe {
-        ffi::sg_query_image_desc(img)
-    }
+    unsafe { ffi::sg_query_image_desc(img) }
 }
 #[inline]
 pub fn query_sampler_desc(smp: Sampler) -> SamplerDesc {
-    unsafe {
-        ffi::sg_query_sampler_desc(smp)
-    }
+    unsafe { ffi::sg_query_sampler_desc(smp) }
 }
 #[inline]
 pub fn query_shader_desc(shd: Shader) -> ShaderDesc {
-    unsafe {
-        ffi::sg_query_shader_desc(shd)
-    }
+    unsafe { ffi::sg_query_shader_desc(shd) }
 }
 #[inline]
 pub fn query_pipeline_desc(pip: Pipeline) -> PipelineDesc {
-    unsafe {
-        ffi::sg_query_pipeline_desc(pip)
-    }
+    unsafe { ffi::sg_query_pipeline_desc(pip) }
 }
 #[inline]
 pub fn query_view_desc(view: View) -> ViewDesc {
-    unsafe {
-        ffi::sg_query_view_desc(view)
-    }
+    unsafe { ffi::sg_query_view_desc(view) }
 }
 #[inline]
 pub fn query_buffer_defaults(desc: &BufferDesc) -> BufferDesc {
-    unsafe {
-        ffi::sg_query_buffer_defaults(desc)
-    }
+    unsafe { ffi::sg_query_buffer_defaults(desc) }
 }
 #[inline]
 pub fn query_image_defaults(desc: &ImageDesc) -> ImageDesc {
-    unsafe {
-        ffi::sg_query_image_defaults(desc)
-    }
+    unsafe { ffi::sg_query_image_defaults(desc) }
 }
 #[inline]
 pub fn query_sampler_defaults(desc: &SamplerDesc) -> SamplerDesc {
-    unsafe {
-        ffi::sg_query_sampler_defaults(desc)
-    }
+    unsafe { ffi::sg_query_sampler_defaults(desc) }
 }
 #[inline]
 pub fn query_shader_defaults(desc: &ShaderDesc) -> ShaderDesc {
-    unsafe {
-        ffi::sg_query_shader_defaults(desc)
-    }
+    unsafe { ffi::sg_query_shader_defaults(desc) }
 }
 #[inline]
 pub fn query_pipeline_defaults(desc: &PipelineDesc) -> PipelineDesc {
-    unsafe {
-        ffi::sg_query_pipeline_defaults(desc)
-    }
+    unsafe { ffi::sg_query_pipeline_defaults(desc) }
 }
 #[inline]
 pub fn query_view_defaults(desc: &ViewDesc) -> ViewDesc {
-    unsafe {
-        ffi::sg_query_view_defaults(desc)
-    }
+    unsafe { ffi::sg_query_view_defaults(desc) }
 }
 #[inline]
 pub fn query_buffer_size(buf: Buffer) -> usize {
-    unsafe {
-        ffi::sg_query_buffer_size(buf)
-    }
+    unsafe { ffi::sg_query_buffer_size(buf) }
 }
 #[inline]
 pub fn query_buffer_usage(buf: Buffer) -> BufferUsage {
-    unsafe {
-        ffi::sg_query_buffer_usage(buf)
-    }
+    unsafe { ffi::sg_query_buffer_usage(buf) }
 }
 #[inline]
 pub fn query_image_type(img: Image) -> ImageType {
-    unsafe {
-        ffi::sg_query_image_type(img)
-    }
+    unsafe { ffi::sg_query_image_type(img) }
 }
 #[inline]
 pub fn query_image_width(img: Image) -> i32 {
-    unsafe {
-        ffi::sg_query_image_width(img)
-    }
+    unsafe { ffi::sg_query_image_width(img) }
 }
 #[inline]
 pub fn query_image_height(img: Image) -> i32 {
-    unsafe {
-        ffi::sg_query_image_height(img)
-    }
+    unsafe { ffi::sg_query_image_height(img) }
 }
 #[inline]
 pub fn query_image_num_slices(img: Image) -> i32 {
-    unsafe {
-        ffi::sg_query_image_num_slices(img)
-    }
+    unsafe { ffi::sg_query_image_num_slices(img) }
 }
 #[inline]
 pub fn query_image_num_mipmaps(img: Image) -> i32 {
-    unsafe {
-        ffi::sg_query_image_num_mipmaps(img)
-    }
+    unsafe { ffi::sg_query_image_num_mipmaps(img) }
 }
 #[inline]
 pub fn query_image_pixelformat(img: Image) -> PixelFormat {
-    unsafe {
-        ffi::sg_query_image_pixelformat(img)
-    }
+    unsafe { ffi::sg_query_image_pixelformat(img) }
 }
 #[inline]
 pub fn query_image_usage(img: Image) -> ImageUsage {
-    unsafe {
-        ffi::sg_query_image_usage(img)
-    }
+    unsafe { ffi::sg_query_image_usage(img) }
 }
 #[inline]
 pub fn query_image_sample_count(img: Image) -> i32 {
-    unsafe {
-        ffi::sg_query_image_sample_count(img)
-    }
+    unsafe { ffi::sg_query_image_sample_count(img) }
 }
 #[inline]
 pub fn query_view_type(view: View) -> ViewType {
-    unsafe {
-        ffi::sg_query_view_type(view)
-    }
+    unsafe { ffi::sg_query_view_type(view) }
 }
 #[inline]
 pub fn query_view_image(view: View) -> Image {
-    unsafe {
-        ffi::sg_query_view_image(view)
-    }
+    unsafe { ffi::sg_query_view_image(view) }
 }
 #[inline]
 pub fn query_view_buffer(view: View) -> Buffer {
-    unsafe {
-        ffi::sg_query_view_buffer(view)
-    }
+    unsafe { ffi::sg_query_view_buffer(view) }
 }
 #[inline]
 pub fn alloc_buffer() -> Buffer {
-    unsafe {
-        ffi::sg_alloc_buffer()
-    }
+    unsafe { ffi::sg_alloc_buffer() }
 }
 #[inline]
 pub fn alloc_image() -> Image {
-    unsafe {
-        ffi::sg_alloc_image()
-    }
+    unsafe { ffi::sg_alloc_image() }
 }
 #[inline]
 pub fn alloc_sampler() -> Sampler {
-    unsafe {
-        ffi::sg_alloc_sampler()
-    }
+    unsafe { ffi::sg_alloc_sampler() }
 }
 #[inline]
 pub fn alloc_shader() -> Shader {
-    unsafe {
-        ffi::sg_alloc_shader()
-    }
+    unsafe { ffi::sg_alloc_shader() }
 }
 #[inline]
 pub fn alloc_pipeline() -> Pipeline {
-    unsafe {
-        ffi::sg_alloc_pipeline()
-    }
+    unsafe { ffi::sg_alloc_pipeline() }
 }
 #[inline]
 pub fn alloc_view() -> View {
-    unsafe {
-        ffi::sg_alloc_view()
-    }
+    unsafe { ffi::sg_alloc_view() }
 }
 #[inline]
 pub fn dealloc_buffer(buf: Buffer) {
-    unsafe {
-        ffi::sg_dealloc_buffer(buf)
-    }
+    unsafe { ffi::sg_dealloc_buffer(buf) }
 }
 #[inline]
 pub fn dealloc_image(img: Image) {
-    unsafe {
-        ffi::sg_dealloc_image(img)
-    }
+    unsafe { ffi::sg_dealloc_image(img) }
 }
 #[inline]
 pub fn dealloc_sampler(smp: Sampler) {
-    unsafe {
-        ffi::sg_dealloc_sampler(smp)
-    }
+    unsafe { ffi::sg_dealloc_sampler(smp) }
 }
 #[inline]
 pub fn dealloc_shader(shd: Shader) {
-    unsafe {
-        ffi::sg_dealloc_shader(shd)
-    }
+    unsafe { ffi::sg_dealloc_shader(shd) }
 }
 #[inline]
 pub fn dealloc_pipeline(pip: Pipeline) {
-    unsafe {
-        ffi::sg_dealloc_pipeline(pip)
-    }
+    unsafe { ffi::sg_dealloc_pipeline(pip) }
 }
 #[inline]
 pub fn dealloc_view(view: View) {
-    unsafe {
-        ffi::sg_dealloc_view(view)
-    }
+    unsafe { ffi::sg_dealloc_view(view) }
 }
 #[inline]
 pub fn init_buffer(buf: Buffer, desc: &BufferDesc) {
-    unsafe {
-        ffi::sg_init_buffer(buf, desc)
-    }
+    unsafe { ffi::sg_init_buffer(buf, desc) }
 }
 #[inline]
 pub fn init_image(img: Image, desc: &ImageDesc) {
-    unsafe {
-        ffi::sg_init_image(img, desc)
-    }
+    unsafe { ffi::sg_init_image(img, desc) }
 }
 #[inline]
 pub fn init_sampler(smg: Sampler, desc: &SamplerDesc) {
-    unsafe {
-        ffi::sg_init_sampler(smg, desc)
-    }
+    unsafe { ffi::sg_init_sampler(smg, desc) }
 }
 #[inline]
 pub fn init_shader(shd: Shader, desc: &ShaderDesc) {
-    unsafe {
-        ffi::sg_init_shader(shd, desc)
-    }
+    unsafe { ffi::sg_init_shader(shd, desc) }
 }
 #[inline]
 pub fn init_pipeline(pip: Pipeline, desc: &PipelineDesc) {
-    unsafe {
-        ffi::sg_init_pipeline(pip, desc)
-    }
+    unsafe { ffi::sg_init_pipeline(pip, desc) }
 }
 #[inline]
 pub fn init_view(view: View, desc: &ViewDesc) {
-    unsafe {
-        ffi::sg_init_view(view, desc)
-    }
+    unsafe { ffi::sg_init_view(view, desc) }
 }
 #[inline]
 pub fn uninit_buffer(buf: Buffer) {
-    unsafe {
-        ffi::sg_uninit_buffer(buf)
-    }
+    unsafe { ffi::sg_uninit_buffer(buf) }
 }
 #[inline]
 pub fn uninit_image(img: Image) {
-    unsafe {
-        ffi::sg_uninit_image(img)
-    }
+    unsafe { ffi::sg_uninit_image(img) }
 }
 #[inline]
 pub fn uninit_sampler(smp: Sampler) {
-    unsafe {
-        ffi::sg_uninit_sampler(smp)
-    }
+    unsafe { ffi::sg_uninit_sampler(smp) }
 }
 #[inline]
 pub fn uninit_shader(shd: Shader) {
-    unsafe {
-        ffi::sg_uninit_shader(shd)
-    }
+    unsafe { ffi::sg_uninit_shader(shd) }
 }
 #[inline]
 pub fn uninit_pipeline(pip: Pipeline) {
-    unsafe {
-        ffi::sg_uninit_pipeline(pip)
-    }
+    unsafe { ffi::sg_uninit_pipeline(pip) }
 }
 #[inline]
 pub fn uninit_view(view: View) {
-    unsafe {
-        ffi::sg_uninit_view(view)
-    }
+    unsafe { ffi::sg_uninit_view(view) }
 }
 #[inline]
 pub fn fail_buffer(buf: Buffer) {
-    unsafe {
-        ffi::sg_fail_buffer(buf)
-    }
+    unsafe { ffi::sg_fail_buffer(buf) }
 }
 #[inline]
 pub fn fail_image(img: Image) {
-    unsafe {
-        ffi::sg_fail_image(img)
-    }
+    unsafe { ffi::sg_fail_image(img) }
 }
 #[inline]
 pub fn fail_sampler(smp: Sampler) {
-    unsafe {
-        ffi::sg_fail_sampler(smp)
-    }
+    unsafe { ffi::sg_fail_sampler(smp) }
 }
 #[inline]
 pub fn fail_shader(shd: Shader) {
-    unsafe {
-        ffi::sg_fail_shader(shd)
-    }
+    unsafe { ffi::sg_fail_shader(shd) }
 }
 #[inline]
 pub fn fail_pipeline(pip: Pipeline) {
-    unsafe {
-        ffi::sg_fail_pipeline(pip)
-    }
+    unsafe { ffi::sg_fail_pipeline(pip) }
 }
 #[inline]
 pub fn fail_view(view: View) {
-    unsafe {
-        ffi::sg_fail_view(view)
-    }
+    unsafe { ffi::sg_fail_view(view) }
 }
 #[inline]
 pub fn enable_frame_stats() {
-    unsafe {
-        ffi::sg_enable_frame_stats()
-    }
+    unsafe { ffi::sg_enable_frame_stats() }
 }
 #[inline]
 pub fn disable_frame_stats() {
-    unsafe {
-        ffi::sg_disable_frame_stats()
-    }
+    unsafe { ffi::sg_disable_frame_stats() }
 }
 #[inline]
 pub fn frame_stats_enabled() -> bool {
-    unsafe {
-        ffi::sg_frame_stats_enabled()
-    }
+    unsafe { ffi::sg_frame_stats_enabled() }
 }
 #[inline]
 pub fn query_frame_stats() -> FrameStats {
-    unsafe {
-        ffi::sg_query_frame_stats()
-    }
+    unsafe { ffi::sg_query_frame_stats() }
 }
 #[inline]
 pub fn d3d11_device() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_d3d11_device()
-    }
+    unsafe { ffi::sg_d3d11_device() }
 }
 #[inline]
 pub fn d3d11_device_context() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_d3d11_device_context()
-    }
+    unsafe { ffi::sg_d3d11_device_context() }
 }
 #[inline]
 pub fn d3d11_query_buffer_info(buf: Buffer) -> D3d11BufferInfo {
-    unsafe {
-        ffi::sg_d3d11_query_buffer_info(buf)
-    }
+    unsafe { ffi::sg_d3d11_query_buffer_info(buf) }
 }
 #[inline]
 pub fn d3d11_query_image_info(img: Image) -> D3d11ImageInfo {
-    unsafe {
-        ffi::sg_d3d11_query_image_info(img)
-    }
+    unsafe { ffi::sg_d3d11_query_image_info(img) }
 }
 #[inline]
 pub fn d3d11_query_sampler_info(smp: Sampler) -> D3d11SamplerInfo {
-    unsafe {
-        ffi::sg_d3d11_query_sampler_info(smp)
-    }
+    unsafe { ffi::sg_d3d11_query_sampler_info(smp) }
 }
 #[inline]
 pub fn d3d11_query_shader_info(shd: Shader) -> D3d11ShaderInfo {
-    unsafe {
-        ffi::sg_d3d11_query_shader_info(shd)
-    }
+    unsafe { ffi::sg_d3d11_query_shader_info(shd) }
 }
 #[inline]
 pub fn d3d11_query_pipeline_info(pip: Pipeline) -> D3d11PipelineInfo {
-    unsafe {
-        ffi::sg_d3d11_query_pipeline_info(pip)
-    }
+    unsafe { ffi::sg_d3d11_query_pipeline_info(pip) }
 }
 #[inline]
 pub fn d3d11_query_view_info(view: View) -> D3d11ViewInfo {
-    unsafe {
-        ffi::sg_d3d11_query_view_info(view)
-    }
+    unsafe { ffi::sg_d3d11_query_view_info(view) }
 }
 #[inline]
 pub fn mtl_device() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_mtl_device()
-    }
+    unsafe { ffi::sg_mtl_device() }
 }
 #[inline]
 pub fn mtl_render_command_encoder() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_mtl_render_command_encoder()
-    }
+    unsafe { ffi::sg_mtl_render_command_encoder() }
 }
 #[inline]
 pub fn mtl_compute_command_encoder() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_mtl_compute_command_encoder()
-    }
+    unsafe { ffi::sg_mtl_compute_command_encoder() }
 }
 #[inline]
 pub fn mtl_query_buffer_info(buf: Buffer) -> MtlBufferInfo {
-    unsafe {
-        ffi::sg_mtl_query_buffer_info(buf)
-    }
+    unsafe { ffi::sg_mtl_query_buffer_info(buf) }
 }
 #[inline]
 pub fn mtl_query_image_info(img: Image) -> MtlImageInfo {
-    unsafe {
-        ffi::sg_mtl_query_image_info(img)
-    }
+    unsafe { ffi::sg_mtl_query_image_info(img) }
 }
 #[inline]
 pub fn mtl_query_sampler_info(smp: Sampler) -> MtlSamplerInfo {
-    unsafe {
-        ffi::sg_mtl_query_sampler_info(smp)
-    }
+    unsafe { ffi::sg_mtl_query_sampler_info(smp) }
 }
 #[inline]
 pub fn mtl_query_shader_info(shd: Shader) -> MtlShaderInfo {
-    unsafe {
-        ffi::sg_mtl_query_shader_info(shd)
-    }
+    unsafe { ffi::sg_mtl_query_shader_info(shd) }
 }
 #[inline]
 pub fn mtl_query_pipeline_info(pip: Pipeline) -> MtlPipelineInfo {
-    unsafe {
-        ffi::sg_mtl_query_pipeline_info(pip)
-    }
+    unsafe { ffi::sg_mtl_query_pipeline_info(pip) }
 }
 #[inline]
 pub fn wgpu_device() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_wgpu_device()
-    }
+    unsafe { ffi::sg_wgpu_device() }
 }
 #[inline]
 pub fn wgpu_queue() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_wgpu_queue()
-    }
+    unsafe { ffi::sg_wgpu_queue() }
 }
 #[inline]
 pub fn wgpu_command_encoder() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_wgpu_command_encoder()
-    }
+    unsafe { ffi::sg_wgpu_command_encoder() }
 }
 #[inline]
 pub fn wgpu_render_pass_encoder() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_wgpu_render_pass_encoder()
-    }
+    unsafe { ffi::sg_wgpu_render_pass_encoder() }
 }
 #[inline]
 pub fn wgpu_compute_pass_encoder() -> *const core::ffi::c_void {
-    unsafe {
-        ffi::sg_wgpu_compute_pass_encoder()
-    }
+    unsafe { ffi::sg_wgpu_compute_pass_encoder() }
 }
 #[inline]
 pub fn wgpu_query_buffer_info(buf: Buffer) -> WgpuBufferInfo {
-    unsafe {
-        ffi::sg_wgpu_query_buffer_info(buf)
-    }
+    unsafe { ffi::sg_wgpu_query_buffer_info(buf) }
 }
 #[inline]
 pub fn wgpu_query_image_info(img: Image) -> WgpuImageInfo {
-    unsafe {
-        ffi::sg_wgpu_query_image_info(img)
-    }
+    unsafe { ffi::sg_wgpu_query_image_info(img) }
 }
 #[inline]
 pub fn wgpu_query_sampler_info(smp: Sampler) -> WgpuSamplerInfo {
-    unsafe {
-        ffi::sg_wgpu_query_sampler_info(smp)
-    }
+    unsafe { ffi::sg_wgpu_query_sampler_info(smp) }
 }
 #[inline]
 pub fn wgpu_query_shader_info(shd: Shader) -> WgpuShaderInfo {
-    unsafe {
-        ffi::sg_wgpu_query_shader_info(shd)
-    }
+    unsafe { ffi::sg_wgpu_query_shader_info(shd) }
 }
 #[inline]
 pub fn wgpu_query_pipeline_info(pip: Pipeline) -> WgpuPipelineInfo {
-    unsafe {
-        ffi::sg_wgpu_query_pipeline_info(pip)
-    }
+    unsafe { ffi::sg_wgpu_query_pipeline_info(pip) }
 }
 #[inline]
 pub fn wgpu_query_view_info(view: View) -> WgpuViewInfo {
-    unsafe {
-        ffi::sg_wgpu_query_view_info(view)
-    }
+    unsafe { ffi::sg_wgpu_query_view_info(view) }
 }
 #[inline]
 pub fn gl_query_buffer_info(buf: Buffer) -> GlBufferInfo {
-    unsafe {
-        ffi::sg_gl_query_buffer_info(buf)
-    }
+    unsafe { ffi::sg_gl_query_buffer_info(buf) }
 }
 #[inline]
 pub fn gl_query_image_info(img: Image) -> GlImageInfo {
-    unsafe {
-        ffi::sg_gl_query_image_info(img)
-    }
+    unsafe { ffi::sg_gl_query_image_info(img) }
 }
 #[inline]
 pub fn gl_query_sampler_info(smp: Sampler) -> GlSamplerInfo {
-    unsafe {
-        ffi::sg_gl_query_sampler_info(smp)
-    }
+    unsafe { ffi::sg_gl_query_sampler_info(smp) }
 }
 #[inline]
 pub fn gl_query_shader_info(shd: Shader) -> GlShaderInfo {
-    unsafe {
-        ffi::sg_gl_query_shader_info(shd)
-    }
+    unsafe { ffi::sg_gl_query_shader_info(shd) }
 }
 #[inline]
 pub fn gl_query_view_info(view: View) -> GlViewInfo {
-    unsafe {
-        ffi::sg_gl_query_view_info(view)
-    }
+    unsafe { ffi::sg_gl_query_view_info(view) }
 }
