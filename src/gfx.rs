@@ -2804,27 +2804,65 @@ impl Default for FrameStatsVk {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct ResourceStats {
-    pub total_alive: u32,
-    pub total_free: u32,
+pub struct FrameResourceStats {
     pub allocated: u32,
     pub deallocated: u32,
     pub inited: u32,
     pub uninited: u32,
 }
-impl ResourceStats {
+impl FrameResourceStats {
+    pub const fn new() -> Self {
+        Self { allocated: 0, deallocated: 0, inited: 0, uninited: 0 }
+    }
+}
+impl Default for FrameResourceStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct TotalResourceStats {
+    pub alive: u32,
+    pub free: u32,
+    pub allocated: u32,
+    pub deallocated: u32,
+    pub inited: u32,
+    pub uninited: u32,
+}
+impl TotalResourceStats {
+    pub const fn new() -> Self {
+        Self { alive: 0, free: 0, allocated: 0, deallocated: 0, inited: 0, uninited: 0 }
+    }
+}
+impl Default for TotalResourceStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct TotalStats {
+    pub buffers: TotalResourceStats,
+    pub images: TotalResourceStats,
+    pub samplers: TotalResourceStats,
+    pub views: TotalResourceStats,
+    pub shaders: TotalResourceStats,
+    pub pipelines: TotalResourceStats,
+}
+impl TotalStats {
     pub const fn new() -> Self {
         Self {
-            total_alive: 0,
-            total_free: 0,
-            allocated: 0,
-            deallocated: 0,
-            inited: 0,
-            uninited: 0,
+            buffers: TotalResourceStats::new(),
+            images: TotalResourceStats::new(),
+            samplers: TotalResourceStats::new(),
+            views: TotalResourceStats::new(),
+            shaders: TotalResourceStats::new(),
+            pipelines: TotalResourceStats::new(),
         }
     }
 }
-impl Default for ResourceStats {
+impl Default for TotalStats {
     fn default() -> Self {
         Self::new()
     }
@@ -2849,12 +2887,12 @@ pub struct FrameStats {
     pub size_update_buffer: u32,
     pub size_append_buffer: u32,
     pub size_update_image: u32,
-    pub buffers: ResourceStats,
-    pub images: ResourceStats,
-    pub samplers: ResourceStats,
-    pub views: ResourceStats,
-    pub shaders: ResourceStats,
-    pub pipelines: ResourceStats,
+    pub buffers: FrameResourceStats,
+    pub images: FrameResourceStats,
+    pub samplers: FrameResourceStats,
+    pub views: FrameResourceStats,
+    pub shaders: FrameResourceStats,
+    pub pipelines: FrameResourceStats,
     pub gl: FrameStatsGl,
     pub d3d11: FrameStatsD3d11,
     pub metal: FrameStatsMetal,
@@ -2881,12 +2919,12 @@ impl FrameStats {
             size_update_buffer: 0,
             size_append_buffer: 0,
             size_update_image: 0,
-            buffers: ResourceStats::new(),
-            images: ResourceStats::new(),
-            samplers: ResourceStats::new(),
-            views: ResourceStats::new(),
-            shaders: ResourceStats::new(),
-            pipelines: ResourceStats::new(),
+            buffers: FrameResourceStats::new(),
+            images: FrameResourceStats::new(),
+            samplers: FrameResourceStats::new(),
+            views: FrameResourceStats::new(),
+            shaders: FrameResourceStats::new(),
+            pipelines: FrameResourceStats::new(),
             gl: FrameStatsGl::new(),
             d3d11: FrameStatsD3d11::new(),
             metal: FrameStatsMetal::new(),
@@ -2896,6 +2934,27 @@ impl FrameStats {
     }
 }
 impl Default for FrameStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct Stats {
+    pub prev_frame: FrameStats,
+    pub cur_frame: FrameStats,
+    pub total: TotalStats,
+}
+impl Stats {
+    pub const fn new() -> Self {
+        Self {
+            prev_frame: FrameStats::new(),
+            cur_frame: FrameStats::new(),
+            total: TotalStats::new(),
+        }
+    }
+}
+impl Default for Stats {
     fn default() -> Self {
         Self::new()
     }
@@ -4164,10 +4223,10 @@ pub mod ffi {
         pub fn sg_fail_shader(shd: Shader);
         pub fn sg_fail_pipeline(pip: Pipeline);
         pub fn sg_fail_view(view: View);
-        pub fn sg_enable_frame_stats();
-        pub fn sg_disable_frame_stats();
-        pub fn sg_frame_stats_enabled() -> bool;
-        pub fn sg_query_frame_stats() -> FrameStats;
+        pub fn sg_enable_stats();
+        pub fn sg_disable_stats();
+        pub fn sg_stats_enabled() -> bool;
+        pub fn sg_query_stats() -> Stats;
         pub fn sg_d3d11_device() -> *const core::ffi::c_void;
         pub fn sg_d3d11_device_context() -> *const core::ffi::c_void;
         pub fn sg_d3d11_query_buffer_info(buf: Buffer) -> D3d11BufferInfo;
@@ -4662,20 +4721,20 @@ pub fn fail_view(view: View) {
     unsafe { ffi::sg_fail_view(view) }
 }
 #[inline]
-pub fn enable_frame_stats() {
-    unsafe { ffi::sg_enable_frame_stats() }
+pub fn enable_stats() {
+    unsafe { ffi::sg_enable_stats() }
 }
 #[inline]
-pub fn disable_frame_stats() {
-    unsafe { ffi::sg_disable_frame_stats() }
+pub fn disable_stats() {
+    unsafe { ffi::sg_disable_stats() }
 }
 #[inline]
-pub fn frame_stats_enabled() -> bool {
-    unsafe { ffi::sg_frame_stats_enabled() }
+pub fn stats_enabled() -> bool {
+    unsafe { ffi::sg_stats_enabled() }
 }
 #[inline]
-pub fn query_frame_stats() -> FrameStats {
-    unsafe { ffi::sg_query_frame_stats() }
+pub fn query_stats() -> Stats {
+    unsafe { ffi::sg_query_stats() }
 }
 #[inline]
 pub fn d3d11_device() -> *const core::ffi::c_void {
