@@ -1,6 +1,7 @@
 [![Rust](https://github.com/floooh/sokol-rust/actions/workflows/main.yml/badge.svg)](https://github.com/floooh/sokol-rust/actions/workflows/main.yml)
 
-> [!WARNING] always delete the `target/` directory before after updating the bindings,
+> [!WARNING]
+> Always delete the `target/` directory before after updating the bindings,
 > somehow the cargo C build step can't figure out that the C source files have changed.
 > Not deleting target will result in weird runtime errors because the memory layout of
 > Rust binding structs doesn't match their C counterparts.
