@@ -153,14 +153,14 @@ fn make_sokol() {
         build.define("_DEBUG", None).define("SOKOL_DEBUG", None);
     }
 
+    if config.build_target == BuildTarget::Macos {
+        build.flag("-x").flag("objective-c");
+    }
+
     for file in &files {
         let file = format!("{BASE_C_DIR}{file}");
 
         println!("cargo:rerun-if-changed={file}");
-
-        if config.build_target == BuildTarget::Macos {
-            build.flag("-ObjC");
-        }
 
         build.file(file);
     }
