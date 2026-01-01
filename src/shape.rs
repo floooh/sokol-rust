@@ -89,8 +89,8 @@ impl Default for Vertex {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct ElementRange {
-    pub base_element: usize,
-    pub num_elements: usize,
+    pub base_element: i32,
+    pub num_elements: i32,
 }
 impl ElementRange {
     pub const fn new() -> Self {
