@@ -112,7 +112,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     };
     let buf = sshape::build_torus(
         &buf,
-        &sshape::Torus { radius: 0.5, ring_radius: 0.4, sides: 20, rings: 36, ..Default::default() },
+        &sshape::Torus { radius: 0.5, ring_radius: 0.3, sides: 20, rings: 36, ..Default::default() },
     );
     state.donut = sshape::element_range(&buf);
     let buf = sshape::build_sphere(
@@ -204,7 +204,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
         shader::UB_VS_PARAMS,
         &sg::value_as_range(&compute_vs_params(state.rx, state.ry, 1.0, 2.5)),
     );
-    sg::draw(state.donut.base_element, state.donut.num_elements, 1);
+    sg::draw(state.donut.base_element as usize, state.donut.num_elements as usize, 1);
     sg::end_pass();
 
     // and the display pass, rendering a rotating textured sphere, using the previously
@@ -220,7 +220,7 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
         shader::UB_VS_PARAMS,
         &sg::value_as_range(&compute_vs_params(-state.rx * 0.25, state.ry * 0.25, aspect, 2.0)),
     );
-    sg::draw(state.sphere.base_element, state.sphere.num_elements, 1);
+    sg::draw(state.sphere.base_element as usize, state.sphere.num_elements as usize, 1);
     sg::end_pass();
 
     sg::commit();
