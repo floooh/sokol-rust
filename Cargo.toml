@@ -62,6 +62,10 @@ name = "texcube"
 path = "examples/texcube/texcube.rs"
 
 [[example]]
+name = "triangle"
+path = "examples/triangle/triangle.rs"
+
+[[example]]
 name = "vertexpull"
 path = "examples/vertexpull/vertexpull.rs"
 
