@@ -58,6 +58,10 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
             println!("Using Wgpu Backend!");
         },
 
+        sg::Backend::Vulkan => {
+            println!("Using Vulkan Backend!");
+        },
+
         sg::Backend::Dummy => {
             println!("Using Dummy Backend!");
         },
@@ -127,6 +131,8 @@ cargo build --all-targets
 Build and run individual examples as such:
 ```console
 cargo run --example clear
+cargo run --example triangle
+cargo run --example quad
 cargo run --example cube
 cargo run --example mrt
 cargo run --example debugtext
@@ -134,6 +140,7 @@ cargo run --example sgl-context
 cargo run --example sgl-points
 cargo run --example blend
 cargo run --example audio
+cargo run --example offscreen
 cargo run --example instancing
 cargo run --example userdata
 cargo run --example vertexpull
