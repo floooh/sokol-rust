@@ -11,7 +11,7 @@ use std::{ffi, mem};
 
 use sokol::{
     app as sapp,
-    gfx::{self as sg, ColorAttachmentAction, VertexFormat, apply_pipeline},
+    gfx::{self as sg, ColorAttachmentAction, VertexFormat},
     glue as sglue,
 };
 
@@ -94,7 +94,6 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     // Cast user data to a borrowed state reference
     let state = unsafe { &mut *(user_data as *mut State) };
 
-    // default pass-action clears to grey
     sg::begin_pass(&sg::Pass {
         action: state.pass_action,
         swapchain: sglue::swapchain(),
