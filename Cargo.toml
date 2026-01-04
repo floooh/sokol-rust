@@ -76,3 +76,7 @@ path = "examples/triangle/triangle.rs"
 [[example]]
 name = "quad"
 path = "examples/quad/quad.rs"
+
+[[example]]
+name = "bufferoffsets"
+path = "examples/bufferoffsets/bufferoffsets.rs"

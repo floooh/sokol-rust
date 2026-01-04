@@ -133,6 +133,7 @@ Build and run individual examples as such:
 cargo run --example clear
 cargo run --example triangle
 cargo run --example quad
+cargo run --example bufferoffsets
 cargo run --example cube
 cargo run --example mrt
 cargo run --example debugtext
