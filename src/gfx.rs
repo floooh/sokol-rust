@@ -4238,6 +4238,7 @@ pub mod ffi {
         pub fn sg_mtl_device() -> *const core::ffi::c_void;
         pub fn sg_mtl_render_command_encoder() -> *const core::ffi::c_void;
         pub fn sg_mtl_compute_command_encoder() -> *const core::ffi::c_void;
+        pub fn sg_mtl_command_queue() -> *const core::ffi::c_void;
         pub fn sg_mtl_query_buffer_info(buf: Buffer) -> MtlBufferInfo;
         pub fn sg_mtl_query_image_info(img: Image) -> MtlImageInfo;
         pub fn sg_mtl_query_sampler_info(smp: Sampler) -> MtlSamplerInfo;
@@ -4779,6 +4780,10 @@ pub fn mtl_render_command_encoder() -> *const core::ffi::c_void {
 #[inline]
 pub fn mtl_compute_command_encoder() -> *const core::ffi::c_void {
     unsafe { ffi::sg_mtl_compute_command_encoder() }
+}
+#[inline]
+pub fn mtl_command_queue() -> *const core::ffi::c_void {
+    unsafe { ffi::sg_mtl_command_queue() }
 }
 #[inline]
 pub fn mtl_query_buffer_info(buf: Buffer) -> MtlBufferInfo {
