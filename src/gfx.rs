@@ -3502,6 +3502,7 @@ impl Default for WgpuEnvironment {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct VulkanEnvironment {
+    pub instance: *const core::ffi::c_void,
     pub physical_device: *const core::ffi::c_void,
     pub device: *const core::ffi::c_void,
     pub queue: *const core::ffi::c_void,
@@ -3510,6 +3511,7 @@ pub struct VulkanEnvironment {
 impl VulkanEnvironment {
     pub const fn new() -> Self {
         Self {
+            instance: core::ptr::null(),
             physical_device: core::ptr::null(),
             device: core::ptr::null(),
             queue: core::ptr::null(),
