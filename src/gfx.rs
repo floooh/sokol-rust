@@ -3075,6 +3075,7 @@ pub enum LogItem {
     VulkanStorageimageSpirvSet1BindingOutOfRange,
     VulkanSamplerSpirvSet1BindingOutOfRange,
     VulkanCreateDescriptorSetLayoutFailed,
+    VulkanShaderUniformDescriptorSetSizeVsCacheSize,
     VulkanCreatePipelineLayoutFailed,
     VulkanCreateGraphicsPipelineFailed,
     VulkanCreateComputePipelineFailed,
