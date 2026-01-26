@@ -324,6 +324,7 @@ pub struct Features {
     pub separate_buffer_types: bool,
     pub draw_base_vertex: bool,
     pub draw_base_instance: bool,
+    pub dual_source_blending: bool,
     pub gl_texture_views: bool,
 }
 impl Features {
@@ -338,6 +339,7 @@ impl Features {
             separate_buffer_types: false,
             draw_base_vertex: false,
             draw_base_instance: false,
+            dual_source_blending: false,
             gl_texture_views: false,
         }
     }
@@ -774,6 +776,10 @@ pub enum BlendFactor {
     OneMinusBlendColor,
     BlendAlpha,
     OneMinusBlendAlpha,
+    Src1Color,
+    OneMinusSrc1Color,
+    Src1Alpha,
+    OneMinusSrc1Alpha,
     Num,
 }
 impl BlendFactor {
@@ -3238,6 +3244,7 @@ pub enum LogItem {
     ValidatePipelinedescAttrSemantics,
     ValidatePipelinedescShaderReadonlyStoragebuffers,
     ValidatePipelinedescBlendopMinmaxRequiresBlendfactorOne,
+    ValidatePipelinedescDualSourceBlendingNotSupported,
     ValidateViewdescCanary,
     ValidateViewdescUniqueViewtype,
     ValidateViewdescAnyViewtype,
