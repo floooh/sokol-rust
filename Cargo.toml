@@ -80,3 +80,7 @@ path = "examples/quad/quad.rs"
 [[example]]
 name = "bufferoffsets"
 path = "examples/bufferoffsets/bufferoffsets.rs"
+
+[[example]]
+name = "sgl"
+path = "examples/sgl/sgl.rs"

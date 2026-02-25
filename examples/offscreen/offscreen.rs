@@ -100,7 +100,6 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
 
     // a donut shape which is rendered into the offscreen render target, and
     // a sphere shape which is rendered into the default framebuffer
-    // let vertices = sshape::value_as_range(value)
     let vertices = [sshape::Vertex::new(); 4_000];
     let vertices = sshape::value_as_range(&vertices);
     let indices = [0u16; 24_000];
