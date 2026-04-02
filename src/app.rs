@@ -1158,6 +1158,7 @@ pub mod ffi {
         pub fn sapp_consume_event();
         pub fn sapp_frame_count() -> u64;
         pub fn sapp_frame_duration() -> f64;
+        pub fn sapp_frame_duration_unfiltered() -> f64;
         pub fn sapp_set_clipboard_string(str: *const core::ffi::c_char);
         pub fn sapp_get_clipboard_string() -> *const core::ffi::c_char;
         pub fn sapp_set_window_title(str: *const core::ffi::c_char);
@@ -1303,6 +1304,10 @@ pub fn frame_count() -> u64 {
 #[inline]
 pub fn frame_duration() -> f64 {
     unsafe { ffi::sapp_frame_duration() }
+}
+#[inline]
+pub fn frame_duration_unfiltered() -> f64 {
+    unsafe { ffi::sapp_frame_duration_unfiltered() }
 }
 #[inline]
 pub fn set_clipboard_string(str: &str) {
