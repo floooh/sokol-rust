@@ -325,6 +325,7 @@ pub struct Features {
     pub draw_base_vertex: bool,
     pub draw_base_instance: bool,
     pub dual_source_blending: bool,
+    pub vertexformat_int10_n2: bool,
     pub gl_texture_views: bool,
 }
 impl Features {
@@ -340,6 +341,7 @@ impl Features {
             draw_base_vertex: false,
             draw_base_instance: false,
             dual_source_blending: false,
+            vertexformat_int10_n2: false,
             gl_texture_views: false,
         }
     }
@@ -596,6 +598,7 @@ pub enum VertexFormat {
     Short4n,
     Ushort4,
     Ushort4n,
+    Int10N2,
     Uint10N2,
     Half2,
     Half4,
@@ -3240,6 +3243,7 @@ pub enum LogItem {
     ValidatePipelinedescNoComputeShaderExpected,
     ValidatePipelinedescNoContAttrs,
     ValidatePipelinedescAttrBasetypeMismatch,
+    ValidatePipelinedescAttrVertexformatInt10N2NotSupported,
     ValidatePipelinedescLayoutStride4,
     ValidatePipelinedescAttrSemantics,
     ValidatePipelinedescShaderReadonlyStoragebuffers,
