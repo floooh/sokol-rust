@@ -133,6 +133,21 @@ impl Default for N3dsDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct Win32Desc {
+    pub skip_coinitialize: bool,
+}
+impl Win32Desc {
+    pub const fn new() -> Self {
+        Self { skip_coinitialize: false }
+    }
+}
+impl Default for Win32Desc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Desc {
     pub sample_rate: i32,
     pub num_channels: i32,
@@ -142,6 +157,7 @@ pub struct Desc {
     pub stream_cb: Option<extern "C" fn(*mut f32, i32, i32)>,
     pub stream_userdata_cb: Option<extern "C" fn(*mut f32, i32, i32, *mut core::ffi::c_void)>,
     pub user_data: *mut core::ffi::c_void,
+    pub win32: Win32Desc,
     pub n3ds: N3dsDesc,
     pub allocator: Allocator,
     pub logger: Logger,
@@ -157,6 +173,7 @@ impl Desc {
             stream_cb: None,
             stream_userdata_cb: None,
             user_data: core::ptr::null_mut(),
+            win32: Win32Desc::new(),
             n3ds: N3dsDesc::new(),
             allocator: Allocator::new(),
             logger: Logger::new(),
