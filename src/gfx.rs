@@ -3158,6 +3158,7 @@ pub enum LogItem {
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
     ValidateImagedescImmutableDynamicStream,
+    ValidateImagedescAttachmentColorDepthStencil,
     ValidateImagedescImagetype2dNumslices,
     ValidateImagedescImagetypeCubeNumslices,
     ValidateImagedescImagetypeArrayNumslices,
