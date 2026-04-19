@@ -1074,6 +1074,7 @@ impl Default for GlSwapchain {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Swapchain {
+    pub invalid: bool,
     pub width: i32,
     pub height: i32,
     pub sample_count: i32,
@@ -1088,6 +1089,7 @@ pub struct Swapchain {
 impl Swapchain {
     pub const fn new() -> Self {
         Self {
+            invalid: false,
             width: 0,
             height: 0,
             sample_count: 0,
@@ -3307,6 +3309,22 @@ pub enum LogItem {
     ValidateBeginpassSwapchainWgpuExpectDepthstencilview,
     ValidateBeginpassSwapchainWgpuExpectDepthstencilviewNotset,
     ValidateBeginpassSwapchainGlExpectFramebufferNotset,
+    ValidateBeginpassSwapchainVulkanExpectRenderimage,
+    ValidateBeginpassSwapchainVulkanExpectRenderimageNotset,
+    ValidateBeginpassSwapchainVulkanExpectRenderview,
+    ValidateBeginpassSwapchainVulkanExpectRenderviewNotset,
+    ValidateBeginpassSwapchainVulkanExpectDepthstencilimage,
+    ValidateBeginpassSwapchainVulkanExpectDepthstencilimageNotset,
+    ValidateBeginpassSwapchainVulkanExpectDepthstencilview,
+    ValidateBeginpassSwapchainVulkanExpectDepthstencilviewNotset,
+    ValidateBeginpassSwapchainVulkanExpectResolveimage,
+    ValidateBeginpassSwapchainVulkanExpectResolveimageNotset,
+    ValidateBeginpassSwapchainVulkanExpectResolveview,
+    ValidateBeginpassSwapchainVulkanExpectResolveviewNotset,
+    ValidateBeginpassSwapchainVulkanExpectRenderfinishedsemaphore,
+    ValidateBeginpassSwapchainVulkanExpectRenderfinishedsemaphoreNotset,
+    ValidateBeginpassSwapchainVulkanExpectPresentcompletesemaphore,
+    ValidateBeginpassSwapchainVulkanExpectPresentcompletesemaphoreNotset,
     ValidateBeginpassColorattachmentviewsContinuous,
     ValidateBeginpassColorattachmentviewAlive,
     ValidateBeginpassColorattachmentviewValid,
