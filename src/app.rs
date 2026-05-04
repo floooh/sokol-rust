@@ -495,6 +495,8 @@ pub enum LogItem {
     AndroidNativeActivityOncreate,
     AndroidCreateThreadPipeFailed,
     AndroidNativeActivityCreateSuccess,
+    AndroidChoreographerEnabled,
+    AndroidChoreographerUnavailable,
     WgpuDeviceLost,
     WgpuDeviceLog,
     WgpuDeviceUncapturedError,
