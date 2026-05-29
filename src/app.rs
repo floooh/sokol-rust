@@ -1187,6 +1187,7 @@ pub mod ffi {
         pub fn sapp_x11_get_window() -> *const core::ffi::c_void;
         pub fn sapp_x11_get_display() -> *const core::ffi::c_void;
         pub fn sapp_android_get_native_activity() -> *const core::ffi::c_void;
+        pub fn sapp_android_get_native_window() -> *const core::ffi::c_void;
     }
 }
 #[inline]
@@ -1410,4 +1411,8 @@ pub fn x11_get_display() -> *const core::ffi::c_void {
 #[inline]
 pub fn android_get_native_activity() -> *const core::ffi::c_void {
     unsafe { ffi::sapp_android_get_native_activity() }
+}
+#[inline]
+pub fn android_get_native_window() -> *const core::ffi::c_void {
+    unsafe { ffi::sapp_android_get_native_window() }
 }
