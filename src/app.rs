@@ -76,7 +76,7 @@ impl Default for EventType {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum Keycode {
     Invalid = 0,
     Space = 32,
@@ -211,7 +211,7 @@ impl Default for Keycode {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum AndroidTooltype {
     Unknown = 0,
     Finger = 1,
@@ -254,7 +254,7 @@ impl Default for Touchpoint {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum Mousebutton {
     Left = 0,
     Right = 1,
@@ -406,10 +406,11 @@ impl Default for Allocator {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum LogItem {
     Ok,
     MallocFailed,
+    SwapchainDepthformatInvalid,
     MacosInvalidNsopenglProfile,
     MetalCreateSwapchainDepthTextureFailed,
     MetalCreateSwapchainMsaaTextureFailed,
@@ -554,7 +555,8 @@ pub enum PixelFormat {
     Rgba8,
     Srgb8a8,
     Bgra8,
-    Sbgra8,
+    Sbgr8a8,
+    Rgba16f,
     Depth,
     DepthStencil,
 }
@@ -831,6 +833,23 @@ impl Default for Swapchain {
         Self::new()
     }
 }
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u32)]
+pub enum CompositeMode {
+    Default,
+    Opaque,
+    Premultiplied,
+}
+impl CompositeMode {
+    pub const fn new() -> Self {
+        Self::Default
+    }
+}
+impl Default for CompositeMode {
+    fn default() -> Self {
+        Self::Default
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Logger {
@@ -896,7 +915,6 @@ pub struct Html5Desc {
     pub canvas_selector: *const core::ffi::c_char,
     pub canvas_resize: bool,
     pub preserve_drawing_buffer: bool,
-    pub premultiplied_alpha: bool,
     pub ask_leave_site: bool,
     pub update_document_title: bool,
     pub bubble_mouse_events: bool,
@@ -913,7 +931,6 @@ impl Html5Desc {
             canvas_selector: core::ptr::null(),
             canvas_resize: false,
             preserve_drawing_buffer: false,
-            premultiplied_alpha: false,
             ask_leave_site: false,
             update_document_title: false,
             bubble_mouse_events: false,
@@ -948,6 +965,21 @@ impl Default for IosDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct MetalDesc {
+    pub disable_display_sync: bool,
+}
+impl MetalDesc {
+    pub const fn new() -> Self {
+        Self { disable_display_sync: false }
+    }
+}
+impl Default for MetalDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Desc {
     pub init_cb: Option<extern "C" fn()>,
     pub frame_cb: Option<extern "C" fn()>,
@@ -960,11 +992,15 @@ pub struct Desc {
     pub event_userdata_cb: Option<extern "C" fn(*const Event, *mut core::ffi::c_void)>,
     pub width: i32,
     pub height: i32,
+    pub depth_format: PixelFormat,
+    pub composite_mode: CompositeMode,
     pub sample_count: i32,
     pub swap_interval: i32,
+    pub srgb: bool,
+    pub hdr: bool,
+    pub disable_vsync: bool,
     pub high_dpi: bool,
     pub fullscreen: bool,
-    pub alpha: bool,
     pub window_title: *const core::ffi::c_char,
     pub enable_clipboard: bool,
     pub clipboard_size: i32,
@@ -975,6 +1011,7 @@ pub struct Desc {
     pub allocator: Allocator,
     pub logger: Logger,
     pub gl: GlDesc,
+    pub metal: MetalDesc,
     pub win32: Win32Desc,
     pub html5: Html5Desc,
     pub ios: IosDesc,
@@ -993,11 +1030,15 @@ impl Desc {
             event_userdata_cb: None,
             width: 0,
             height: 0,
+            depth_format: PixelFormat::new(),
+            composite_mode: CompositeMode::new(),
             sample_count: 0,
             swap_interval: 0,
+            srgb: false,
+            hdr: false,
+            disable_vsync: false,
             high_dpi: false,
             fullscreen: false,
-            alpha: false,
             window_title: core::ptr::null(),
             enable_clipboard: false,
             clipboard_size: 0,
@@ -1008,6 +1049,7 @@ impl Desc {
             allocator: Allocator::new(),
             logger: Logger::new(),
             gl: GlDesc::new(),
+            metal: MetalDesc::new(),
             win32: Win32Desc::new(),
             html5: Html5Desc::new(),
             ios: IosDesc::new(),
@@ -1020,7 +1062,7 @@ impl Default for Desc {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum Html5FetchError {
     FetchErrorNoError,
     FetchErrorBufferTooSmall,
@@ -1087,7 +1129,7 @@ impl Default for Html5FetchRequest {
     }
 }
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(i32)]
+#[repr(u32)]
 pub enum MouseCursor {
     Default = 0,
     Arrow,
@@ -1132,6 +1174,8 @@ pub mod ffi {
     #![allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub fn sapp_get_environment() -> Environment;
+        pub fn sapp_acquire_swapchain() -> Swapchain;
         pub fn sapp_isvalid() -> bool;
         pub fn sapp_width() -> i32;
         pub fn sapp_widthf() -> f32;
@@ -1170,8 +1214,6 @@ pub mod ffi {
         pub fn sapp_get_num_dropped_files() -> i32;
         pub fn sapp_get_dropped_file_path(index: i32) -> *const core::ffi::c_char;
         pub fn sapp_run(desc: *const Desc);
-        pub fn sapp_get_environment() -> Environment;
-        pub fn sapp_get_swapchain() -> Swapchain;
         pub fn sapp_egl_get_display() -> *const core::ffi::c_void;
         pub fn sapp_egl_get_context() -> *const core::ffi::c_void;
         pub fn sapp_html5_ask_leave_site(ask: bool);
@@ -1189,6 +1231,14 @@ pub mod ffi {
         pub fn sapp_android_get_native_activity() -> *const core::ffi::c_void;
         pub fn sapp_android_get_native_window() -> *const core::ffi::c_void;
     }
+}
+#[inline]
+pub fn get_environment() -> Environment {
+    unsafe { ffi::sapp_get_environment() }
+}
+#[inline]
+pub fn acquire_swapchain() -> Swapchain {
+    unsafe { ffi::sapp_acquire_swapchain() }
 }
 #[inline]
 pub fn isvalid() -> bool {
@@ -1343,14 +1393,6 @@ pub fn get_dropped_file_path(index: i32) -> &'static str {
 #[inline]
 pub fn run(desc: &Desc) {
     unsafe { ffi::sapp_run(desc) }
-}
-#[inline]
-pub fn get_environment() -> Environment {
-    unsafe { ffi::sapp_get_environment() }
-}
-#[inline]
-pub fn get_swapchain() -> Swapchain {
-    unsafe { ffi::sapp_get_swapchain() }
 }
 #[inline]
 pub fn egl_get_display() -> *const core::ffi::c_void {
