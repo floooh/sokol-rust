@@ -980,6 +980,21 @@ impl Default for MetalDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct AndroidDesc {
+    pub native_event_cb: Option<extern "C" fn(*const core::ffi::c_void) -> bool>,
+}
+impl AndroidDesc {
+    pub const fn new() -> Self {
+        Self { native_event_cb: None }
+    }
+}
+impl Default for AndroidDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Desc {
     pub init_cb: Option<extern "C" fn()>,
     pub frame_cb: Option<extern "C" fn()>,
@@ -1015,6 +1030,7 @@ pub struct Desc {
     pub win32: Win32Desc,
     pub html5: Html5Desc,
     pub ios: IosDesc,
+    pub android: AndroidDesc,
 }
 impl Desc {
     pub const fn new() -> Self {
@@ -1053,6 +1069,7 @@ impl Desc {
             win32: Win32Desc::new(),
             html5: Html5Desc::new(),
             ios: IosDesc::new(),
+            android: AndroidDesc::new(),
         }
     }
 }
