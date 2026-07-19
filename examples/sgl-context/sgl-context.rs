@@ -58,15 +58,18 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         ..Default::default()
     };
 
-    state.display.sgl_pip = sgl::context_make_pipeline(sgl::default_context(), &sg::PipelineDesc {
-        cull_mode: sg::CullMode::Back,
-        depth: sg::DepthState {
-            write_enabled: true,
-            compare: sg::CompareFunc::LessEqual,
+    state.display.sgl_pip = sgl::context_make_pipeline(
+        sgl::default_context(),
+        &sg::PipelineDesc {
+            cull_mode: sg::CullMode::Back,
+            depth: sg::DepthState {
+                write_enabled: true,
+                compare: sg::CompareFunc::LessEqual,
+                ..Default::default()
+            },
             ..Default::default()
         },
-        ..Default::default()
-    });
+    );
 
     // create a sokol-gl context compatible with the offscreen render pass
     // (specific color pixel format, no depth-stencil-surface, no MSAA)

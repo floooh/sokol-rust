@@ -109,20 +109,15 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         indices: sshape::BufferState { buffer: indices, ..Default::default() },
         ..Default::default()
     };
-    sshape::build_torus(&mut shp, &sshape::Torus {
-        radius: 0.5,
-        ring_radius: 0.3,
-        sides: 20,
-        rings: 36,
-        ..Default::default()
-    });
+    sshape::build_torus(
+        &mut shp,
+        &sshape::Torus { radius: 0.5, ring_radius: 0.3, sides: 20, rings: 36, ..Default::default() },
+    );
     state.donut = sshape::element_range(&shp);
-    sshape::build_sphere(&mut shp, &sshape::Sphere {
-        radius: 0.5,
-        slices: 72,
-        stacks: 40,
-        ..Default::default()
-    });
+    sshape::build_sphere(
+        &mut shp,
+        &sshape::Sphere { radius: 0.5, slices: 72, stacks: 40, ..Default::default() },
+    );
     state.sphere = sshape::element_range(&shp);
 
     let vbuf = sg::make_buffer(&sshape::vertex_buffer_desc(&shp));
