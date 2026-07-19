@@ -50,6 +50,8 @@ impl Default for Range {
         Self::new()
     }
 }
+pub const MIN_VERTEX_SIZE: usize = 12;
+pub const MAX_VERTEX_SIZE: usize = 24;
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Mat4 {
@@ -67,21 +69,17 @@ impl Default for Mat4 {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Vertex {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub normal: u32,
-    pub u: u16,
-    pub v: u16,
-    pub color: u32,
+pub struct OptionalComponents {
+    pub normals: bool,
+    pub texcoords: bool,
+    pub colors: bool,
 }
-impl Vertex {
+impl OptionalComponents {
     pub const fn new() -> Self {
-        Self { x: 0.0, y: 0.0, z: 0.0, normal: 0, u: 0, v: 0, color: 0 }
+        Self { normals: false, texcoords: false, colors: false }
     }
 }
-impl Default for Vertex {
+impl Default for OptionalComponents {
     fn default() -> Self {
         Self::new()
     }
@@ -153,17 +151,23 @@ impl Default for BufferItem {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Buffer {
+pub struct State {
     pub valid: bool,
+    pub disable: OptionalComponents,
     pub vertices: BufferItem,
     pub indices: BufferItem,
 }
-impl Buffer {
+impl State {
     pub const fn new() -> Self {
-        Self { valid: false, vertices: BufferItem::new(), indices: BufferItem::new() }
+        Self {
+            valid: false,
+            disable: OptionalComponents::new(),
+            vertices: BufferItem::new(),
+            indices: BufferItem::new(),
+        }
     }
 }
-impl Default for Buffer {
+impl Default for State {
     fn default() -> Self {
         Self::new()
     }
@@ -323,24 +327,25 @@ pub mod ffi {
     #![allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub fn sshape_build_plane(buf: *const Buffer, params: *const Plane) -> Buffer;
-        pub fn sshape_build_box(buf: *const Buffer, params: *const Box) -> Buffer;
-        pub fn sshape_build_sphere(buf: *const Buffer, params: *const Sphere) -> Buffer;
-        pub fn sshape_build_cylinder(buf: *const Buffer, params: *const Cylinder) -> Buffer;
-        pub fn sshape_build_torus(buf: *const Buffer, params: *const Torus) -> Buffer;
-        pub fn sshape_plane_sizes(tiles: u32) -> Sizes;
-        pub fn sshape_box_sizes(tiles: u32) -> Sizes;
-        pub fn sshape_sphere_sizes(slices: u32, stacks: u32) -> Sizes;
-        pub fn sshape_cylinder_sizes(slices: u32, stacks: u32) -> Sizes;
-        pub fn sshape_torus_sizes(sides: u32, rings: u32) -> Sizes;
-        pub fn sshape_element_range(buf: *const Buffer) -> ElementRange;
-        pub fn sshape_vertex_buffer_desc(buf: *const Buffer) -> sg::BufferDesc;
-        pub fn sshape_index_buffer_desc(buf: *const Buffer) -> sg::BufferDesc;
-        pub fn sshape_vertex_buffer_layout_state() -> sg::VertexBufferLayoutState;
-        pub fn sshape_position_vertex_attr_state() -> sg::VertexAttrState;
-        pub fn sshape_normal_vertex_attr_state() -> sg::VertexAttrState;
-        pub fn sshape_texcoord_vertex_attr_state() -> sg::VertexAttrState;
-        pub fn sshape_color_vertex_attr_state() -> sg::VertexAttrState;
+        pub fn sshape_build_plane(state: *mut State, params: *const Plane);
+        pub fn sshape_build_box(state: *mut State, params: *const Box);
+        pub fn sshape_build_sphere(state: *mut State, params: *const Sphere);
+        pub fn sshape_build_cylinder(state: *mut State, params: *const Cylinder);
+        pub fn sshape_build_torus(state: *mut State, params: *const Torus);
+        pub fn sshape_vertex_size(components: *const OptionalComponents) -> usize;
+        pub fn sshape_plane_sizes(tiles: u32, vertex_size: usize) -> Sizes;
+        pub fn sshape_box_sizes(tiles: u32, vetrex_size: usize) -> Sizes;
+        pub fn sshape_sphere_sizes(slices: u32, stacks: u32, vertex_size: usize) -> Sizes;
+        pub fn sshape_cylinder_sizes(slices: u32, stacks: u32, vertex_size: usize) -> Sizes;
+        pub fn sshape_torus_sizes(sides: u32, rings: u32, vertex_size: usize) -> Sizes;
+        pub fn sshape_element_range(state: *const State) -> ElementRange;
+        pub fn sshape_vertex_buffer_desc(state: *const State) -> sg::BufferDesc;
+        pub fn sshape_index_buffer_desc(state: *const State) -> sg::BufferDesc;
+        pub fn sshape_vertex_buffer_layout_state(state: *const State) -> sg::VertexBufferLayoutState;
+        pub fn sshape_position_vertex_attr_state(state: *const State) -> sg::VertexAttrState;
+        pub fn sshape_normal_vertex_attr_state(state: *const State) -> sg::VertexAttrState;
+        pub fn sshape_texcoord_vertex_attr_state(state: *const State) -> sg::VertexAttrState;
+        pub fn sshape_color_vertex_attr_state(state: *const State) -> sg::VertexAttrState;
         pub fn sshape_color_4f(r: f32, g: f32, b: f32, a: f32) -> u32;
         pub fn sshape_color_3f(r: f32, g: f32, b: f32) -> u32;
         pub fn sshape_color_4b(r: u8, g: u8, b: u8, a: u8) -> u32;
@@ -350,76 +355,80 @@ pub mod ffi {
     }
 }
 #[inline]
-pub fn build_plane(buf: &Buffer, params: &Plane) -> Buffer {
-    unsafe { ffi::sshape_build_plane(buf, params) }
+pub fn build_plane(state: &mut State, params: &Plane) {
+    unsafe { ffi::sshape_build_plane(state, params) }
 }
 #[inline]
-pub fn build_box(buf: &Buffer, params: &Box) -> Buffer {
-    unsafe { ffi::sshape_build_box(buf, params) }
+pub fn build_box(state: &mut State, params: &Box) {
+    unsafe { ffi::sshape_build_box(state, params) }
 }
 #[inline]
-pub fn build_sphere(buf: &Buffer, params: &Sphere) -> Buffer {
-    unsafe { ffi::sshape_build_sphere(buf, params) }
+pub fn build_sphere(state: &mut State, params: &Sphere) {
+    unsafe { ffi::sshape_build_sphere(state, params) }
 }
 #[inline]
-pub fn build_cylinder(buf: &Buffer, params: &Cylinder) -> Buffer {
-    unsafe { ffi::sshape_build_cylinder(buf, params) }
+pub fn build_cylinder(state: &mut State, params: &Cylinder) {
+    unsafe { ffi::sshape_build_cylinder(state, params) }
 }
 #[inline]
-pub fn build_torus(buf: &Buffer, params: &Torus) -> Buffer {
-    unsafe { ffi::sshape_build_torus(buf, params) }
+pub fn build_torus(state: &mut State, params: &Torus) {
+    unsafe { ffi::sshape_build_torus(state, params) }
 }
 #[inline]
-pub fn plane_sizes(tiles: u32) -> Sizes {
-    unsafe { ffi::sshape_plane_sizes(tiles) }
+pub fn vertex_size(components: &OptionalComponents) -> usize {
+    unsafe { ffi::sshape_vertex_size(components) }
 }
 #[inline]
-pub fn box_sizes(tiles: u32) -> Sizes {
-    unsafe { ffi::sshape_box_sizes(tiles) }
+pub fn plane_sizes(tiles: u32, vertex_size: usize) -> Sizes {
+    unsafe { ffi::sshape_plane_sizes(tiles, vertex_size) }
 }
 #[inline]
-pub fn sphere_sizes(slices: u32, stacks: u32) -> Sizes {
-    unsafe { ffi::sshape_sphere_sizes(slices, stacks) }
+pub fn box_sizes(tiles: u32, vetrex_size: usize) -> Sizes {
+    unsafe { ffi::sshape_box_sizes(tiles, vetrex_size) }
 }
 #[inline]
-pub fn cylinder_sizes(slices: u32, stacks: u32) -> Sizes {
-    unsafe { ffi::sshape_cylinder_sizes(slices, stacks) }
+pub fn sphere_sizes(slices: u32, stacks: u32, vertex_size: usize) -> Sizes {
+    unsafe { ffi::sshape_sphere_sizes(slices, stacks, vertex_size) }
 }
 #[inline]
-pub fn torus_sizes(sides: u32, rings: u32) -> Sizes {
-    unsafe { ffi::sshape_torus_sizes(sides, rings) }
+pub fn cylinder_sizes(slices: u32, stacks: u32, vertex_size: usize) -> Sizes {
+    unsafe { ffi::sshape_cylinder_sizes(slices, stacks, vertex_size) }
 }
 #[inline]
-pub fn element_range(buf: &Buffer) -> ElementRange {
-    unsafe { ffi::sshape_element_range(buf) }
+pub fn torus_sizes(sides: u32, rings: u32, vertex_size: usize) -> Sizes {
+    unsafe { ffi::sshape_torus_sizes(sides, rings, vertex_size) }
 }
 #[inline]
-pub fn vertex_buffer_desc(buf: &Buffer) -> sg::BufferDesc {
-    unsafe { ffi::sshape_vertex_buffer_desc(buf) }
+pub fn element_range(state: &State) -> ElementRange {
+    unsafe { ffi::sshape_element_range(state) }
 }
 #[inline]
-pub fn index_buffer_desc(buf: &Buffer) -> sg::BufferDesc {
-    unsafe { ffi::sshape_index_buffer_desc(buf) }
+pub fn vertex_buffer_desc(state: &State) -> sg::BufferDesc {
+    unsafe { ffi::sshape_vertex_buffer_desc(state) }
 }
 #[inline]
-pub fn vertex_buffer_layout_state() -> sg::VertexBufferLayoutState {
-    unsafe { ffi::sshape_vertex_buffer_layout_state() }
+pub fn index_buffer_desc(state: &State) -> sg::BufferDesc {
+    unsafe { ffi::sshape_index_buffer_desc(state) }
 }
 #[inline]
-pub fn position_vertex_attr_state() -> sg::VertexAttrState {
-    unsafe { ffi::sshape_position_vertex_attr_state() }
+pub fn vertex_buffer_layout_state(state: &State) -> sg::VertexBufferLayoutState {
+    unsafe { ffi::sshape_vertex_buffer_layout_state(state) }
 }
 #[inline]
-pub fn normal_vertex_attr_state() -> sg::VertexAttrState {
-    unsafe { ffi::sshape_normal_vertex_attr_state() }
+pub fn position_vertex_attr_state(state: &State) -> sg::VertexAttrState {
+    unsafe { ffi::sshape_position_vertex_attr_state(state) }
 }
 #[inline]
-pub fn texcoord_vertex_attr_state() -> sg::VertexAttrState {
-    unsafe { ffi::sshape_texcoord_vertex_attr_state() }
+pub fn normal_vertex_attr_state(state: &State) -> sg::VertexAttrState {
+    unsafe { ffi::sshape_normal_vertex_attr_state(state) }
 }
 #[inline]
-pub fn color_vertex_attr_state() -> sg::VertexAttrState {
-    unsafe { ffi::sshape_color_vertex_attr_state() }
+pub fn texcoord_vertex_attr_state(state: &State) -> sg::VertexAttrState {
+    unsafe { ffi::sshape_texcoord_vertex_attr_state(state) }
+}
+#[inline]
+pub fn color_vertex_attr_state(state: &State) -> sg::VertexAttrState {
+    unsafe { ffi::sshape_color_vertex_attr_state(state) }
 }
 #[inline]
 pub fn color_4f(r: f32, g: f32, b: f32, a: f32) -> u32 {

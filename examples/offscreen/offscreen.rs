@@ -100,31 +100,36 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
 
     // a donut shape which is rendered into the offscreen render target, and
     // a sphere shape which is rendered into the default framebuffer
-    let vertices = [sshape::Vertex::new(); 4_000];
+    let vertices = [0u8; sshape::MAX_VERTEX_SIZE * 4_000];
     let vertices = sshape::value_as_range(&vertices);
     let indices = [0u16; 24_000];
     let indices = sshape::value_as_range(&indices);
-    let buf = sshape::Buffer {
+    let mut shp = sshape::State {
         vertices: sshape::BufferItem { buffer: vertices, ..Default::default() },
         indices: sshape::BufferItem { buffer: indices, ..Default::default() },
         ..Default::default()
     };
-    let buf = sshape::build_torus(
-        &buf,
-        &sshape::Torus { radius: 0.5, ring_radius: 0.3, sides: 20, rings: 36, ..Default::default() },
-    );
-    state.donut = sshape::element_range(&buf);
-    let buf = sshape::build_sphere(
-        &buf,
-        &sshape::Sphere { radius: 0.5, slices: 72, stacks: 40, ..Default::default() },
-    );
-    state.sphere = sshape::element_range(&buf);
+    sshape::build_torus(&mut shp, &sshape::Torus {
+        radius: 0.5,
+        ring_radius: 0.3,
+        sides: 20,
+        rings: 36,
+        ..Default::default()
+    });
+    state.donut = sshape::element_range(&shp);
+    sshape::build_sphere(&mut shp, &sshape::Sphere {
+        radius: 0.5,
+        slices: 72,
+        stacks: 40,
+        ..Default::default()
+    });
+    state.sphere = sshape::element_range(&shp);
 
-    let vbuf = sg::make_buffer(&sshape::vertex_buffer_desc(&buf));
+    let vbuf = sg::make_buffer(&sshape::vertex_buffer_desc(&shp));
     state.offscreen.bind.vertex_buffers[0] = vbuf;
     state.display.bind.vertex_buffers[0] = vbuf;
 
-    let ibuf = sg::make_buffer(&sshape::index_buffer_desc(&buf));
+    let ibuf = sg::make_buffer(&sshape::index_buffer_desc(&shp));
     state.offscreen.bind.index_buffer = ibuf;
     state.display.bind.index_buffer = ibuf;
 
@@ -133,9 +138,9 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         shader: sg::make_shader(&shader::offscreen_shader_desc(sg::query_backend())),
         layout: {
             let mut l = sg::VertexLayoutState::new();
-            l.buffers[0] = sshape::vertex_buffer_layout_state();
-            l.attrs[shader::ATTR_OFFSCREEN_POSITION] = sshape::position_vertex_attr_state();
-            l.attrs[shader::ATTR_OFFSCREEN_NORMAL] = sshape::normal_vertex_attr_state();
+            l.buffers[0] = sshape::vertex_buffer_layout_state(&shp);
+            l.attrs[shader::ATTR_OFFSCREEN_POSITION] = sshape::position_vertex_attr_state(&shp);
+            l.attrs[shader::ATTR_OFFSCREEN_NORMAL] = sshape::normal_vertex_attr_state(&shp);
             l
         },
         index_type: sg::IndexType::Uint16,
@@ -160,10 +165,10 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
         shader: sg::make_shader(&shader::default_shader_desc(sg::query_backend())),
         layout: {
             let mut l = sg::VertexLayoutState::new();
-            l.buffers[0] = sshape::vertex_buffer_layout_state();
-            l.attrs[shader::ATTR_DEFAULT_POSITION] = sshape::position_vertex_attr_state();
-            l.attrs[shader::ATTR_DEFAULT_NORMAL] = sshape::normal_vertex_attr_state();
-            l.attrs[shader::ATTR_DEFAULT_TEXCOORD0] = sshape::texcoord_vertex_attr_state();
+            l.buffers[0] = sshape::vertex_buffer_layout_state(&shp);
+            l.attrs[shader::ATTR_DEFAULT_POSITION] = sshape::position_vertex_attr_state(&shp);
+            l.attrs[shader::ATTR_DEFAULT_NORMAL] = sshape::normal_vertex_attr_state(&shp);
+            l.attrs[shader::ATTR_DEFAULT_TEXCOORD0] = sshape::texcoord_vertex_attr_state(&shp);
             l
         },
         index_type: sg::IndexType::Uint16,
