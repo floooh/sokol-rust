@@ -134,17 +134,17 @@ impl Default for Sizes {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct BufferItem {
+pub struct BufferState {
     pub buffer: Range,
     pub data_size: usize,
     pub shape_offset: usize,
 }
-impl BufferItem {
+impl BufferState {
     pub const fn new() -> Self {
         Self { buffer: Range::new(), data_size: 0, shape_offset: 0 }
     }
 }
-impl Default for BufferItem {
+impl Default for BufferState {
     fn default() -> Self {
         Self::new()
     }
@@ -154,16 +154,16 @@ impl Default for BufferItem {
 pub struct State {
     pub valid: bool,
     pub disable: OptionalComponents,
-    pub vertices: BufferItem,
-    pub indices: BufferItem,
+    pub vertices: BufferState,
+    pub indices: BufferState,
 }
 impl State {
     pub const fn new() -> Self {
         Self {
             valid: false,
             disable: OptionalComponents::new(),
-            vertices: BufferItem::new(),
-            indices: BufferItem::new(),
+            vertices: BufferState::new(),
+            indices: BufferState::new(),
         }
     }
 }
@@ -334,7 +334,7 @@ pub mod ffi {
         pub fn sshape_build_torus(state: *mut State, params: *const Torus);
         pub fn sshape_vertex_size(components: *const OptionalComponents) -> usize;
         pub fn sshape_plane_sizes(tiles: u32, vertex_size: usize) -> Sizes;
-        pub fn sshape_box_sizes(tiles: u32, vetrex_size: usize) -> Sizes;
+        pub fn sshape_box_sizes(tiles: u32, vertex_size: usize) -> Sizes;
         pub fn sshape_sphere_sizes(slices: u32, stacks: u32, vertex_size: usize) -> Sizes;
         pub fn sshape_cylinder_sizes(slices: u32, stacks: u32, vertex_size: usize) -> Sizes;
         pub fn sshape_torus_sizes(sides: u32, rings: u32, vertex_size: usize) -> Sizes;
@@ -383,8 +383,8 @@ pub fn plane_sizes(tiles: u32, vertex_size: usize) -> Sizes {
     unsafe { ffi::sshape_plane_sizes(tiles, vertex_size) }
 }
 #[inline]
-pub fn box_sizes(tiles: u32, vetrex_size: usize) -> Sizes {
-    unsafe { ffi::sshape_box_sizes(tiles, vetrex_size) }
+pub fn box_sizes(tiles: u32, vertex_size: usize) -> Sizes {
+    unsafe { ffi::sshape_box_sizes(tiles, vertex_size) }
 }
 #[inline]
 pub fn sphere_sizes(slices: u32, stacks: u32, vertex_size: usize) -> Sizes {

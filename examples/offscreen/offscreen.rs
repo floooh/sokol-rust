@@ -105,8 +105,8 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     let indices = [0u16; 24_000];
     let indices = sshape::value_as_range(&indices);
     let mut shp = sshape::State {
-        vertices: sshape::BufferItem { buffer: vertices, ..Default::default() },
-        indices: sshape::BufferItem { buffer: indices, ..Default::default() },
+        vertices: sshape::BufferState { buffer: vertices, ..Default::default() },
+        indices: sshape::BufferState { buffer: indices, ..Default::default() },
         ..Default::default()
     };
     sshape::build_torus(&mut shp, &sshape::Torus {
