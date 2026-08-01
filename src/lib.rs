@@ -7,6 +7,7 @@ pub mod framebuffer;
 pub mod gfx;
 pub mod gl;
 pub mod glue;
+pub mod letterbox;
 pub mod log;
 pub mod shape;
 pub mod time;
