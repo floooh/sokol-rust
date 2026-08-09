@@ -400,6 +400,7 @@ impl Default for Limits {
 pub enum ResourceState {
     Initial,
     Alloc,
+    Unsealed,
     Valid,
     Failed,
     Invalid,
@@ -1195,6 +1196,7 @@ pub struct BufferUsage {
     pub immutable: bool,
     pub dynamic_update: bool,
     pub stream_update: bool,
+    pub write_unsealed: bool,
 }
 impl BufferUsage {
     pub const fn new() -> Self {
@@ -1205,6 +1207,7 @@ impl BufferUsage {
             immutable: false,
             dynamic_update: false,
             stream_update: false,
+            write_unsealed: false,
         }
     }
 }
@@ -1258,6 +1261,7 @@ pub struct ImageUsage {
     pub immutable: bool,
     pub dynamic_update: bool,
     pub stream_update: bool,
+    pub write_unsealed: bool,
 }
 impl ImageUsage {
     pub const fn new() -> Self {
@@ -1269,6 +1273,7 @@ impl ImageUsage {
             immutable: false,
             dynamic_update: false,
             stream_update: false,
+            write_unsealed: false,
         }
     }
 }
@@ -1309,6 +1314,130 @@ impl ImageData {
     }
 }
 impl Default for ImageData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ImageExtent {
+    pub width: i32,
+    pub height: i32,
+    pub num_slices: i32,
+}
+impl ImageExtent {
+    pub const fn new() -> Self {
+        Self { width: 0, height: 0, num_slices: 0 }
+    }
+}
+impl Default for ImageExtent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ImageLocation {
+    pub image: Image,
+    pub mip_level: i32,
+    pub x: i32,
+    pub y: i32,
+    pub slice: i32,
+}
+impl ImageLocation {
+    pub const fn new() -> Self {
+        Self { image: Image::new(), mip_level: 0, x: 0, y: 0, slice: 0 }
+    }
+}
+impl Default for ImageLocation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WriteImageSource {
+    pub data: Range,
+    pub offset: usize,
+    pub bytes_per_row: i32,
+    pub bytes_per_slice: i32,
+}
+impl WriteImageSource {
+    pub const fn new() -> Self {
+        Self { data: Range::new(), offset: 0, bytes_per_row: 0, bytes_per_slice: 0 }
+    }
+}
+impl Default for WriteImageSource {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WriteImageDesc {
+    pub src: WriteImageSource,
+    pub dst: ImageLocation,
+    pub size: ImageExtent,
+}
+impl WriteImageDesc {
+    pub const fn new() -> Self {
+        Self {
+            src: WriteImageSource::new(),
+            dst: ImageLocation::new(),
+            size: ImageExtent::new(),
+        }
+    }
+}
+impl Default for WriteImageDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct BufferLocation {
+    pub buffer: Buffer,
+    pub offset: usize,
+}
+impl BufferLocation {
+    pub const fn new() -> Self {
+        Self { buffer: Buffer::new(), offset: 0 }
+    }
+}
+impl Default for BufferLocation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WriteBufferSource {
+    pub data: Range,
+    pub offset: usize,
+}
+impl WriteBufferSource {
+    pub const fn new() -> Self {
+        Self { data: Range::new(), offset: 0 }
+    }
+}
+impl Default for WriteBufferSource {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WriteBufferDesc {
+    pub src: WriteBufferSource,
+    pub dst: BufferLocation,
+    pub size: usize,
+}
+impl WriteBufferDesc {
+    pub const fn new() -> Self {
+        Self { src: WriteBufferSource::new(), dst: BufferLocation::new(), size: 0 }
+    }
+}
+impl Default for WriteBufferDesc {
     fn default() -> Self {
         Self::new()
     }
@@ -2119,6 +2248,10 @@ pub struct TraceHooks {
     pub update_buffer: Option<extern "C" fn(Buffer, *const Range, *mut core::ffi::c_void)>,
     pub update_image: Option<extern "C" fn(Image, *const ImageData, *mut core::ffi::c_void)>,
     pub append_buffer: Option<extern "C" fn(Buffer, *const Range, i32, *mut core::ffi::c_void)>,
+    pub write_buffer_unsealed: Option<extern "C" fn(*const WriteBufferDesc, *mut core::ffi::c_void)>,
+    pub write_image_unsealed: Option<extern "C" fn(*const WriteImageDesc, *mut core::ffi::c_void)>,
+    pub seal_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
+    pub seal_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
     pub begin_pass: Option<extern "C" fn(*const Pass, *mut core::ffi::c_void)>,
     pub apply_viewport: Option<extern "C" fn(i32, i32, i32, i32, bool, *mut core::ffi::c_void)>,
     pub apply_scissor_rect: Option<extern "C" fn(i32, i32, i32, i32, bool, *mut core::ffi::c_void)>,
@@ -2183,6 +2316,10 @@ impl TraceHooks {
             update_buffer: None,
             update_image: None,
             append_buffer: None,
+            write_buffer_unsealed: None,
+            write_image_unsealed: None,
+            seal_buffer: None,
+            seal_image: None,
             begin_pass: None,
             apply_viewport: None,
             apply_scissor_rect: None,
@@ -2895,6 +3032,10 @@ pub struct FrameStats {
     pub num_update_buffer: u32,
     pub num_append_buffer: u32,
     pub num_update_image: u32,
+    pub num_write_buffer_unsealed: u32,
+    pub num_write_image_unsealed: u32,
+    pub num_seal_buffer: u32,
+    pub num_seal_image: u32,
     pub size_apply_uniforms: u32,
     pub size_update_buffer: u32,
     pub size_append_buffer: u32,
@@ -2927,6 +3068,10 @@ impl FrameStats {
             num_update_buffer: 0,
             num_append_buffer: 0,
             num_update_image: 0,
+            num_write_buffer_unsealed: 0,
+            num_write_image_unsealed: 0,
+            num_seal_buffer: 0,
+            num_seal_image: 0,
             size_apply_uniforms: 0,
             size_update_buffer: 0,
             size_append_buffer: 0,
@@ -3072,6 +3217,7 @@ pub enum LogItem {
     VulkanStagingAllocateMemoryFailed,
     VulkanStagingBindBufferMemoryFailed,
     VulkanStagingStreamBufferOverflow,
+    VulkanStagingImageRowPitchGreaterStagingBuffer,
     VulkanCreateSharedBufferFailed,
     VulkanAllocateSharedBufferMemoryFailed,
     VulkanBindSharedBufferMemoryFailed,
@@ -3135,6 +3281,10 @@ pub enum LogItem {
     BeginpassTooManyResolveAttachments,
     BeginpassAttachmentsAlive,
     DrawWithoutBindings,
+    WriteBufferUnsealedBufferAlive,
+    WriteImageUnsealedImageAlive,
+    SealBufferAlive,
+    SealImageAlive,
     ShaderdescTooManyVertexstageTextures,
     ShaderdescTooManyFragmentstageTextures,
     ShaderdescTooManyComputestageTextures,
@@ -3149,6 +3299,7 @@ pub enum LogItem {
     ShaderdescTooManyComputestageTexturesamplerpairs,
     ValidateBufferdescCanary,
     ValidateBufferdescImmutableDynamicStream,
+    ValidateBufferdescUnsealedVsImmutable,
     ValidateBufferdescSeparateBufferTypes,
     ValidateBufferdescExpectNonzeroSize,
     ValidateBufferdescExpectMatchingDataSize,
@@ -3161,6 +3312,8 @@ pub enum LogItem {
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
     ValidateImagedescImmutableDynamicStream,
+    ValidateImagedescUnsealedVsImmutable,
+    ValidateImagedescUnsealedVsAttachment,
     ValidateImagedescAttachmentColorDepthStencil,
     ValidateImagedescImagetype2dNumslices,
     ValidateImagedescImagetypeCubeNumslices,
@@ -3181,9 +3334,12 @@ pub enum LogItem {
     ValidateImagedescAttachmentMsaa3dImage,
     ValidateImagedescAttachmentMsaaCubeImage,
     ValidateImagedescAttachmentMsaaArrayImage,
+    ValidateImagedescStorageimageExpectImmutable,
+    ValidateImagedescStorageimageExpectNoData,
     ValidateImagedescStorageimagePixelformat,
     ValidateImagedescStorageimageExpectNoMsaa,
     ValidateImagedescInjectedNoData,
+    ValidateImagedescUnsealedNoData,
     ValidateImagedescDynamicNoData,
     ValidateImagedescCompressedImmutable,
     ValidateSamplerdescCanary,
@@ -3259,7 +3415,8 @@ pub enum LogItem {
     ValidateViewdescUniqueViewtype,
     ValidateViewdescAnyViewtype,
     ValidateViewdescResourceAlive,
-    ValidateViewdescResourceFailed,
+    ValidateViewdescResourceValid,
+    ValidateViewdescImageValidUnsealed,
     ValidateViewdescStoragebufferOffsetVsBufferSize,
     ValidateViewdescStoragebufferOffsetMultiple256,
     ValidateViewdescStoragebufferUsage,
@@ -3454,6 +3611,32 @@ pub enum LogItem {
     ValidateAppendbufUpdate,
     ValidateUpdimgUsage,
     ValidateUpdimgOnce,
+    ValidateWritebufferunsealedUsage,
+    ValidateWritebufferunsealedResourcestate,
+    ValidateWritebufferunsealedSrcDataPointer,
+    ValidateWritebufferunsealedSrcDataSize,
+    ValidateWritebufferunsealedSize,
+    ValidateWritebufferunsealedWriteOverflow,
+    ValidateWritebufferunsealedReadOverflow,
+    ValidateWriteimageunsealedUsage,
+    ValidateWriteimageunsealedResourcestate,
+    ValidateWriteimageunsealedSrcDataPointer,
+    ValidateWriteimageunsealedSrcDataSize,
+    ValidateWriteimageunsealedBytesperrow,
+    ValidateWriteimageunsealedBytesperslice,
+    ValidateWriteimageunsealedMiplevel,
+    ValidateWriteimageunsealedWidth,
+    ValidateWriteimageunsealedHeight,
+    ValidateWriteimageunsealedNumslices,
+    ValidateWriteimageunsealedReadOverflow,
+    ValidateWriteimageunsealedDstXRange,
+    ValidateWriteimageunsealedDstYRange,
+    ValidateWriteimageunsealedDstSliceRange,
+    ValidateWriteimageunsealedWriteWidthOverflow,
+    ValidateWriteimageunsealedWriteHeightOverflow,
+    ValidateWriteimageunsealedWriteNumslicesOverflow,
+    ValidateSealbufferResourcestate,
+    ValidateSealimageResourcestate,
     ValidationFailed,
 }
 impl LogItem {
@@ -4160,11 +4343,6 @@ pub mod ffi {
         pub fn sg_destroy_shader(shd: Shader);
         pub fn sg_destroy_pipeline(pip: Pipeline);
         pub fn sg_destroy_view(view: View);
-        pub fn sg_update_buffer(buf: Buffer, data: *const Range);
-        pub fn sg_update_image(img: Image, data: *const ImageData);
-        pub fn sg_append_buffer(buf: Buffer, data: *const Range) -> i32;
-        pub fn sg_query_buffer_overflow(buf: Buffer) -> bool;
-        pub fn sg_query_buffer_will_overflow(buf: Buffer, size: usize) -> bool;
         pub fn sg_begin_pass(pass: *const Pass);
         pub fn sg_apply_viewport(x: i32, y: i32, width: i32, height: i32, origin_top_left: bool);
         pub fn sg_apply_viewportf(x: f32, y: f32, width: f32, height: f32, origin_top_left: bool);
@@ -4184,6 +4362,15 @@ pub mod ffi {
         pub fn sg_dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize);
         pub fn sg_end_pass();
         pub fn sg_commit();
+        pub fn sg_write_buffer_unsealed(desc: *const WriteBufferDesc);
+        pub fn sg_write_image_unsealed(desc: *const WriteImageDesc);
+        pub fn sg_seal_buffer(buf: Buffer);
+        pub fn sg_seal_image(img: Image);
+        pub fn sg_update_buffer(buf: Buffer, data: *const Range);
+        pub fn sg_update_image(img: Image, data: *const ImageData);
+        pub fn sg_append_buffer(buf: Buffer, data: *const Range) -> i32;
+        pub fn sg_query_buffer_overflow(buf: Buffer) -> bool;
+        pub fn sg_query_buffer_will_overflow(buf: Buffer, size: usize) -> bool;
         pub fn sg_query_desc() -> Desc;
         pub fn sg_query_backend() -> Backend;
         pub fn sg_query_features() -> Features;
@@ -4384,26 +4571,6 @@ pub fn destroy_view(view: View) {
     unsafe { ffi::sg_destroy_view(view) }
 }
 #[inline]
-pub fn update_buffer(buf: Buffer, data: &Range) {
-    unsafe { ffi::sg_update_buffer(buf, data) }
-}
-#[inline]
-pub fn update_image(img: Image, data: &ImageData) {
-    unsafe { ffi::sg_update_image(img, data) }
-}
-#[inline]
-pub fn append_buffer(buf: Buffer, data: &Range) -> i32 {
-    unsafe { ffi::sg_append_buffer(buf, data) }
-}
-#[inline]
-pub fn query_buffer_overflow(buf: Buffer) -> bool {
-    unsafe { ffi::sg_query_buffer_overflow(buf) }
-}
-#[inline]
-pub fn query_buffer_will_overflow(buf: Buffer, size: usize) -> bool {
-    unsafe { ffi::sg_query_buffer_will_overflow(buf, size) }
-}
-#[inline]
 pub fn begin_pass(pass: &Pass) {
     unsafe { ffi::sg_begin_pass(pass) }
 }
@@ -4460,6 +4627,42 @@ pub fn end_pass() {
 #[inline]
 pub fn commit() {
     unsafe { ffi::sg_commit() }
+}
+#[inline]
+pub fn write_buffer_unsealed(desc: &WriteBufferDesc) {
+    unsafe { ffi::sg_write_buffer_unsealed(desc) }
+}
+#[inline]
+pub fn write_image_unsealed(desc: &WriteImageDesc) {
+    unsafe { ffi::sg_write_image_unsealed(desc) }
+}
+#[inline]
+pub fn seal_buffer(buf: Buffer) {
+    unsafe { ffi::sg_seal_buffer(buf) }
+}
+#[inline]
+pub fn seal_image(img: Image) {
+    unsafe { ffi::sg_seal_image(img) }
+}
+#[inline]
+pub fn update_buffer(buf: Buffer, data: &Range) {
+    unsafe { ffi::sg_update_buffer(buf, data) }
+}
+#[inline]
+pub fn update_image(img: Image, data: &ImageData) {
+    unsafe { ffi::sg_update_image(img, data) }
+}
+#[inline]
+pub fn append_buffer(buf: Buffer, data: &Range) -> i32 {
+    unsafe { ffi::sg_append_buffer(buf, data) }
+}
+#[inline]
+pub fn query_buffer_overflow(buf: Buffer) -> bool {
+    unsafe { ffi::sg_query_buffer_overflow(buf) }
+}
+#[inline]
+pub fn query_buffer_will_overflow(buf: Buffer, size: usize) -> bool {
+    unsafe { ffi::sg_query_buffer_will_overflow(buf, size) }
 }
 #[inline]
 pub fn query_desc() -> Desc {
