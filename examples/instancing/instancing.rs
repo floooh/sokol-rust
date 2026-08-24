@@ -72,7 +72,7 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     // empty, dynamic instance-data vertex buffer, goes into vertex-buffer-slot 1
     state.bind.vertex_buffers[1] = sg::make_buffer(&sg::BufferDesc {
         size: MAX_PARTICLES * std::mem::size_of::<m::Vec3>(),
-        usage: sg::BufferUsage { stream_update: true, ..Default::default() },
+        usage: sg::BufferUsage { write_transient: true, ..Default::default() },
         ..Default::default()
     });
 
@@ -140,7 +140,11 @@ extern "C" fn frame(user_data: *mut ffi::c_void) {
     }
 
     // update instance data
-    sg::update_buffer(state.bind.vertex_buffers[1], &sg::slice_as_range(state.pos.as_slice()));
+    sg::write_buffer_transient(&sg::WriteBufferDesc {
+        dst: sg::BufferLocation { buffer: state.bind.vertex_buffers[1], ..Default::default() },
+        src: sg::WriteBufferSource { data: sg::slice_as_range(state.pos.as_slice()), ..Default::default() },
+        size: state.cur_num_particles * std::mem::size_of::<m::Vec3>(),
+    });
 
     // vertex shader uniform data with model-view-projection matrix
     let proj = m::persp_mat4(60.0, sapp::widthf() / sapp::heightf(), 0.01, 50.0);
