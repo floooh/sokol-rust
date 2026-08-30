@@ -2396,23 +2396,23 @@ impl Default for SlotInfo {
 #[derive(Copy, Clone, Debug)]
 pub struct BufferInfo {
     pub slot: SlotInfo,
+    pub num_slots: i32,
+    pub active_slot: i32,
     pub update_frame_index: u32,
     pub append_frame_index: u32,
     pub append_pos: i32,
     pub append_overflow: bool,
-    pub num_slots: i32,
-    pub active_slot: i32,
 }
 impl BufferInfo {
     pub const fn new() -> Self {
         Self {
             slot: SlotInfo::new(),
+            num_slots: 0,
+            active_slot: 0,
             update_frame_index: 0,
             append_frame_index: 0,
             append_pos: 0,
             append_overflow: false,
-            num_slots: 0,
-            active_slot: 0,
         }
     }
 }
@@ -2425,13 +2425,13 @@ impl Default for BufferInfo {
 #[derive(Copy, Clone, Debug)]
 pub struct ImageInfo {
     pub slot: SlotInfo,
-    pub upd_frame_index: u32,
     pub num_slots: i32,
     pub active_slot: i32,
+    pub upd_frame_index: u32,
 }
 impl ImageInfo {
     pub const fn new() -> Self {
-        Self { slot: SlotInfo::new(), upd_frame_index: 0, num_slots: 0, active_slot: 0 }
+        Self { slot: SlotInfo::new(), num_slots: 0, active_slot: 0, upd_frame_index: 0 }
     }
 }
 impl Default for ImageInfo {
@@ -3225,7 +3225,7 @@ pub enum LogItem {
     VulkanStagingCreateBufferFailed,
     VulkanStagingAllocateMemoryFailed,
     VulkanStagingBindBufferMemoryFailed,
-    VulkanStagingStreamBufferOverflow,
+    VulkanStagingTransientBufferOverflow,
     VulkanStagingImageRowPitchGreaterStagingBuffer,
     VulkanCreateSharedBufferFailed,
     VulkanAllocateSharedBufferMemoryFailed,
@@ -3323,8 +3323,10 @@ pub enum LogItem {
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
     ValidateImagedescImmutableVsWritable,
-    ValidateImagedescUnsealedVsImmutable,
-    ValidateImagedescUnsealedVsAttachment,
+    ValidateImagedescWriteUnsealedVsImmutable,
+    ValidateImagedescWriteUnsealedVsAttachment,
+    ValidateImagedescWriteTransientVsAttachment,
+    ValidateImagedescDynamicUpdateVsAttachment,
     ValidateImagedescAttachmentColorDepthStencil,
     ValidateImagedescImagetype2dNumslices,
     ValidateImagedescImagetypeCubeNumslices,
@@ -3899,14 +3901,14 @@ impl Default for WgpuDesc {
 #[derive(Copy, Clone, Debug)]
 pub struct VulkanDesc {
     pub copy_staging_buffer_size: i32,
-    pub stream_staging_buffer_size: i32,
+    pub transient_staging_buffer_size: i32,
     pub descriptor_buffer_size: i32,
 }
 impl VulkanDesc {
     pub const fn new() -> Self {
         Self {
             copy_staging_buffer_size: 0,
-            stream_staging_buffer_size: 0,
+            transient_staging_buffer_size: 0,
             descriptor_buffer_size: 0,
         }
     }
