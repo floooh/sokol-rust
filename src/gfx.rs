@@ -1194,9 +1194,9 @@ pub struct BufferUsage {
     pub index_buffer: bool,
     pub storage_buffer: bool,
     pub immutable: bool,
-    pub dynamic_update: bool,
-    pub stream_update: bool,
     pub write_unsealed: bool,
+    pub write_transient: bool,
+    pub dynamic_update: bool,
 }
 impl BufferUsage {
     pub const fn new() -> Self {
@@ -1205,9 +1205,9 @@ impl BufferUsage {
             index_buffer: false,
             storage_buffer: false,
             immutable: false,
-            dynamic_update: false,
-            stream_update: false,
             write_unsealed: false,
+            write_transient: false,
+            dynamic_update: false,
         }
     }
 }
@@ -1259,9 +1259,9 @@ pub struct ImageUsage {
     pub resolve_attachment: bool,
     pub depth_stencil_attachment: bool,
     pub immutable: bool,
-    pub dynamic_update: bool,
-    pub stream_update: bool,
     pub write_unsealed: bool,
+    pub write_transient: bool,
+    pub dynamic_update: bool,
 }
 impl ImageUsage {
     pub const fn new() -> Self {
@@ -1271,9 +1271,9 @@ impl ImageUsage {
             resolve_attachment: false,
             depth_stencil_attachment: false,
             immutable: false,
-            dynamic_update: false,
-            stream_update: false,
             write_unsealed: false,
+            write_transient: false,
+            dynamic_update: false,
         }
     }
 }
@@ -2248,6 +2248,8 @@ pub struct TraceHooks {
     pub update_buffer: Option<extern "C" fn(Buffer, *const Range, *mut core::ffi::c_void)>,
     pub update_image: Option<extern "C" fn(Image, *const ImageData, *mut core::ffi::c_void)>,
     pub append_buffer: Option<extern "C" fn(Buffer, *const Range, i32, *mut core::ffi::c_void)>,
+    pub write_buffer_transient: Option<extern "C" fn(*const WriteBufferDesc, *mut core::ffi::c_void)>,
+    pub write_image_transient: Option<extern "C" fn(*const WriteImageDesc, *mut core::ffi::c_void)>,
     pub write_buffer_unsealed: Option<extern "C" fn(*const WriteBufferDesc, *mut core::ffi::c_void)>,
     pub write_image_unsealed: Option<extern "C" fn(*const WriteImageDesc, *mut core::ffi::c_void)>,
     pub seal_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
@@ -2316,6 +2318,8 @@ impl TraceHooks {
             update_buffer: None,
             update_image: None,
             append_buffer: None,
+            write_buffer_transient: None,
+            write_image_transient: None,
             write_buffer_unsealed: None,
             write_image_unsealed: None,
             seal_buffer: None,
@@ -3032,6 +3036,8 @@ pub struct FrameStats {
     pub num_update_buffer: u32,
     pub num_append_buffer: u32,
     pub num_update_image: u32,
+    pub num_write_buffer_transient: u32,
+    pub num_write_image_transient: u32,
     pub num_write_buffer_unsealed: u32,
     pub num_write_image_unsealed: u32,
     pub num_seal_buffer: u32,
@@ -3068,6 +3074,8 @@ impl FrameStats {
             num_update_buffer: 0,
             num_append_buffer: 0,
             num_update_image: 0,
+            num_write_buffer_transient: 0,
+            num_write_image_transient: 0,
             num_write_buffer_unsealed: 0,
             num_write_image_unsealed: 0,
             num_seal_buffer: 0,
@@ -3171,6 +3179,7 @@ pub enum LogItem {
     D3d11MapForUpdateBufferFailed,
     D3d11MapForAppendBufferFailed,
     D3d11MapForUpdateImageFailed,
+    D3d11MapForWriteBufferTransientFailed,
     MetalCreateBufferFailed,
     MetalTextureFormatNotSupported,
     MetalCreateTextureFailed,
@@ -3281,6 +3290,8 @@ pub enum LogItem {
     BeginpassTooManyResolveAttachments,
     BeginpassAttachmentsAlive,
     DrawWithoutBindings,
+    WriteBufferTransientBufferAlive,
+    WriteImageTransientImageAlive,
     WriteBufferUnsealedBufferAlive,
     WriteImageUnsealedImageAlive,
     SealBufferAlive,
@@ -3298,7 +3309,7 @@ pub enum LogItem {
     ShaderdescTooManyFragmentstageTexturesamplerpairs,
     ShaderdescTooManyComputestageTexturesamplerpairs,
     ValidateBufferdescCanary,
-    ValidateBufferdescImmutableDynamicStream,
+    ValidateBufferdescImmutableVsWritable,
     ValidateBufferdescUnsealedVsImmutable,
     ValidateBufferdescSeparateBufferTypes,
     ValidateBufferdescExpectNonzeroSize,
@@ -3311,7 +3322,7 @@ pub enum LogItem {
     ValidateImagedataNodata,
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
-    ValidateImagedescImmutableDynamicStream,
+    ValidateImagedescImmutableVsWritable,
     ValidateImagedescUnsealedVsImmutable,
     ValidateImagedescUnsealedVsAttachment,
     ValidateImagedescAttachmentColorDepthStencil,
@@ -3339,8 +3350,7 @@ pub enum LogItem {
     ValidateImagedescStorageimagePixelformat,
     ValidateImagedescStorageimageExpectNoMsaa,
     ValidateImagedescInjectedNoData,
-    ValidateImagedescUnsealedNoData,
-    ValidateImagedescDynamicNoData,
+    ValidateImagedescWritableNoData,
     ValidateImagedescCompressedImmutable,
     ValidateSamplerdescCanary,
     ValidateSamplerdescAnistropicRequiresLinearFiltering,
@@ -3546,11 +3556,13 @@ pub enum LogItem {
     ValidateAbndVbufAlive,
     ValidateAbndVbufUsage,
     ValidateAbndVbufOverflow,
+    ValidateAbndVbufWriteTransient,
     ValidateAbndExpectedNoIbuf,
     ValidateAbndExpectedIbuf,
     ValidateAbndIbufAlive,
     ValidateAbndIbufUsage,
     ValidateAbndIbufOverflow,
+    ValidateAbndIbufWriteTransient,
     ValidateAbndExpectedViewBinding,
     ValidateAbndViewAlive,
     ValidateAbndExpectTexview,
@@ -3561,10 +3573,13 @@ pub enum LogItem {
     ValidateAbndTexviewExpectedNonMultisampledImage,
     ValidateAbndTexviewExpectedFilterableImage,
     ValidateAbndTexviewExpectedDepthImage,
+    ValidateAbndTexviewImageWriteTransient,
     ValidateAbndSbviewReadwriteImmutable,
+    ValidateAbndSbviewBufferWriteTransient,
     ValidateAbndSimgviewComputePassExpected,
     ValidateAbndSimgviewImagetypeMismatch,
     ValidateAbndSimgviewAccessformat,
+    ValidateAbndSimgviewImageWriteTransient,
     ValidateAbndExpectedSamplerBinding,
     ValidateAbndUnexpectedSamplerCompareNever,
     ValidateAbndExpectedSamplerCompareNever,
@@ -3613,28 +3628,33 @@ pub enum LogItem {
     ValidateUpdimgOnce,
     ValidateWritebufferunsealedUsage,
     ValidateWritebufferunsealedResourcestate,
-    ValidateWritebufferunsealedSrcDataPointer,
-    ValidateWritebufferunsealedSrcDataSize,
-    ValidateWritebufferunsealedSize,
-    ValidateWritebufferunsealedWriteOverflow,
-    ValidateWritebufferunsealedReadOverflow,
+    ValidateWritebuffertransientUsage,
+    ValidateWritebuffertransientWriteBeforeBind,
+    ValidateWritebuffertransientDstOffsetAlignment,
+    ValidateWritebufferSrcDataPointer,
+    ValidateWritebufferSrcDataSize,
+    ValidateWritebufferSize,
+    ValidateWritebufferWriteOverflow,
+    ValidateWritebufferReadOverflow,
     ValidateWriteimageunsealedUsage,
     ValidateWriteimageunsealedResourcestate,
-    ValidateWriteimageunsealedSrcDataPointer,
-    ValidateWriteimageunsealedSrcDataSize,
-    ValidateWriteimageunsealedBytesperrow,
-    ValidateWriteimageunsealedBytesperslice,
-    ValidateWriteimageunsealedMiplevel,
-    ValidateWriteimageunsealedWidth,
-    ValidateWriteimageunsealedHeight,
-    ValidateWriteimageunsealedNumslices,
-    ValidateWriteimageunsealedReadOverflow,
-    ValidateWriteimageunsealedDstXRange,
-    ValidateWriteimageunsealedDstYRange,
-    ValidateWriteimageunsealedDstSliceRange,
-    ValidateWriteimageunsealedWriteWidthOverflow,
-    ValidateWriteimageunsealedWriteHeightOverflow,
-    ValidateWriteimageunsealedWriteNumslicesOverflow,
+    ValidateWriteimagetransientUsage,
+    ValidateWriteimagetransientWriteBeforeBind,
+    ValidateWriteimageSrcDataPointer,
+    ValidateWriteimageSrcDataSize,
+    ValidateWriteimageBytesperrow,
+    ValidateWriteimageBytesperslice,
+    ValidateWriteimageMiplevel,
+    ValidateWriteimageWidth,
+    ValidateWriteimageHeight,
+    ValidateWriteimageNumslices,
+    ValidateWriteimageReadOverflow,
+    ValidateWriteimageDstXRange,
+    ValidateWriteimageDstYRange,
+    ValidateWriteimageDstSliceRange,
+    ValidateWriteimageWriteWidthOverflow,
+    ValidateWriteimageWriteHeightOverflow,
+    ValidateWriteimageWriteNumslicesOverflow,
     ValidateSealbufferResourcestate,
     ValidateSealimageResourcestate,
     ValidationFailed,
@@ -4362,6 +4382,8 @@ pub mod ffi {
         pub fn sg_dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize);
         pub fn sg_end_pass();
         pub fn sg_commit();
+        pub fn sg_write_buffer_transient(desc: *const WriteBufferDesc);
+        pub fn sg_write_image_transient(desc: *const WriteImageDesc);
         pub fn sg_write_buffer_unsealed(desc: *const WriteBufferDesc);
         pub fn sg_write_image_unsealed(desc: *const WriteImageDesc);
         pub fn sg_seal_buffer(buf: Buffer);
@@ -4627,6 +4649,14 @@ pub fn end_pass() {
 #[inline]
 pub fn commit() {
     unsafe { ffi::sg_commit() }
+}
+#[inline]
+pub fn write_buffer_transient(desc: &WriteBufferDesc) {
+    unsafe { ffi::sg_write_buffer_transient(desc) }
+}
+#[inline]
+pub fn write_image_transient(desc: &WriteImageDesc) {
+    unsafe { ffi::sg_write_image_transient(desc) }
 }
 #[inline]
 pub fn write_buffer_unsealed(desc: &WriteBufferDesc) {
