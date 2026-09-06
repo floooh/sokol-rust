@@ -132,8 +132,18 @@ fn make_sokol() {
     let backend = select_sokol_backend(&mut build, &config);
 
     let files = [
-        "sokol_log.c", "sokol_app.c", "sokol_gfx.c", "sokol_glue.c", "sokol_time.c", "sokol_audio.c",
-        "sokol_gl.c", "sokol_debugtext.c", "sokol_shape.c",
+        "sokol_log.c",
+        "sokol_app.c",
+        "sokol_gfx.c",
+        "sokol_glue.c",
+        "sokol_time.c",
+        "sokol_audio.c",
+        "sokol_gl.c",
+        "sokol_debugtext.c",
+        "sokol_shape.c",
+        "sokol_cmdbuf.c",
+        "sokol_framebuffer.c",
+        "sokol_letterbox.c",
     ];
 
     //
