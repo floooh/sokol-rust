@@ -148,9 +148,73 @@ cargo run --example userdata
 cargo run --example vertexpull
 ```
 
->NOTE: imgui support has been removed for now, the required cimgui submodule dependency caused trouble with
-> Github Actions. We'll need to solve this some other way in the future, and in a way that works for all
-> language bindings.
+## Dear ImGui integration
+
+> _The section below is LLM-generated._
+
+sokol-rust ships bindings for `sokol_imgui.h`, `sokol_gfx_imgui.h` and
+`sokol_app_imgui.h` as the crate modules `sokol::imgui`, `sokol::gfximgui`
+and `sokol::appimgui`. All three are gated behind the `imgui` cargo
+feature and `build.rs` does **not** compile the corresponding C stubs —
+Dear ImGui (C++) is not part of the crate and must be supplied by your
+project.
+
+To use them:
+
+1. Add `sokol` with the `imgui` feature and clone
+   [dcimgui](https://github.com/floooh/dcimgui) (an all-in-one Dear ImGui
+   + `cimgui.h` C-API drop) into your project.
+
+    ```toml
+    [dependencies]
+    sokol = { path = "path/to/sokol-rust", features = ["imgui"] }
+
+    [build-dependencies]
+    cc = "1"
+    ```
+
+2. Compile dcimgui + the sokol stub in your own `build.rs`. Use `src/`
+   for the regular flavour or `src-docking/` for the docking flavour:
+
+    ```rust
+    // build.rs
+    fn main() {
+        let dcimgui = std::path::Path::new("path/to/dcimgui/src");
+        let sokol_c = std::path::Path::new("path/to/sokol-rust/src/sokol/c");
+
+        cc::Build::new()
+            .cpp(true)
+            .std("c++17")
+            .include(dcimgui)
+            .files([
+                dcimgui.join("cimgui.cpp"),
+                dcimgui.join("cimgui_internal.cpp"),
+                dcimgui.join("imgui.cpp"),
+                dcimgui.join("imgui_draw.cpp"),
+                dcimgui.join("imgui_tables.cpp"),
+                dcimgui.join("imgui_widgets.cpp"),
+                dcimgui.join("imgui_demo.cpp"),
+            ])
+            .compile("imgui");
+
+        cc::Build::new()
+            .std("c11")
+            .define("IMPL", None)
+            .define("SOKOL_METAL", None)   // match the backend sokol-gfx was built with
+            .include(dcimgui)
+            .file(sokol_c.join("sokol_imgui.c"))
+            .compile("sokol_imgui");
+    }
+    ```
+
+    The backend define (`SOKOL_METAL`, `SOKOL_D3D11`, `SOKOL_GLCORE`,
+    `SOKOL_GLES3`, ...) must match the one sokol-gfx itself was built
+    with — otherwise the imgui renderer picks a different backend than
+    sokol-gfx.
+
+3. `use sokol::imgui;` and call `imgui::setup(...)` as normal.
+
+The same flow applies to `sokol_gfx_imgui.h` and `sokol_app_imgui.h`.
 
 ## Wasm/Emscripten
 To compile for wasm, you will need the emcc compiler which you can get at https://github.com/emscripten-core/emsdk
