@@ -138,6 +138,7 @@ fn make_sokol() {
         "sokol_glue.c",
         "sokol_time.c",
         "sokol_audio.c",
+        "sokol_fetch.c",
         "sokol_gl.c",
         "sokol_debugtext.c",
         "sokol_shape.c",

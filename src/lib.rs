@@ -4,6 +4,7 @@ pub mod app;
 pub mod audio;
 pub mod cmdbuf;
 pub mod debugtext;
+pub mod fetch;
 pub mod framebuffer;
 pub mod gfx;
 pub mod gl;
