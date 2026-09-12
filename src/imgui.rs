@@ -18,7 +18,6 @@ fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str 
 #[repr(i32)]
 pub enum LogItem {
     Ok,
-    MallocFailed,
     BufferOverflow,
 }
 impl LogItem {
@@ -29,23 +28,6 @@ impl LogItem {
 impl Default for LogItem {
     fn default() -> Self {
         Self::Ok
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct Allocator {
-    pub alloc_fn: Option<extern "C" fn(usize, *mut core::ffi::c_void) -> *mut core::ffi::c_void>,
-    pub free_fn: Option<extern "C" fn(*mut core::ffi::c_void, *mut core::ffi::c_void)>,
-    pub user_data: *mut core::ffi::c_void,
-}
-impl Allocator {
-    pub const fn new() -> Self {
-        Self { alloc_fn: None, free_fn: None, user_data: core::ptr::null_mut() }
-    }
-}
-impl Default for Allocator {
-    fn default() -> Self {
-        Self::new()
     }
 }
 #[repr(C)]
@@ -87,7 +69,6 @@ pub struct Desc {
     pub disable_set_mouse_cursor: bool,
     pub disable_windows_resize_from_edges: bool,
     pub write_alpha_channel: bool,
-    pub allocator: Allocator,
     pub logger: Logger,
 }
 impl Desc {
@@ -103,7 +84,6 @@ impl Desc {
             disable_set_mouse_cursor: false,
             disable_windows_resize_from_edges: false,
             write_alpha_channel: false,
-            allocator: Allocator::new(),
             logger: Logger::new(),
         }
     }
