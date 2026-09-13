@@ -3423,6 +3423,7 @@ pub enum LogItem {
     ValidatePipelinedescDualSourceBlendingNotSupported,
     ValidatePipelinedescDepthFormatNoneButDepthWriteEnabled,
     ValidatePipelinedescDepthFormatNoneCompareFuncMismatch,
+    ValidatePipelinedescColorCount,
     ValidateViewdescCanary,
     ValidateViewdescUniqueViewtype,
     ValidateViewdescAnyViewtype,
