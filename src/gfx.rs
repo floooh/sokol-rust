@@ -3198,6 +3198,7 @@ pub enum LogItem {
     MetalCreateRpsFailed,
     MetalCreateRpsOutput,
     MetalCreateDssFailed,
+    MetalCreateTextureviewFailed,
     WgpuBindgroupsPoolExhausted,
     WgpuBindgroupscacheSizeGreaterOne,
     WgpuBindgroupscacheSizePow2,
