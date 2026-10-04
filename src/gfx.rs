@@ -327,6 +327,8 @@ pub struct Features {
     pub draw_base_instance: bool,
     pub dual_source_blending: bool,
     pub vertexformat_int10_n2: bool,
+    pub copy_buffer_to_image_relaxed_buffer_type: bool,
+    pub copy_buffer_to_image_relaxed_bytes_per_row: bool,
     pub gl_texture_views: bool,
 }
 impl Features {
@@ -343,6 +345,8 @@ impl Features {
             draw_base_instance: false,
             dual_source_blending: false,
             vertexformat_int10_n2: false,
+            copy_buffer_to_image_relaxed_buffer_type: false,
+            copy_buffer_to_image_relaxed_bytes_per_row: false,
             gl_texture_views: false,
         }
     }
@@ -1156,6 +1160,24 @@ impl Default for Pass {
         Self::new()
     }
 }
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u32)]
+pub enum PassState {
+    None,
+    Render,
+    Compute,
+    Num,
+}
+impl PassState {
+    pub const fn new() -> Self {
+        Self::None
+    }
+}
+impl Default for PassState {
+    fn default() -> Self {
+        Self::None
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Bindings {
@@ -1193,10 +1215,12 @@ pub struct BufferUsage {
     pub vertex_buffer: bool,
     pub index_buffer: bool,
     pub storage_buffer: bool,
-    pub immutable: bool,
+    pub staging_buffer: bool,
+    pub staging_index_buffer: bool,
     pub write_unsealed: bool,
     pub write_transient: bool,
-    pub dynamic_update: bool,
+    pub copy_src: bool,
+    pub copy_dst: bool,
 }
 impl BufferUsage {
     pub const fn new() -> Self {
@@ -1204,10 +1228,12 @@ impl BufferUsage {
             vertex_buffer: false,
             index_buffer: false,
             storage_buffer: false,
-            immutable: false,
+            staging_buffer: false,
+            staging_index_buffer: false,
             write_unsealed: false,
             write_transient: false,
-            dynamic_update: false,
+            copy_src: false,
+            copy_dst: false,
         }
     }
 }
@@ -1224,8 +1250,8 @@ pub struct BufferDesc {
     pub usage: BufferUsage,
     pub data: Range,
     pub label: *const core::ffi::c_char,
-    pub gl_buffers: [u32; 2],
-    pub mtl_buffers: [*const core::ffi::c_void; 2],
+    pub gl_buffer: u32,
+    pub mtl_buffer: *const core::ffi::c_void,
     pub d3d11_buffer: *const core::ffi::c_void,
     pub wgpu_buffer: *const core::ffi::c_void,
     pub _end_canary: u32,
@@ -1238,8 +1264,8 @@ impl BufferDesc {
             usage: BufferUsage::new(),
             data: Range::new(),
             label: core::ptr::null(),
-            gl_buffers: [0; 2],
-            mtl_buffers: [core::ptr::null(); 2],
+            gl_buffer: 0,
+            mtl_buffer: core::ptr::null(),
             d3d11_buffer: core::ptr::null(),
             wgpu_buffer: core::ptr::null(),
             _end_canary: 0,
@@ -1258,10 +1284,11 @@ pub struct ImageUsage {
     pub color_attachment: bool,
     pub resolve_attachment: bool,
     pub depth_stencil_attachment: bool,
-    pub immutable: bool,
     pub write_unsealed: bool,
     pub write_transient: bool,
-    pub dynamic_update: bool,
+    pub copy_src: bool,
+    pub copy_dst: bool,
+    pub immutable: bool,
 }
 impl ImageUsage {
     pub const fn new() -> Self {
@@ -1270,10 +1297,11 @@ impl ImageUsage {
             color_attachment: false,
             resolve_attachment: false,
             depth_stencil_attachment: false,
-            immutable: false,
             write_unsealed: false,
             write_transient: false,
-            dynamic_update: false,
+            copy_src: false,
+            copy_dst: false,
+            immutable: false,
         }
     }
 }
@@ -1411,6 +1439,24 @@ impl Default for BufferLocation {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct BufferImageLocation {
+    pub buffer: Buffer,
+    pub offset: usize,
+    pub bytes_per_row: i32,
+    pub bytes_per_slice: i32,
+}
+impl BufferImageLocation {
+    pub const fn new() -> Self {
+        Self { buffer: Buffer::new(), offset: 0, bytes_per_row: 0, bytes_per_slice: 0 }
+    }
+}
+impl Default for BufferImageLocation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct WriteBufferSource {
     pub data: Range,
     pub offset: usize,
@@ -1444,6 +1490,44 @@ impl Default for WriteBufferDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct CopyBufferToBufferDesc {
+    pub src: BufferLocation,
+    pub dst: BufferLocation,
+    pub size: usize,
+}
+impl CopyBufferToBufferDesc {
+    pub const fn new() -> Self {
+        Self { src: BufferLocation::new(), dst: BufferLocation::new(), size: 0 }
+    }
+}
+impl Default for CopyBufferToBufferDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct CopyBufferToImageDesc {
+    pub src: BufferImageLocation,
+    pub dst: ImageLocation,
+    pub size: ImageExtent,
+}
+impl CopyBufferToImageDesc {
+    pub const fn new() -> Self {
+        Self {
+            src: BufferImageLocation::new(),
+            dst: ImageLocation::new(),
+            size: ImageExtent::new(),
+        }
+    }
+}
+impl Default for CopyBufferToImageDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ImageDesc {
     pub _start_canary: u32,
     pub _type: ImageType,
@@ -1456,9 +1540,9 @@ pub struct ImageDesc {
     pub sample_count: i32,
     pub data: ImageData,
     pub label: *const core::ffi::c_char,
-    pub gl_textures: [u32; 2],
+    pub gl_texture: u32,
     pub gl_texture_target: u32,
-    pub mtl_textures: [*const core::ffi::c_void; 2],
+    pub mtl_texture: *const core::ffi::c_void,
     pub d3d11_texture: *const core::ffi::c_void,
     pub wgpu_texture: *const core::ffi::c_void,
     pub _end_canary: u32,
@@ -1477,9 +1561,9 @@ impl ImageDesc {
             sample_count: 0,
             data: ImageData::new(),
             label: core::ptr::null(),
-            gl_textures: [0; 2],
+            gl_texture: 0,
             gl_texture_target: 0,
-            mtl_textures: [core::ptr::null(); 2],
+            mtl_texture: core::ptr::null(),
             d3d11_texture: core::ptr::null(),
             wgpu_texture: core::ptr::null(),
             _end_canary: 0,
@@ -2245,15 +2329,14 @@ pub struct TraceHooks {
     pub destroy_shader: Option<extern "C" fn(Shader, *mut core::ffi::c_void)>,
     pub destroy_pipeline: Option<extern "C" fn(Pipeline, *mut core::ffi::c_void)>,
     pub destroy_view: Option<extern "C" fn(View, *mut core::ffi::c_void)>,
-    pub update_buffer: Option<extern "C" fn(Buffer, *const Range, *mut core::ffi::c_void)>,
-    pub update_image: Option<extern "C" fn(Image, *const ImageData, *mut core::ffi::c_void)>,
-    pub append_buffer: Option<extern "C" fn(Buffer, *const Range, i32, *mut core::ffi::c_void)>,
     pub write_buffer_transient: Option<extern "C" fn(*const WriteBufferDesc, *mut core::ffi::c_void)>,
     pub write_image_transient: Option<extern "C" fn(*const WriteImageDesc, *mut core::ffi::c_void)>,
     pub write_buffer_unsealed: Option<extern "C" fn(*const WriteBufferDesc, *mut core::ffi::c_void)>,
     pub write_image_unsealed: Option<extern "C" fn(*const WriteImageDesc, *mut core::ffi::c_void)>,
     pub seal_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
     pub seal_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
+    pub copy_buffer_to_buffer: Option<extern "C" fn(*const CopyBufferToBufferDesc, *mut core::ffi::c_void)>,
+    pub copy_buffer_to_image: Option<extern "C" fn(*const CopyBufferToImageDesc, *mut core::ffi::c_void)>,
     pub begin_pass: Option<extern "C" fn(*const Pass, *mut core::ffi::c_void)>,
     pub apply_viewport: Option<extern "C" fn(i32, i32, i32, i32, bool, *mut core::ffi::c_void)>,
     pub apply_scissor_rect: Option<extern "C" fn(i32, i32, i32, i32, bool, *mut core::ffi::c_void)>,
@@ -2315,15 +2398,14 @@ impl TraceHooks {
             destroy_shader: None,
             destroy_pipeline: None,
             destroy_view: None,
-            update_buffer: None,
-            update_image: None,
-            append_buffer: None,
             write_buffer_transient: None,
             write_image_transient: None,
             write_buffer_unsealed: None,
             write_image_unsealed: None,
             seal_buffer: None,
             seal_image: None,
+            copy_buffer_to_buffer: None,
+            copy_buffer_to_image: None,
             begin_pass: None,
             apply_viewport: None,
             apply_scissor_rect: None,
@@ -2398,22 +2480,10 @@ pub struct BufferInfo {
     pub slot: SlotInfo,
     pub num_slots: i32,
     pub active_slot: i32,
-    pub update_frame_index: u32,
-    pub append_frame_index: u32,
-    pub append_pos: i32,
-    pub append_overflow: bool,
 }
 impl BufferInfo {
     pub const fn new() -> Self {
-        Self {
-            slot: SlotInfo::new(),
-            num_slots: 0,
-            active_slot: 0,
-            update_frame_index: 0,
-            append_frame_index: 0,
-            append_pos: 0,
-            append_overflow: false,
-        }
+        Self { slot: SlotInfo::new(), num_slots: 0, active_slot: 0 }
     }
 }
 impl Default for BufferInfo {
@@ -2427,11 +2497,10 @@ pub struct ImageInfo {
     pub slot: SlotInfo,
     pub num_slots: i32,
     pub active_slot: i32,
-    pub upd_frame_index: u32,
 }
 impl ImageInfo {
     pub const fn new() -> Self {
-        Self { slot: SlotInfo::new(), num_slots: 0, active_slot: 0, upd_frame_index: 0 }
+        Self { slot: SlotInfo::new(), num_slots: 0, active_slot: 0 }
     }
 }
 impl Default for ImageInfo {
@@ -3033,19 +3102,17 @@ pub struct FrameStats {
     pub num_draw: u32,
     pub num_draw_ex: u32,
     pub num_dispatch: u32,
-    pub num_update_buffer: u32,
-    pub num_append_buffer: u32,
-    pub num_update_image: u32,
     pub num_write_buffer_transient: u32,
     pub num_write_image_transient: u32,
     pub num_write_buffer_unsealed: u32,
     pub num_write_image_unsealed: u32,
     pub num_seal_buffer: u32,
     pub num_seal_image: u32,
+    pub num_copy_buffer_to_buffer: u32,
+    pub num_copy_buffer_to_image: u32,
     pub size_apply_uniforms: u32,
-    pub size_update_buffer: u32,
-    pub size_append_buffer: u32,
-    pub size_update_image: u32,
+    pub size_copy_buffer_to_buffer: u32,
+    pub size_copy_buffer_to_image: u32,
     pub buffers: FrameResourceStats,
     pub images: FrameResourceStats,
     pub samplers: FrameResourceStats,
@@ -3071,19 +3138,17 @@ impl FrameStats {
             num_draw: 0,
             num_draw_ex: 0,
             num_dispatch: 0,
-            num_update_buffer: 0,
-            num_append_buffer: 0,
-            num_update_image: 0,
             num_write_buffer_transient: 0,
             num_write_image_transient: 0,
             num_write_buffer_unsealed: 0,
             num_write_image_unsealed: 0,
             num_seal_buffer: 0,
             num_seal_image: 0,
+            num_copy_buffer_to_buffer: 0,
+            num_copy_buffer_to_image: 0,
             size_apply_uniforms: 0,
-            size_update_buffer: 0,
-            size_append_buffer: 0,
-            size_update_image: 0,
+            size_copy_buffer_to_buffer: 0,
+            size_copy_buffer_to_image: 0,
             buffers: FrameResourceStats::new(),
             images: FrameResourceStats::new(),
             samplers: FrameResourceStats::new(),
@@ -3145,6 +3210,7 @@ pub enum LogItem {
     GlFramebufferStatusUnsupported,
     GlFramebufferStatusIncompleteMultisample,
     GlFramebufferStatusUnknown,
+    GlApplePixelUnpackOffsetBug,
     D3d11FeatureLevel0Detected,
     D3d11CreateBufferFailed,
     D3d11CreateBufferSrvFailed,
@@ -3176,9 +3242,6 @@ pub enum LogItem {
     D3d11CreateRtvFailed,
     D3d11CreateDsvFailed,
     D3d11CreateUavFailed,
-    D3d11MapForUpdateBufferFailed,
-    D3d11MapForAppendBufferFailed,
-    D3d11MapForUpdateImageFailed,
     D3d11MapForWriteBufferTransientFailed,
     MetalCreateBufferFailed,
     MetalTextureFormatNotSupported,
@@ -3292,11 +3355,23 @@ pub enum LogItem {
     BeginpassAttachmentsAlive,
     DrawWithoutBindings,
     WriteBufferTransientBufferAlive,
+    WriteBufferTransientBufferValid,
     WriteImageTransientImageAlive,
+    WriteImageTransientImageValid,
     WriteBufferUnsealedBufferAlive,
+    WriteBufferUnsealedBufferUnsealed,
     WriteImageUnsealedImageAlive,
+    WriteImageUnsealedImageUnsealed,
     SealBufferAlive,
     SealImageAlive,
+    CopyBufferToBufferSrcAlive,
+    CopyBufferToBufferDstAlive,
+    CopyBufferToBufferSrcValid,
+    CopyBufferToBufferDstValid,
+    CopyBufferToImageSrcAlive,
+    CopyBufferToImageDstAlive,
+    CopyBufferToImageSrcValid,
+    CopyBufferToImageDstValid,
     ShaderdescTooManyVertexstageTextures,
     ShaderdescTooManyFragmentstageTextures,
     ShaderdescTooManyComputestageTextures,
@@ -3310,13 +3385,25 @@ pub enum LogItem {
     ShaderdescTooManyFragmentstageTexturesamplerpairs,
     ShaderdescTooManyComputestageTexturesamplerpairs,
     ValidateBufferdescCanary,
-    ValidateBufferdescImmutableVsWritable,
-    ValidateBufferdescUnsealedVsImmutable,
-    ValidateBufferdescSeparateBufferTypes,
     ValidateBufferdescExpectNonzeroSize,
+    ValidateBufferdescStagingVsVertexbuffer,
+    ValidateBufferdescStagingVsIndexbuffer,
+    ValidateBufferdescStagingVsStoragebuffer,
+    ValidateBufferdescStagingVsInjected,
+    ValidateBufferdescStagingVsCopydst,
+    ValidateBufferdescStagingVsInitialdata,
+    ValidateBufferdescStagingCopysrc,
+    ValidateBufferdescSeparateBufferTypes,
+    ValidateBufferdescWriteunsealedVsWritetransient,
+    ValidateBufferdescWriteunsealedVsCopydst,
+    ValidateBufferdescWriteunsealedVsStaging,
+    ValidateBufferdescWriteunsealedVsInitialdata,
+    ValidateBufferdescWritetransientVsCopydst,
+    ValidateBufferdescWritetransientVsInitialdata,
+    ValidateBufferdescWritetransientVsInjected,
+    ValidateBufferdescCopydstVsInitialdata,
     ValidateBufferdescExpectMatchingDataSize,
     ValidateBufferdescExpectZeroDataSize,
-    ValidateBufferdescExpectNoData,
     ValidateBufferdescExpectData,
     ValidateBufferdescStoragebufferSupported,
     ValidateBufferdescStoragebufferSizeMultiple4,
@@ -3324,10 +3411,11 @@ pub enum LogItem {
     ValidateImagedataDataSize,
     ValidateImagedescCanary,
     ValidateImagedescImmutableVsWritable,
-    ValidateImagedescWriteUnsealedVsImmutable,
-    ValidateImagedescWriteUnsealedVsAttachment,
-    ValidateImagedescWriteTransientVsAttachment,
-    ValidateImagedescDynamicUpdateVsAttachment,
+    ValidateImagedescWriteunsealedVsImmutable,
+    ValidateImagedescWriteunsealedVsAttachment,
+    ValidateImagedescWritetransientVsAttachment,
+    ValidateImagedescWritetransientVsInjected,
+    ValidateImagedescCopydstVsAttachment,
     ValidateImagedescAttachmentColorDepthStencil,
     ValidateImagedescImagetype2dNumslices,
     ValidateImagedescImagetypeCubeNumslices,
@@ -3354,7 +3442,6 @@ pub enum LogItem {
     ValidateImagedescStorageimageExpectNoMsaa,
     ValidateImagedescInjectedNoData,
     ValidateImagedescWritableNoData,
-    ValidateImagedescCompressedImmutable,
     ValidateSamplerdescCanary,
     ValidateSamplerdescAnistropicRequiresLinearFiltering,
     ValidateShaderdescCanary,
@@ -3559,23 +3646,21 @@ pub enum LogItem {
     ValidateAbndExpectedVbuf,
     ValidateAbndVbufAlive,
     ValidateAbndVbufUsage,
-    ValidateAbndVbufOverflow,
     ValidateAbndExpectedNoIbuf,
     ValidateAbndExpectedIbuf,
     ValidateAbndIbufAlive,
     ValidateAbndIbufUsage,
-    ValidateAbndIbufOverflow,
     ValidateAbndExpectedViewBinding,
     ValidateAbndViewAlive,
     ValidateAbndExpectTexview,
     ValidateAbndExpectSbview,
+    ValidateAbndSbviewReadwriteVsWritetransient,
     ValidateAbndExpectSimgview,
     ValidateAbndTexviewImagetypeMismatch,
     ValidateAbndTexviewExpectedMultisampledImage,
     ValidateAbndTexviewExpectedNonMultisampledImage,
     ValidateAbndTexviewExpectedFilterableImage,
     ValidateAbndTexviewExpectedDepthImage,
-    ValidateAbndSbviewReadwriteImmutable,
     ValidateAbndSimgviewComputePassExpected,
     ValidateAbndSimgviewImagetypeMismatch,
     ValidateAbndSimgviewAccessformat,
@@ -3620,19 +3705,10 @@ pub enum LogItem {
     ValidateDispatchRequiredBindingsOrUniformsMissing,
     ValidateDispatchWriteBufferTransientMissing,
     ValidateDispatchWriteImageTransientMissing,
-    ValidateUpdatebufUsage,
-    ValidateUpdatebufSize,
-    ValidateUpdatebufOnce,
-    ValidateUpdatebufAppend,
-    ValidateAppendbufUsage,
-    ValidateAppendbufSize,
-    ValidateAppendbufUpdate,
-    ValidateUpdimgUsage,
-    ValidateUpdimgOnce,
     ValidateWritebufferunsealedUsage,
-    ValidateWritebufferunsealedResourcestate,
     ValidateWritebuffertransientUsage,
     ValidateWritebuffertransientWriteBeforeBind,
+    ValidateWritebuffertransientWriteBeforeCopy,
     ValidateWritebuffertransientDstOffsetAlignment,
     ValidateWritebufferSrcDataPointer,
     ValidateWritebufferSrcDataSize,
@@ -3640,13 +3716,14 @@ pub enum LogItem {
     ValidateWritebufferWriteOverflow,
     ValidateWritebufferReadOverflow,
     ValidateWriteimageunsealedUsage,
-    ValidateWriteimageunsealedResourcestate,
     ValidateWriteimagetransientUsage,
     ValidateWriteimagetransientWriteBeforeBind,
     ValidateWriteimageSrcDataPointer,
     ValidateWriteimageSrcDataSize,
     ValidateWriteimageBytesperrow,
     ValidateWriteimageBytesperslice,
+    ValidateWriteimageBytesperrowTooSmall,
+    ValidateWriteimageBytespersliceTooSmall,
     ValidateWriteimageMiplevel,
     ValidateWriteimageWidth,
     ValidateWriteimageHeight,
@@ -3658,8 +3735,49 @@ pub enum LogItem {
     ValidateWriteimageWriteWidthOverflow,
     ValidateWriteimageWriteHeightOverflow,
     ValidateWriteimageWriteNumslicesOverflow,
+    ValidateWriteimageDstXAlignment,
+    ValidateWriteimageDstYAlignment,
+    ValidateWriteimageWidthMultiple,
+    ValidateWriteimageHeightMultiple,
     ValidateSealbufferResourcestate,
     ValidateSealimageResourcestate,
+    ValidateCopybuffertobufferInsidePass,
+    ValidateCopybuffertobufferSrcVsDstBuffer,
+    ValidateCopybuffertobufferCopySrc,
+    ValidateCopybuffertobufferCopyDst,
+    ValidateCopybuffertobufferZeroSize,
+    ValidateCopybuffertobufferSrcOffsetAlignment,
+    ValidateCopybuffertobufferDstOffsetAlignment,
+    ValidateCopybuffertobufferSrcOverflow,
+    ValidateCopybuffertobufferDstOverflow,
+    ValidateCopybuffertobufferWebgl2IndexBuffer,
+    ValidateCopybuffertoimageWebgl2IndexBuffer,
+    ValidateCopybuffertoimageBytesperrowTooSmall,
+    ValidateCopybuffertoimageBytespersliceTooSmall,
+    ValidateCopybuffertoimageSrcStagingIndexBuffer,
+    ValidateCopybuffertoimageSrcStagingBuffer,
+    ValidateCopybuffertoimageInsidePass,
+    ValidateCopybuffertoimageCopySrc,
+    ValidateCopybuffertoimageCopyDst,
+    ValidateCopybuffertoimageSrcOffsetAlignment,
+    ValidateCopybuffertoimageBytesperrowMultipleBlocksize,
+    ValidateCopybuffertoimageBytesperrowMultiple256,
+    ValidateCopybuffertoimageBytesperslice,
+    ValidateCopybuffertoimageSrcOverflow,
+    ValidateCopybuffertoimageDstMiplevel,
+    ValidateCopybuffertoimageDstWidth,
+    ValidateCopybuffertoimageDstHeight,
+    ValidateCopybuffertoimageDstWidthMultiple,
+    ValidateCopybuffertoimageDstHeightMultiple,
+    ValidateCopybuffertoimageDstNumslices,
+    ValidateCopybuffertoimageDstXRange,
+    ValidateCopybuffertoimageDstYRange,
+    ValidateCopybuffertoimageDstXAlignment,
+    ValidateCopybuffertoimageDstYAlignment,
+    ValidateCopybuffertoimageDstSliceRange,
+    ValidateCopybuffertoimageDstWidthOverflow,
+    ValidateCopybuffertoimageDstHeightOverflow,
+    ValidateCopybuffertoimageDstNumslicesOverflow,
     ValidationFailed,
 }
 impl LogItem {
@@ -4391,11 +4509,8 @@ pub mod ffi {
         pub fn sg_write_image_unsealed(desc: *const WriteImageDesc);
         pub fn sg_seal_buffer(buf: Buffer);
         pub fn sg_seal_image(img: Image);
-        pub fn sg_update_buffer(buf: Buffer, data: *const Range);
-        pub fn sg_update_image(img: Image, data: *const ImageData);
-        pub fn sg_append_buffer(buf: Buffer, data: *const Range) -> i32;
-        pub fn sg_query_buffer_overflow(buf: Buffer) -> bool;
-        pub fn sg_query_buffer_will_overflow(buf: Buffer, size: usize) -> bool;
+        pub fn sg_copy_buffer_to_buffer(desc: *const CopyBufferToBufferDesc);
+        pub fn sg_copy_buffer_to_image(desc: *const CopyBufferToImageDesc);
         pub fn sg_query_desc() -> Desc;
         pub fn sg_query_backend() -> Backend;
         pub fn sg_query_features() -> Features;
@@ -4404,6 +4519,7 @@ pub mod ffi {
         pub fn sg_query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i32;
         pub fn sg_query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32)
         -> i32;
+        pub fn sg_query_pass_state() -> PassState;
         pub fn sg_query_buffer_state(buf: Buffer) -> ResourceState;
         pub fn sg_query_image_state(img: Image) -> ResourceState;
         pub fn sg_query_sampler_state(smp: Sampler) -> ResourceState;
@@ -4678,24 +4794,12 @@ pub fn seal_image(img: Image) {
     unsafe { ffi::sg_seal_image(img) }
 }
 #[inline]
-pub fn update_buffer(buf: Buffer, data: &Range) {
-    unsafe { ffi::sg_update_buffer(buf, data) }
+pub fn copy_buffer_to_buffer(desc: &CopyBufferToBufferDesc) {
+    unsafe { ffi::sg_copy_buffer_to_buffer(desc) }
 }
 #[inline]
-pub fn update_image(img: Image, data: &ImageData) {
-    unsafe { ffi::sg_update_image(img, data) }
-}
-#[inline]
-pub fn append_buffer(buf: Buffer, data: &Range) -> i32 {
-    unsafe { ffi::sg_append_buffer(buf, data) }
-}
-#[inline]
-pub fn query_buffer_overflow(buf: Buffer) -> bool {
-    unsafe { ffi::sg_query_buffer_overflow(buf) }
-}
-#[inline]
-pub fn query_buffer_will_overflow(buf: Buffer, size: usize) -> bool {
-    unsafe { ffi::sg_query_buffer_will_overflow(buf, size) }
+pub fn copy_buffer_to_image(desc: &CopyBufferToImageDesc) {
+    unsafe { ffi::sg_copy_buffer_to_image(desc) }
 }
 #[inline]
 pub fn query_desc() -> Desc {
@@ -4724,6 +4828,10 @@ pub fn query_row_pitch(fmt: PixelFormat, width: i32, row_align_bytes: i32) -> i3
 #[inline]
 pub fn query_surface_pitch(fmt: PixelFormat, width: i32, height: i32, row_align_bytes: i32) -> i32 {
     unsafe { ffi::sg_query_surface_pitch(fmt, width, height, row_align_bytes) }
+}
+#[inline]
+pub fn query_pass_state() -> PassState {
+    unsafe { ffi::sg_query_pass_state() }
 }
 #[inline]
 pub fn query_buffer_state(buf: Buffer) -> ResourceState {

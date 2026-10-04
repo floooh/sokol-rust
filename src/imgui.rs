@@ -19,6 +19,10 @@ fn c_char_ptr_to_rust_str(c_char_ptr: *const core::ffi::c_char) -> &'static str 
 pub enum LogItem {
     Ok,
     BufferOverflow,
+    NewFrameNotCalledBeforeFlush,
+    FlushCalledInSokolgfxPass,
+    FlushNotCalledBeforeDraw,
+    DrawCalledOutsideSokolgfxRenderPass,
 }
 impl LogItem {
     pub const fn new() -> Self {
@@ -133,7 +137,8 @@ pub mod ffi {
     extern "C" {
         pub fn simgui_setup(desc: *const Desc);
         pub fn simgui_new_frame(desc: *const FrameDesc);
-        pub fn simgui_render();
+        pub fn simgui_flush();
+        pub fn simgui_draw();
         pub fn simgui_imtextureid(tex_view: sg::View) -> u64;
         pub fn simgui_imtextureid_with_sampler(tex_view: sg::View, smp: sg::Sampler) -> u64;
         pub fn simgui_texture_view_from_imtextureid(imtex_id: u64) -> sg::View;
@@ -160,8 +165,12 @@ pub fn new_frame(desc: &FrameDesc) {
     unsafe { ffi::simgui_new_frame(desc) }
 }
 #[inline]
-pub fn render() {
-    unsafe { ffi::simgui_render() }
+pub fn flush() {
+    unsafe { ffi::simgui_flush() }
+}
+#[inline]
+pub fn draw() {
+    unsafe { ffi::simgui_draw() }
 }
 #[inline]
 pub fn imtextureid(tex_view: sg::View) -> u64 {
