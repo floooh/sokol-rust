@@ -2681,6 +2681,7 @@ pub struct FrameStatsD3d11Bindings {
     pub num_cs_set_shader_resources: u32,
     pub num_cs_set_samplers: u32,
     pub num_cs_set_unordered_access_views: u32,
+    pub num_om_set_rts_and_uavs: u32,
 }
 impl FrameStatsD3d11Bindings {
     pub const fn new() -> Self {
@@ -2694,6 +2695,7 @@ impl FrameStatsD3d11Bindings {
             num_cs_set_shader_resources: 0,
             num_cs_set_samplers: 0,
             num_cs_set_unordered_access_views: 0,
+            num_om_set_rts_and_uavs: 0,
         }
     }
 }
@@ -3466,6 +3468,7 @@ pub enum LogItem {
     ValidateShaderdescUniformblockSizeMismatch,
     ValidateShaderdescUniformblockArrayCount,
     ValidateShaderdescUniformblockStd140ArrayType,
+    ValidateShaderdescViewStoragebufferVertexshaderReadwrite,
     ValidateShaderdescViewStoragebufferMetalBufferSlotCollision,
     ValidateShaderdescViewStoragebufferHlslRegisterTCollision,
     ValidateShaderdescViewStoragebufferHlslRegisterUCollision,
@@ -3507,6 +3510,8 @@ pub enum LogItem {
     ValidatePipelinedescLayoutStride4,
     ValidatePipelinedescAttrSemantics,
     ValidatePipelinedescShaderReadonlyStoragebuffers,
+    ValidatePipelinedescShaderHlslRegisterUVsColorCount,
+    ValidatePipelinedescShaderHlslRegisterULimit,
     ValidatePipelinedescBlendopMinmaxRequiresBlendfactorOne,
     ValidatePipelinedescDualSourceBlendingNotSupported,
     ValidatePipelinedescDepthFormatNoneButDepthWriteEnabled,
@@ -3646,15 +3651,19 @@ pub enum LogItem {
     ValidateAbndExpectedVbuf,
     ValidateAbndVbufAlive,
     ValidateAbndVbufUsage,
+    ValidateAbndVbufVsSbviewReadwrite,
     ValidateAbndExpectedNoIbuf,
     ValidateAbndExpectedIbuf,
     ValidateAbndIbufAlive,
     ValidateAbndIbufUsage,
+    ValidateAbndIbufVsSbviewReadwrite,
     ValidateAbndExpectedViewBinding,
     ValidateAbndViewAlive,
     ValidateAbndExpectTexview,
     ValidateAbndExpectSbview,
     ValidateAbndSbviewReadwriteVsWritetransient,
+    ValidateAbndSbviewReadonlyVsReadwrite,
+    ValidateAbndSbviewReadwriteVsRead,
     ValidateAbndExpectSimgview,
     ValidateAbndTexviewImagetypeMismatch,
     ValidateAbndTexviewExpectedMultisampledImage,
