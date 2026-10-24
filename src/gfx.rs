@@ -329,6 +329,7 @@ pub struct Features {
     pub vertexformat_int10_n2: bool,
     pub copy_buffer_to_image_relaxed_buffer_type: bool,
     pub copy_buffer_to_image_relaxed_bytes_per_row: bool,
+    pub copy_image_to_image_relaxed: bool,
     pub gl_texture_views: bool,
 }
 impl Features {
@@ -347,6 +348,7 @@ impl Features {
             vertexformat_int10_n2: false,
             copy_buffer_to_image_relaxed_buffer_type: false,
             copy_buffer_to_image_relaxed_bytes_per_row: false,
+            copy_image_to_image_relaxed: false,
             gl_texture_views: false,
         }
     }
@@ -1288,7 +1290,6 @@ pub struct ImageUsage {
     pub write_transient: bool,
     pub copy_src: bool,
     pub copy_dst: bool,
-    pub immutable: bool,
 }
 impl ImageUsage {
     pub const fn new() -> Self {
@@ -1301,7 +1302,6 @@ impl ImageUsage {
             write_transient: false,
             copy_src: false,
             copy_dst: false,
-            immutable: false,
         }
     }
 }
@@ -1329,21 +1329,6 @@ impl ViewType {
 impl Default for ViewType {
     fn default() -> Self {
         Self::Invalid
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ImageData {
-    pub mip_levels: [Range; 16],
-}
-impl ImageData {
-    pub const fn new() -> Self {
-        Self { mip_levels: [Range::new(); 16] }
-    }
-}
-impl Default for ImageData {
-    fn default() -> Self {
-        Self::new()
     }
 }
 #[repr(C)]
@@ -1528,6 +1513,23 @@ impl Default for CopyBufferToImageDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct CopyImageToImageDesc {
+    pub src: ImageLocation,
+    pub dst: ImageLocation,
+    pub size: ImageExtent,
+}
+impl CopyImageToImageDesc {
+    pub const fn new() -> Self {
+        Self { src: ImageLocation::new(), dst: ImageLocation::new(), size: ImageExtent::new() }
+    }
+}
+impl Default for CopyImageToImageDesc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct ImageDesc {
     pub _start_canary: u32,
     pub _type: ImageType,
@@ -1538,7 +1540,7 @@ pub struct ImageDesc {
     pub num_mipmaps: i32,
     pub pixel_format: PixelFormat,
     pub sample_count: i32,
-    pub data: ImageData,
+    pub data: Range,
     pub label: *const core::ffi::c_char,
     pub gl_texture: u32,
     pub gl_texture_target: u32,
@@ -1559,7 +1561,7 @@ impl ImageDesc {
             num_mipmaps: 0,
             pixel_format: PixelFormat::new(),
             sample_count: 0,
-            data: ImageData::new(),
+            data: Range::new(),
             label: core::ptr::null(),
             gl_texture: 0,
             gl_texture_target: 0,
@@ -2337,6 +2339,7 @@ pub struct TraceHooks {
     pub seal_image: Option<extern "C" fn(Image, *mut core::ffi::c_void)>,
     pub copy_buffer_to_buffer: Option<extern "C" fn(*const CopyBufferToBufferDesc, *mut core::ffi::c_void)>,
     pub copy_buffer_to_image: Option<extern "C" fn(*const CopyBufferToImageDesc, *mut core::ffi::c_void)>,
+    pub copy_image_to_image: Option<extern "C" fn(*const CopyImageToImageDesc, *mut core::ffi::c_void)>,
     pub begin_pass: Option<extern "C" fn(*const Pass, *mut core::ffi::c_void)>,
     pub apply_viewport: Option<extern "C" fn(i32, i32, i32, i32, bool, *mut core::ffi::c_void)>,
     pub apply_scissor_rect: Option<extern "C" fn(i32, i32, i32, i32, bool, *mut core::ffi::c_void)>,
@@ -2406,6 +2409,7 @@ impl TraceHooks {
             seal_image: None,
             copy_buffer_to_buffer: None,
             copy_buffer_to_image: None,
+            copy_image_to_image: None,
             begin_pass: None,
             apply_viewport: None,
             apply_scissor_rect: None,
@@ -3002,6 +3006,7 @@ pub struct FrameStatsVk {
     pub num_delete_queue_collected: u32,
     pub num_cmd_copy_buffer: u32,
     pub num_cmd_copy_buffer_to_image: u32,
+    pub num_cmd_copy_image: u32,
     pub num_cmd_set_descriptor_buffer_offsets: u32,
     pub size_descriptor_buffer_writes: u32,
 }
@@ -3016,6 +3021,7 @@ impl FrameStatsVk {
             num_delete_queue_collected: 0,
             num_cmd_copy_buffer: 0,
             num_cmd_copy_buffer_to_image: 0,
+            num_cmd_copy_image: 0,
             num_cmd_set_descriptor_buffer_offsets: 0,
             size_descriptor_buffer_writes: 0,
         }
@@ -3112,9 +3118,11 @@ pub struct FrameStats {
     pub num_seal_image: u32,
     pub num_copy_buffer_to_buffer: u32,
     pub num_copy_buffer_to_image: u32,
+    pub num_copy_image_to_image: u32,
     pub size_apply_uniforms: u32,
     pub size_copy_buffer_to_buffer: u32,
     pub size_copy_buffer_to_image: u32,
+    pub size_copy_image_to_image: u32,
     pub buffers: FrameResourceStats,
     pub images: FrameResourceStats,
     pub samplers: FrameResourceStats,
@@ -3148,9 +3156,11 @@ impl FrameStats {
             num_seal_image: 0,
             num_copy_buffer_to_buffer: 0,
             num_copy_buffer_to_image: 0,
+            num_copy_image_to_image: 0,
             size_apply_uniforms: 0,
             size_copy_buffer_to_buffer: 0,
             size_copy_buffer_to_image: 0,
+            size_copy_image_to_image: 0,
             buffers: FrameResourceStats::new(),
             images: FrameResourceStats::new(),
             samplers: FrameResourceStats::new(),
@@ -3374,6 +3384,10 @@ pub enum LogItem {
     CopyBufferToImageDstAlive,
     CopyBufferToImageSrcValid,
     CopyBufferToImageDstValid,
+    CopyImageToImageSrcAlive,
+    CopyImageToImageDstAlive,
+    CopyImageToImageSrcValid,
+    CopyImageToImageDstValid,
     ShaderdescTooManyVertexstageTextures,
     ShaderdescTooManyFragmentstageTextures,
     ShaderdescTooManyComputestageTextures,
@@ -3409,41 +3423,47 @@ pub enum LogItem {
     ValidateBufferdescExpectData,
     ValidateBufferdescStoragebufferSupported,
     ValidateBufferdescStoragebufferSizeMultiple4,
-    ValidateImagedataNodata,
-    ValidateImagedataDataSize,
+    ValidateImagedescDataSize,
     ValidateImagedescCanary,
-    ValidateImagedescImmutableVsWritable,
-    ValidateImagedescWriteunsealedVsImmutable,
-    ValidateImagedescWriteunsealedVsAttachment,
-    ValidateImagedescWritetransientVsAttachment,
+    ValidateImagedescAnyAttachmentVsCopydst,
+    ValidateImagedescAnyAttachmentVsInitialdata,
+    ValidateImagedescAnyAttachmentVsWritetransient,
+    ValidateImagedescAnyAttachmentVsWriteunsealed,
+    ValidateImagedescColorAttachmentPixelformat,
+    ValidateImagedescColorAttachmentVsDepthstencilAttachment,
+    ValidateImagedescResolveAttachmentExpectNoMsaa,
+    ValidateImagedescResolveAttachmentVsDepthstencilAttachment,
+    ValidateImagedescCopydstVsInitialdata,
+    ValidateImagedescDepthformat3dImage,
+    ValidateImagedescDepthformatAttachmentOrCopydst,
+    ValidateImagedescDepthstencilAttachmentPixelformat,
+    ValidateImagedescDepthstencilAttachmentVsStorageimage,
+    ValidateImagedescStorageimageVsInitialdata,
+    ValidateImagedescStorageimageVsWritetransient,
+    ValidateImagedescWritetransientVsCopydst,
+    ValidateImagedescWritetransientVsInitialdata,
     ValidateImagedescWritetransientVsInjected,
-    ValidateImagedescCopydstVsAttachment,
-    ValidateImagedescAttachmentColorDepthStencil,
+    ValidateImagedescWriteunsealedVsCopydst,
+    ValidateImagedescWriteunsealedVsInitialdata,
+    ValidateImagedescWriteunsealedVsWritetransient,
+    ValidateImagedescInitialDataRequired,
+    ValidateImagedescInjectedExpectNoData,
+    ValidateImagedescNoDataButSizeSet,
     ValidateImagedescImagetype2dNumslices,
     ValidateImagedescImagetypeCubeNumslices,
     ValidateImagedescImagetypeArrayNumslices,
     ValidateImagedescImagetype3dNumslices,
-    ValidateImagedescNumslices,
     ValidateImagedescWidth,
     ValidateImagedescHeight,
-    ValidateImagedescNonrtPixelformat,
     ValidateImagedescMsaaButNoAttachment,
-    ValidateImagedescDepth3dImage,
-    ValidateImagedescAttachmentExpectImmutable,
-    ValidateImagedescAttachmentExpectNoData,
     ValidateImagedescAttachmentPixelformat,
-    ValidateImagedescAttachmentResolveExpectNoMsaa,
     ValidateImagedescAttachmentNoMsaaSupport,
     ValidateImagedescAttachmentMsaaNumMipmaps,
     ValidateImagedescAttachmentMsaa3dImage,
     ValidateImagedescAttachmentMsaaCubeImage,
     ValidateImagedescAttachmentMsaaArrayImage,
-    ValidateImagedescStorageimageExpectImmutable,
-    ValidateImagedescStorageimageExpectNoData,
     ValidateImagedescStorageimagePixelformat,
     ValidateImagedescStorageimageExpectNoMsaa,
-    ValidateImagedescInjectedNoData,
-    ValidateImagedescWritableNoData,
     ValidateSamplerdescCanary,
     ValidateSamplerdescAnistropicRequiresLinearFiltering,
     ValidateShaderdescCanary,
@@ -3607,7 +3627,6 @@ pub enum LogItem {
     ValidateBeginpassResolveattachmentviewImageAlive,
     ValidateBeginpassResolveattachmentviewImageValid,
     ValidateBeginpassResolveattachmentviewSizes,
-    ValidateBeginpassDepthstencilattachmentviewsContinuous,
     ValidateBeginpassDepthstencilattachmentviewAlive,
     ValidateBeginpassDepthstencilattachmentviewValid,
     ValidateBeginpassDepthstencilattachmentviewType,
@@ -3711,7 +3730,6 @@ pub enum LogItem {
     ValidateDispatchNumgroupsx,
     ValidateDispatchNumgroupsy,
     ValidateDispatchNumgroupsz,
-    ValidateDispatchRequiredBindingsOrUniformsMissing,
     ValidateDispatchWriteBufferTransientMissing,
     ValidateDispatchWriteImageTransientMissing,
     ValidateWritebufferunsealedUsage,
@@ -3727,6 +3745,7 @@ pub enum LogItem {
     ValidateWriteimageunsealedUsage,
     ValidateWriteimagetransientUsage,
     ValidateWriteimagetransientWriteBeforeBind,
+    ValidateWriteimagetransientWriteBeforeCopy,
     ValidateWriteimageSrcDataPointer,
     ValidateWriteimageSrcDataSize,
     ValidateWriteimageBytesperrow,
@@ -3760,6 +3779,7 @@ pub enum LogItem {
     ValidateCopybuffertobufferSrcOverflow,
     ValidateCopybuffertobufferDstOverflow,
     ValidateCopybuffertobufferWebgl2IndexBuffer,
+    ValidateCopybuffertoimageDepthFormatNotAllowed,
     ValidateCopybuffertoimageWebgl2IndexBuffer,
     ValidateCopybuffertoimageBytesperrowTooSmall,
     ValidateCopybuffertoimageBytespersliceTooSmall,
@@ -3787,6 +3807,45 @@ pub enum LogItem {
     ValidateCopybuffertoimageDstWidthOverflow,
     ValidateCopybuffertoimageDstHeightOverflow,
     ValidateCopybuffertoimageDstNumslicesOverflow,
+    ValidateCopyimagetoimageSrcVsDstImage,
+    ValidateCopyimagetoimageInsidePass,
+    ValidateCopyimagetoimageCopySrc,
+    ValidateCopyimagetoimageCopyDst,
+    ValidateCopyimagetoimage3dVsOther,
+    ValidateCopyimagetoimageSrcVsDstFormat,
+    ValidateCopyimagetoimageSrcVsDstSampleCount,
+    ValidateCopyimagetoimageRenderable,
+    ValidateCopyimagetoimageMsaa,
+    ValidateCopyimagetoimageWholeMiplevel,
+    ValidateCopyimagetoimageSrcVsDstSize,
+    ValidateCopyimagetoimageSrcMiplevel,
+    ValidateCopyimagetoimageSrcWidth,
+    ValidateCopyimagetoimageSrcHeight,
+    ValidateCopyimagetoimageDstMiplevel,
+    ValidateCopyimagetoimageDstWidth,
+    ValidateCopyimagetoimageDstHeight,
+    ValidateCopyimagetoimageSrcWidthMultiple,
+    ValidateCopyimagetoimageSrcHeightMultiple,
+    ValidateCopyimagetoimageDstWidthMultiple,
+    ValidateCopyimagetoimageDstHeightMultiple,
+    ValidateCopyimagetoimageSrcNumslices,
+    ValidateCopyimagetoimageDstNumslices,
+    ValidateCopyimagetoimageSrcXRange,
+    ValidateCopyimagetoimageDstXRange,
+    ValidateCopyimagetoimageSrcYRange,
+    ValidateCopyimagetoimageDstYRange,
+    ValidateCopyimagetoimageSrcXAlignment,
+    ValidateCopyimagetoimageDstXAlignment,
+    ValidateCopyimagetoimageSrcYAlignment,
+    ValidateCopyimagetoimageDstYAlignment,
+    ValidateCopyimagetoimageSrcSliceRange,
+    ValidateCopyimagetoimageDstSliceRange,
+    ValidateCopyimagetoimageSrcWidthOverflow,
+    ValidateCopyimagetoimageDstWidthOverflow,
+    ValidateCopyimagetoimageSrcHeightOverflow,
+    ValidateCopyimagetoimageDstHeightOverflow,
+    ValidateCopyimagetoimageSrcNumslicesOverflow,
+    ValidateCopyimagetoimageDstNumslicesOverflow,
     ValidationFailed,
 }
 impl LogItem {
@@ -4520,6 +4579,7 @@ pub mod ffi {
         pub fn sg_seal_image(img: Image);
         pub fn sg_copy_buffer_to_buffer(desc: *const CopyBufferToBufferDesc);
         pub fn sg_copy_buffer_to_image(desc: *const CopyBufferToImageDesc);
+        pub fn sg_copy_image_to_image(desc: *const CopyImageToImageDesc);
         pub fn sg_query_desc() -> Desc;
         pub fn sg_query_backend() -> Backend;
         pub fn sg_query_features() -> Features;
@@ -4809,6 +4869,10 @@ pub fn copy_buffer_to_buffer(desc: &CopyBufferToBufferDesc) {
 #[inline]
 pub fn copy_buffer_to_image(desc: &CopyBufferToImageDesc) {
     unsafe { ffi::sg_copy_buffer_to_image(desc) }
+}
+#[inline]
+pub fn copy_image_to_image(desc: &CopyImageToImageDesc) {
+    unsafe { ffi::sg_copy_image_to_image(desc) }
 }
 #[inline]
 pub fn query_desc() -> Desc {
