@@ -143,7 +143,6 @@ pub const NUM_INFLIGHT_FRAMES: usize = 2;
 pub const MAX_COLOR_ATTACHMENTS: usize = 8;
 pub const MAX_UNIFORMBLOCK_MEMBERS: usize = 16;
 pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
-pub const MAX_MIPMAPS: usize = 16;
 pub const MAX_VERTEXBUFFER_BINDSLOTS: usize = 8;
 pub const MAX_UNIFORMBLOCK_BINDSLOTS: usize = 8;
 pub const MAX_VIEW_BINDSLOTS: usize = 32;
@@ -329,7 +328,7 @@ pub struct Features {
     pub vertexformat_int10_n2: bool,
     pub copy_buffer_to_image_relaxed_buffer_type: bool,
     pub copy_buffer_to_image_relaxed_bytes_per_row: bool,
-    pub copy_image_to_image_relaxed: bool,
+    pub copy_image_to_image_relaxed_pixel_format: bool,
     pub gl_texture_views: bool,
 }
 impl Features {
@@ -348,7 +347,7 @@ impl Features {
             vertexformat_int10_n2: false,
             copy_buffer_to_image_relaxed_buffer_type: false,
             copy_buffer_to_image_relaxed_bytes_per_row: false,
-            copy_image_to_image_relaxed: false,
+            copy_image_to_image_relaxed_pixel_format: false,
             gl_texture_views: false,
         }
     }
@@ -2710,21 +2709,6 @@ impl Default for FrameStatsD3d11Bindings {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct FrameStatsD3d11Uniforms {
-    pub num_update_subresource: u32,
-}
-impl FrameStatsD3d11Uniforms {
-    pub const fn new() -> Self {
-        Self { num_update_subresource: 0 }
-    }
-}
-impl Default for FrameStatsD3d11Uniforms {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
 pub struct FrameStatsD3d11Draw {
     pub num_draw_indexed_instanced: u32,
     pub num_draw_indexed: u32,
@@ -2752,8 +2736,9 @@ pub struct FrameStatsD3d11 {
     pub pass: FrameStatsD3d11Pass,
     pub pipeline: FrameStatsD3d11Pipeline,
     pub bindings: FrameStatsD3d11Bindings,
-    pub uniforms: FrameStatsD3d11Uniforms,
     pub draw: FrameStatsD3d11Draw,
+    pub num_update_subresource: u32,
+    pub num_copy_subresource_region: u32,
     pub num_map: u32,
     pub num_unmap: u32,
 }
@@ -2763,8 +2748,9 @@ impl FrameStatsD3d11 {
             pass: FrameStatsD3d11Pass::new(),
             pipeline: FrameStatsD3d11Pipeline::new(),
             bindings: FrameStatsD3d11Bindings::new(),
-            uniforms: FrameStatsD3d11Uniforms::new(),
             draw: FrameStatsD3d11Draw::new(),
+            num_update_subresource: 0,
+            num_copy_subresource_region: 0,
             num_map: 0,
             num_unmap: 0,
         }
@@ -3438,7 +3424,6 @@ pub enum LogItem {
     ValidateImagedescDepthformatAttachmentOrCopydst,
     ValidateImagedescDepthstencilAttachmentPixelformat,
     ValidateImagedescDepthstencilAttachmentVsStorageimage,
-    ValidateImagedescStorageimageVsInitialdata,
     ValidateImagedescStorageimageVsWritetransient,
     ValidateImagedescWritetransientVsCopydst,
     ValidateImagedescWritetransientVsInitialdata,
@@ -3455,8 +3440,10 @@ pub enum LogItem {
     ValidateImagedescImagetype3dNumslices,
     ValidateImagedescWidth,
     ValidateImagedescHeight,
+    ValidateImagedescNumMipmaps,
     ValidateImagedescMsaaButNoAttachment,
     ValidateImagedescAttachmentPixelformat,
+    ValidateImagedescAttachmentMsaaVsCopy,
     ValidateImagedescAttachmentNoMsaaSupport,
     ValidateImagedescAttachmentMsaaNumMipmaps,
     ValidateImagedescAttachmentMsaa3dImage,
@@ -3561,10 +3548,6 @@ pub enum LogItem {
     ValidateViewdescTextureCubemapSlices,
     ValidateViewdescTextureArraySlices,
     ValidateViewdescTexture3dSlices,
-    ValidateViewdescStorageimagePixelformat,
-    ValidateViewdescColorattachmentPixelformat,
-    ValidateViewdescDepthstencilattachmentPixelformat,
-    ValidateViewdescResolveattachmentSamplecount,
     ValidateBeginpassCanary,
     ValidateBeginpassComputepassExpectNoAttachments,
     ValidateBeginpassSwapchainExpectWidth,
@@ -3779,6 +3762,7 @@ pub enum LogItem {
     ValidateCopybuffertobufferSrcOverflow,
     ValidateCopybuffertobufferDstOverflow,
     ValidateCopybuffertobufferWebgl2IndexBuffer,
+    ValidateCopybuffertobufferSrcTransientMissing,
     ValidateCopybuffertoimageDepthFormatNotAllowed,
     ValidateCopybuffertoimageWebgl2IndexBuffer,
     ValidateCopybuffertoimageBytesperrowTooSmall,
@@ -3807,13 +3791,13 @@ pub enum LogItem {
     ValidateCopybuffertoimageDstWidthOverflow,
     ValidateCopybuffertoimageDstHeightOverflow,
     ValidateCopybuffertoimageDstNumslicesOverflow,
+    ValidateCopybuffertoimageSrcTransientMissing,
     ValidateCopyimagetoimageSrcVsDstImage,
     ValidateCopyimagetoimageInsidePass,
     ValidateCopyimagetoimageCopySrc,
     ValidateCopyimagetoimageCopyDst,
     ValidateCopyimagetoimage3dVsOther,
     ValidateCopyimagetoimageSrcVsDstFormat,
-    ValidateCopyimagetoimageSrcVsDstSampleCount,
     ValidateCopyimagetoimageRenderable,
     ValidateCopyimagetoimageMsaa,
     ValidateCopyimagetoimageWholeMiplevel,
@@ -3846,6 +3830,7 @@ pub enum LogItem {
     ValidateCopyimagetoimageDstHeightOverflow,
     ValidateCopyimagetoimageSrcNumslicesOverflow,
     ValidateCopyimagetoimageDstNumslicesOverflow,
+    ValidateCopyimagetoimageSrcTransientMissing,
     ValidationFailed,
 }
 impl LogItem {
