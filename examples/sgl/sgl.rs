@@ -47,20 +47,16 @@ extern "C" fn init(user_data: *mut ffi::c_void) {
     // a checkerboard image and texture view
     let img_width: usize = 8;
     let img_height: usize = 8;
+    let mut pixels = [0u32; 64];
+    for y in 0..img_height {
+        for x in 0..img_width {
+            pixels[y * img_width + x] = if 0 == (y ^ x) & 1 { 0xFF_00_00_00 } else { 0xFF_FF_FF_FF };
+        }
+    }
     let img = sg::make_image(&sg::ImageDesc {
         width: img_width as i32,
         height: img_height as i32,
-        data: {
-            let mut data = sg::ImageData::new();
-            let mut res = [0u32; 64];
-            for y in 0..img_height {
-                for x in 0..img_width {
-                    res[y * img_width + x] = if 0 == (y ^ x) & 1 { 0xFF_00_00_00 } else { 0xFF_FF_FF_FF };
-                }
-            }
-            data.mip_levels[0] = sg::value_as_range(&res);
-            data
-        },
+        data: sg::slice_as_range(&pixels),
         ..Default::default()
     });
     state.tex_view = sg::make_view(&sg::ViewDesc {
