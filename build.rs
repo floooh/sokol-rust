@@ -249,7 +249,8 @@ fn make_sokol() {
                 println!("cargo:rustc-link-lib=dylib=egl");
             }
 
-            println!("cargo:rustc-link-lib=dylib=asound");
+            println!("cargo:rustc-link-lib=dylib=pulse-simple");
+            println!("cargo:rustc-link-lib=dylib=pulse");
 
             if config.wayland_desired {
                 println!("cargo:rustc-link-lib=dylib=wayland-client");
