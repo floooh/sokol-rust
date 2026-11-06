@@ -63,6 +63,7 @@ pub enum EventType {
     QuitRequested,
     ClipboardPasted,
     FilesDropped,
+    AndroidBack,
     Num,
 }
 impl EventType {
