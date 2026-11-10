@@ -172,7 +172,7 @@ pub struct RenderDesc {
     pub use_nearest_filter: bool,
     pub pip: sg::Pipeline,
     pub views: [sg::View; 32],
-    pub samplers: [sg::Sampler; 12],
+    pub samplers: [sg::Sampler; 14],
     pub uniforms: [sg::Range; 8],
 }
 impl RenderDesc {
@@ -181,7 +181,7 @@ impl RenderDesc {
             use_nearest_filter: false,
             pip: sg::Pipeline::new(),
             views: [sg::View::new(); 32],
-            samplers: [sg::Sampler::new(); 12],
+            samplers: [sg::Sampler::new(); 14],
             uniforms: [sg::Range::new(); 8],
         }
     }

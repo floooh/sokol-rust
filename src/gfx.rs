@@ -146,7 +146,7 @@ pub const MAX_VERTEX_ATTRIBUTES: usize = 16;
 pub const MAX_VERTEXBUFFER_BINDSLOTS: usize = 8;
 pub const MAX_UNIFORMBLOCK_BINDSLOTS: usize = 8;
 pub const MAX_VIEW_BINDSLOTS: usize = 32;
-pub const MAX_SAMPLER_BINDSLOTS: usize = 12;
+pub const MAX_SAMPLER_BINDSLOTS: usize = 14;
 pub const MAX_TEXTURE_SAMPLER_PAIRS: usize = 32;
 pub const MAX_PORTABLE_COLOR_ATTACHMENTS: usize = 4;
 pub const MAX_PORTABLE_TEXTURE_BINDINGS_PER_STAGE: usize = 16;
@@ -1182,26 +1182,22 @@ impl Default for PassState {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Bindings {
-    pub _start_canary: u32,
     pub vertex_buffers: [Buffer; 8],
     pub vertex_buffer_offsets: [i32; 8],
     pub index_buffer: Buffer,
     pub index_buffer_offset: i32,
     pub views: [View; 32],
-    pub samplers: [Sampler; 12],
-    pub _end_canary: u32,
+    pub samplers: [Sampler; 14],
 }
 impl Bindings {
     pub const fn new() -> Self {
         Self {
-            _start_canary: 0,
             vertex_buffers: [Buffer::new(); 8],
             vertex_buffer_offsets: [0; 8],
             index_buffer: Buffer::new(),
             index_buffer_offset: 0,
             views: [View::new(); 32],
-            samplers: [Sampler::new(); 12],
-            _end_canary: 0,
+            samplers: [Sampler::new(); 14],
         }
     }
 }
@@ -1952,7 +1948,7 @@ pub struct ShaderDesc {
     pub attrs: [ShaderVertexAttr; 16],
     pub uniform_blocks: [ShaderUniformBlock; 8],
     pub views: [ShaderView; 32],
-    pub samplers: [ShaderSampler; 12],
+    pub samplers: [ShaderSampler; 14],
     pub texture_sampler_pairs: [ShaderTextureSamplerPair; 32],
     pub mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup,
     pub label: *const core::ffi::c_char,
@@ -1968,7 +1964,7 @@ impl ShaderDesc {
             attrs: [ShaderVertexAttr::new(); 16],
             uniform_blocks: [ShaderUniformBlock::new(); 8],
             views: [ShaderView::new(); 32],
-            samplers: [ShaderSampler::new(); 12],
+            samplers: [ShaderSampler::new(); 14],
             texture_sampler_pairs: [ShaderTextureSamplerPair::new(); 32],
             mtl_threads_per_threadgroup: MtlShaderThreadsPerThreadgroup::new(),
             label: core::ptr::null(),
