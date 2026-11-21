@@ -208,7 +208,9 @@ pub mod ffi {
             base_vertex: i32,
             base_instance: i32,
         );
+        pub fn scb_draw_indirect(cb: Cmdbuf, buf: sg::Buffer, offset: i32);
         pub fn scb_dispatch(cb: Cmdbuf, num_groups_x: i32, num_groups_y: i32, num_groups_z: i32);
+        pub fn scb_dispatch_indirect(cb: Cmdbuf, buf: sg::Buffer, offset: i32);
         pub fn scb_query_cmdbuf_state(cb: Cmdbuf) -> ResourceState;
         pub fn scb_query_cmdbuf_info(cb: Cmdbuf) -> CmdbufInfo;
     }
@@ -281,8 +283,16 @@ pub fn draw_ex(
     unsafe { ffi::scb_draw_ex(cb, base_element, num_elements, num_instances, base_vertex, base_instance) }
 }
 #[inline]
+pub fn draw_indirect(cb: Cmdbuf, buf: sg::Buffer, offset: i32) {
+    unsafe { ffi::scb_draw_indirect(cb, buf, offset) }
+}
+#[inline]
 pub fn dispatch(cb: Cmdbuf, num_groups_x: i32, num_groups_y: i32, num_groups_z: i32) {
     unsafe { ffi::scb_dispatch(cb, num_groups_x, num_groups_y, num_groups_z) }
+}
+#[inline]
+pub fn dispatch_indirect(cb: Cmdbuf, buf: sg::Buffer, offset: i32) {
+    unsafe { ffi::scb_dispatch_indirect(cb, buf, offset) }
 }
 #[inline]
 pub fn query_cmdbuf_state(cb: Cmdbuf) -> ResourceState {

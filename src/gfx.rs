@@ -324,6 +324,8 @@ pub struct Features {
     pub separate_buffer_types: bool,
     pub draw_base_vertex: bool,
     pub draw_base_instance: bool,
+    pub draw_indirect_base_instance: bool,
+    pub draw_indirect_index_buffer_offset: bool,
     pub dual_source_blending: bool,
     pub vertexformat_int10_n2: bool,
     pub copy_buffer_to_image_relaxed_buffer_type: bool,
@@ -343,6 +345,8 @@ impl Features {
             separate_buffer_types: false,
             draw_base_vertex: false,
             draw_base_instance: false,
+            draw_indirect_base_instance: false,
+            draw_indirect_index_buffer_offset: false,
             dual_source_blending: false,
             vertexformat_int10_n2: false,
             copy_buffer_to_image_relaxed_buffer_type: false,
@@ -1212,6 +1216,7 @@ pub struct BufferUsage {
     pub vertex_buffer: bool,
     pub index_buffer: bool,
     pub storage_buffer: bool,
+    pub indirect_buffer: bool,
     pub staging_buffer: bool,
     pub staging_index_buffer: bool,
     pub write_unsealed: bool,
@@ -1225,6 +1230,7 @@ impl BufferUsage {
             vertex_buffer: false,
             index_buffer: false,
             storage_buffer: false,
+            indirect_buffer: false,
             staging_buffer: false,
             staging_index_buffer: false,
             write_unsealed: false,
@@ -2311,6 +2317,66 @@ impl Default for ViewDesc {
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
+pub struct DrawIndirectArgs {
+    pub num_elements: u32,
+    pub num_instances: u32,
+    pub base_element: u32,
+    pub base_instance: u32,
+}
+impl DrawIndirectArgs {
+    pub const fn new() -> Self {
+        Self { num_elements: 0, num_instances: 0, base_element: 0, base_instance: 0 }
+    }
+}
+impl Default for DrawIndirectArgs {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct DrawIndirectIndexedArgs {
+    pub num_elements: u32,
+    pub num_instances: u32,
+    pub base_element: u32,
+    pub base_vertex: i32,
+    pub base_instance: u32,
+}
+impl DrawIndirectIndexedArgs {
+    pub const fn new() -> Self {
+        Self {
+            num_elements: 0,
+            num_instances: 0,
+            base_element: 0,
+            base_vertex: 0,
+            base_instance: 0,
+        }
+    }
+}
+impl Default for DrawIndirectIndexedArgs {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct DispatchIndirectArgs {
+    pub num_groups_x: u32,
+    pub num_groups_y: u32,
+    pub num_groups_z: u32,
+}
+impl DispatchIndirectArgs {
+    pub const fn new() -> Self {
+        Self { num_groups_x: 0, num_groups_y: 0, num_groups_z: 0 }
+    }
+}
+impl Default for DispatchIndirectArgs {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct TraceHooks {
     pub user_data: *mut core::ffi::c_void,
     pub reset_state_cache: Option<extern "C" fn(*mut core::ffi::c_void)>,
@@ -2343,7 +2409,9 @@ pub struct TraceHooks {
     pub apply_uniforms: Option<extern "C" fn(i32, *const Range, *mut core::ffi::c_void)>,
     pub draw: Option<extern "C" fn(i32, i32, i32, *mut core::ffi::c_void)>,
     pub draw_ex: Option<extern "C" fn(i32, i32, i32, i32, i32, *mut core::ffi::c_void)>,
+    pub draw_indirect: Option<extern "C" fn(Buffer, i32, *mut core::ffi::c_void)>,
     pub dispatch: Option<extern "C" fn(i32, i32, i32, *mut core::ffi::c_void)>,
+    pub dispatch_indirect: Option<extern "C" fn(Buffer, i32, *mut core::ffi::c_void)>,
     pub end_pass: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub commit: Option<extern "C" fn(*mut core::ffi::c_void)>,
     pub alloc_buffer: Option<extern "C" fn(Buffer, *mut core::ffi::c_void)>,
@@ -2413,7 +2481,9 @@ impl TraceHooks {
             apply_uniforms: None,
             draw: None,
             draw_ex: None,
+            draw_indirect: None,
             dispatch: None,
+            dispatch_indirect: None,
             end_pass: None,
             commit: None,
             alloc_buffer: None,
@@ -2710,6 +2780,8 @@ pub struct FrameStatsD3d11Draw {
     pub num_draw_indexed: u32,
     pub num_draw_instanced: u32,
     pub num_draw: u32,
+    pub num_draw_indexed_instanced_indirect: u32,
+    pub num_draw_instanced_indirect: u32,
 }
 impl FrameStatsD3d11Draw {
     pub const fn new() -> Self {
@@ -2718,10 +2790,28 @@ impl FrameStatsD3d11Draw {
             num_draw_indexed: 0,
             num_draw_instanced: 0,
             num_draw: 0,
+            num_draw_indexed_instanced_indirect: 0,
+            num_draw_instanced_indirect: 0,
         }
     }
 }
 impl Default for FrameStatsD3d11Draw {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FrameStatsD3d11Dispatch {
+    pub num_dispatch: u32,
+    pub num_dispatch_indirect: u32,
+}
+impl FrameStatsD3d11Dispatch {
+    pub const fn new() -> Self {
+        Self { num_dispatch: 0, num_dispatch_indirect: 0 }
+    }
+}
+impl Default for FrameStatsD3d11Dispatch {
     fn default() -> Self {
         Self::new()
     }
@@ -2733,6 +2823,7 @@ pub struct FrameStatsD3d11 {
     pub pipeline: FrameStatsD3d11Pipeline,
     pub bindings: FrameStatsD3d11Bindings,
     pub draw: FrameStatsD3d11Draw,
+    pub dispatch: FrameStatsD3d11Dispatch,
     pub num_update_subresource: u32,
     pub num_copy_subresource_region: u32,
     pub num_map: u32,
@@ -2745,6 +2836,7 @@ impl FrameStatsD3d11 {
             pipeline: FrameStatsD3d11Pipeline::new(),
             bindings: FrameStatsD3d11Bindings::new(),
             draw: FrameStatsD3d11Draw::new(),
+            dispatch: FrameStatsD3d11Dispatch::new(),
             num_update_subresource: 0,
             num_copy_subresource_region: 0,
             num_map: 0,
@@ -3091,7 +3183,9 @@ pub struct FrameStats {
     pub num_apply_uniforms: u32,
     pub num_draw: u32,
     pub num_draw_ex: u32,
+    pub num_draw_indirect: u32,
     pub num_dispatch: u32,
+    pub num_dispatch_indirect: u32,
     pub num_write_buffer_transient: u32,
     pub num_write_image_transient: u32,
     pub num_write_buffer_unsealed: u32,
@@ -3129,7 +3223,9 @@ impl FrameStats {
             num_apply_uniforms: 0,
             num_draw: 0,
             num_draw_ex: 0,
+            num_draw_indirect: 0,
             num_dispatch: 0,
+            num_dispatch_indirect: 0,
             num_write_buffer_transient: 0,
             num_write_image_transient: 0,
             num_write_buffer_unsealed: 0,
@@ -3370,6 +3466,8 @@ pub enum LogItem {
     CopyImageToImageDstAlive,
     CopyImageToImageSrcValid,
     CopyImageToImageDstValid,
+    DrawIndirectBufferAlive,
+    DispatchIndirectBufferAlive,
     ShaderdescTooManyVertexstageTextures,
     ShaderdescTooManyFragmentstageTextures,
     ShaderdescTooManyComputestageTextures,
@@ -3387,6 +3485,7 @@ pub enum LogItem {
     ValidateBufferdescStagingVsVertexbuffer,
     ValidateBufferdescStagingVsIndexbuffer,
     ValidateBufferdescStagingVsStoragebuffer,
+    ValidateBufferdescStagingVsIndirectbuffer,
     ValidateBufferdescStagingVsInjected,
     ValidateBufferdescStagingVsCopydst,
     ValidateBufferdescStagingVsInitialdata,
@@ -3403,6 +3502,8 @@ pub enum LogItem {
     ValidateBufferdescExpectData,
     ValidateBufferdescStoragebufferSupported,
     ValidateBufferdescStoragebufferSizeMultiple4,
+    ValidateBufferdescIndirectbufferSupported,
+    ValidateBufferdescIndirectbufferSizeMultiple4,
     ValidateImagedescDataSize,
     ValidateImagedescCanary,
     ValidateImagedescAnyAttachmentVsCopydst,
@@ -3703,16 +3804,37 @@ pub enum LogItem {
     ValidateDrawRequiredBindingsOrUniformsMissing,
     ValidateDrawWriteBufferTransientMissing,
     ValidateDrawWriteImageTransientMissing,
+    ValidateDrawIndirectRenderpassExpected,
+    ValidateDrawIndirectBufferUsage,
+    ValidateDrawIndirectOffsetRange,
+    ValidateDrawIndirectOffsetMultiple4,
+    ValidateDrawIndirectIndexBufferOffset,
+    ValidateDrawIndirectRequiredBindingsOrUniformsMissing,
+    ValidateDrawIndirectWriteBufferTransientMissing,
+    ValidateDrawIndirectWriteImageTransientMissing,
+    ValidateDrawIndirectBufferWriteBufferTransientMissing,
+    ValidateDrawIndirectBufferVsSbviewReadwrite,
     ValidateDispatchComputepassExpected,
     ValidateDispatchNumgroupsx,
     ValidateDispatchNumgroupsy,
     ValidateDispatchNumgroupsz,
+    ValidateDispatchRequiredBindingsOrUniformsMissing,
     ValidateDispatchWriteBufferTransientMissing,
     ValidateDispatchWriteImageTransientMissing,
+    ValidateDispatchIndirectComputepassExpected,
+    ValidateDispatchIndirectBufferUsage,
+    ValidateDispatchIndirectOffsetRange,
+    ValidateDispatchIndirectOffsetMultiple4,
+    ValidateDispatchIndirectRequiredBindingsOrUniformsMissing,
+    ValidateDispatchIndirectWriteBufferTransientMissing,
+    ValidateDispatchIndirectWriteImageTransientMissing,
+    ValidateDispatchIndirectBufferWriteBufferTransientMissing,
+    ValidateDispatchIndirectBufferVsSbviewReadwrite,
     ValidateWritebufferunsealedUsage,
     ValidateWritebuffertransientUsage,
     ValidateWritebuffertransientWriteBeforeBind,
     ValidateWritebuffertransientWriteBeforeCopy,
+    ValidateWritebuffertransientWriteBeforeIndirect,
     ValidateWritebuffertransientDstOffsetAlignment,
     ValidateWritebufferSrcDataPointer,
     ValidateWritebufferSrcDataSize,
@@ -4547,7 +4669,9 @@ pub mod ffi {
             base_vertex: i32,
             base_instance: i32,
         );
+        pub fn sg_draw_indirect(buf: Buffer, offset: i32);
         pub fn sg_dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize);
+        pub fn sg_dispatch_indirect(buf: Buffer, offset: i32);
         pub fn sg_end_pass();
         pub fn sg_commit();
         pub fn sg_write_buffer_transient(desc: *const WriteBufferDesc);
@@ -4806,8 +4930,16 @@ pub fn draw_ex(
     unsafe { ffi::sg_draw_ex(base_element, num_elements, num_instances, base_vertex, base_instance) }
 }
 #[inline]
+pub fn draw_indirect(buf: Buffer, offset: i32) {
+    unsafe { ffi::sg_draw_indirect(buf, offset) }
+}
+#[inline]
 pub fn dispatch(num_groups_x: usize, num_groups_y: usize, num_groups_z: usize) {
     unsafe { ffi::sg_dispatch(num_groups_x, num_groups_y, num_groups_z) }
+}
+#[inline]
+pub fn dispatch_indirect(buf: Buffer, offset: i32) {
+    unsafe { ffi::sg_dispatch_indirect(buf, offset) }
 }
 #[inline]
 pub fn end_pass() {
